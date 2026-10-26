@@ -8,7 +8,20 @@
     <AssemblyName>GitHubTopicReports</AssemblyName>
     <Product>Local Github Library</Product>
     <Description>A local-first Windows library for discovering, comparing and organizing GitHub repositories.</Description>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <RepositoryUrl>https://github.com/huaaorain/local-github-library</RepositoryUrl>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LLamaSharp" Version="0.30.0" />
+    <PackageReference Include="LLamaSharp.Backend.Cpu"
+                      Version="0.30.0"
+                      GeneratePathProperty="true" />
+  </ItemGroup>
+  <Target Name="CopyLlamaCpuNativeRuntime" AfterTargets="Publish">
+    <ItemGroup>
+      <LlamaCpuRuntimeFiles Include="$(PkgLLamaSharp_Backend_Cpu)\LLamaSharpRuntimes\win-x64\native\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LlamaCpuRuntimeFiles)"
+          DestinationFiles="@(LlamaCpuRuntimeFiles->'$(PublishDir)runtimes\win-x64\native\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
 </Project>

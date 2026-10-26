@@ -340,6 +340,52 @@ internal static class ProjectReadmeSummary
     private static readonly Regex WhitespaceRegex = new(
         @"[ \t]+",
         RegexOptions.Compiled);
+    private static readonly Regex SentenceEndRegex = new(
+        @"[.!?。！？](?:\s|$)",
+        RegexOptions.Compiled);
+    private static readonly string[] LanguageNames =
+    [
+        "English",
+        "Chinese",
+        "Traditional Chinese",
+        "Japanese",
+        "Korean",
+        "German",
+        "Spanish",
+        "French",
+        "Ukrainian",
+        "Portuguese",
+        "Arabic",
+        "Persian",
+        "Indonesian",
+        "Italian",
+        "Greek",
+        "Malayalam",
+        "Urdu",
+        "Romanian",
+        "简体中文",
+        "繁體中文",
+        "日本語",
+        "한국어",
+        "Türkçe",
+        "Русский",
+        "Tiếng Việt",
+        "ไทย",
+        "Deutsch",
+        "Español",
+        "Français",
+        "Українська",
+        "Polski",
+        "Português",
+        "العربية",
+        "فارسی",
+        "Bahasa Indonesia",
+        "Italiano",
+        "Ελληνικά",
+        "മലയാളം",
+        "Roman Urdu",
+        "Română"
+    ];
 
     public static string Extract(string markdown, string fallback)
     {
@@ -395,9 +441,13 @@ internal static class ProjectReadmeSummary
             var paragraph = WhitespaceRegex.Replace(string.Join(' ', lines), " ").Trim();
             var lowerParagraph = paragraph.ToLowerInvariant();
             if (paragraph.Length < 60 ||
+                IsNavigationOrLanguageList(paragraph) ||
                 paragraph.Equals("Table of Contents", StringComparison.OrdinalIgnoreCase) ||
                 paragraph.Equals("Contents", StringComparison.OrdinalIgnoreCase) ||
                 paragraph.Equals("目录", StringComparison.Ordinal) ||
+                lowerParagraph.Contains("[!important]", StringComparison.Ordinal) ||
+                lowerParagraph.Contains("[!warning]", StringComparison.Ordinal) ||
+                lowerParagraph.Contains("[!caution]", StringComparison.Ordinal) ||
                 lowerParagraph.StartsWith("what is ", StringComparison.Ordinal) ||
                 lowerParagraph.StartsWith("how to use", StringComparison.Ordinal) ||
                 lowerParagraph.StartsWith("table of contents", StringComparison.Ordinal) ||
@@ -433,5 +483,35 @@ internal static class ProjectReadmeSummary
         return sentenceEnd >= 180
             ? shortened[..(sentenceEnd + 1)]
             : shortened.TrimEnd() + "...";
+    }
+
+    private static bool IsNavigationOrLanguageList(string paragraph)
+    {
+        var languageCount = LanguageNames.Count(
+            language => paragraph.Contains(language, StringComparison.OrdinalIgnoreCase));
+        var separatorCount = paragraph.Count(
+            character => character is '·' or '•' or '|' or '｜');
+        var slashSeparatorCount = Regex.Matches(paragraph, @"\s/\s").Count;
+        separatorCount += slashSeparatorCount;
+        var sentencePunctuationCount = SentenceEndRegex.Matches(paragraph).Count;
+
+        if (languageCount >= 3 && paragraph.Length < 600)
+        {
+            return true;
+        }
+
+        if (languageCount >= 2 &&
+            separatorCount >= 1 &&
+            sentencePunctuationCount == 0)
+        {
+            return true;
+        }
+
+        if (separatorCount < 2)
+        {
+            return false;
+        }
+
+        return sentencePunctuationCount == 0;
     }
 }

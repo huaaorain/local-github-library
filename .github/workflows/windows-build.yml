@@ -21,7 +21,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore .\GitHubTopicReports.csproj
+        run: dotnet restore .\GitHubTopicReports.csproj -r win-x64
 
       - name: Build
         run: dotnet build .\GitHubTopicReports.csproj -c Release --no-restore
@@ -33,5 +33,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: LocalGithubLibrary-win-x64
-          path: dist/GitHubTopicReports.exe
+          path: dist/
           if-no-files-found: error

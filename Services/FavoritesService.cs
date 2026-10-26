@@ -95,12 +95,7 @@ public sealed class FavoritesService
             var folder = document.Folders.FirstOrDefault(item => item.Id == folderId)
                 ?? throw new InvalidOperationException("请选择一个收藏目录。");
 
-            if (folder.Repositories.Any(item =>
-                    item.Id == repository.Id ||
-                    string.Equals(
-                        item.FullName,
-                        repository.FullName,
-                        StringComparison.OrdinalIgnoreCase)))
+            if (folder.ContainsRepository(repository))
             {
                 return new FavoriteAddResult
                 {
@@ -187,12 +182,7 @@ public sealed class FavoritesService
 
             foreach (var repository in repositories)
             {
-                var exists = folder.Repositories.Any(item =>
-                    item.Id == repository.Id ||
-                    string.Equals(
-                        item.FullName,
-                        repository.FullName,
-                        StringComparison.OrdinalIgnoreCase));
+                var exists = folder.ContainsRepository(repository);
                 if (exists)
                 {
                     duplicates++;

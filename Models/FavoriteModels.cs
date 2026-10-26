@@ -14,6 +14,17 @@ public sealed class FavoriteFolder
     public List<FavoriteRepository> Repositories { get; init; } = [];
 
     public string CountDisplay => $"{Repositories.Count:N0} 个仓库";
+
+    public bool ContainsRepository(long repositoryId, string fullName) =>
+        Repositories.Any(item =>
+            item.Id == repositoryId ||
+            string.Equals(
+                item.FullName,
+                fullName,
+                StringComparison.OrdinalIgnoreCase));
+
+    public bool ContainsRepository(RepositoryRecord repository) =>
+        ContainsRepository(repository.Id, repository.FullName);
 }
 
 public sealed class FavoriteRepository

@@ -1,3 +1,4 @@
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -14,6 +15,9 @@ public partial class MainWindow : Window
     private readonly FavoritesService _favorites;
     private readonly GlobalLeaderboardService _globalLeaderboard;
     private readonly ConfigurationPackageService _configurationPackages;
+    private readonly LlmPackageService _llmPackageService;
+    private readonly LlmPromptService _llmPromptService;
+    private readonly LocalLlmService _localLlm;
     private CancellationTokenSource? _searchCancellation;
     private CancellationTokenSource? _standaloneSearchCancellation;
     private CancellationTokenSource? _findSummaryCancellation;
@@ -38,6 +42,7 @@ public partial class MainWindow : Window
     private FavoriteRepository? _selectedCombinedFavoriteRepository;
     private string _standaloneDetailUrl = "";
     private bool _workspaceReady;
+    private bool _standaloneSearchBusy;
     private string _currentKeyword = "";
 
     public MainWindow()
@@ -45,6 +50,9 @@ public partial class MainWindow : Window
         _favorites = new FavoritesService(_library.LibraryRoot);
         _globalLeaderboard = new GlobalLeaderboardService(_library.LibraryRoot);
         _configurationPackages = new ConfigurationPackageService(_library.LibraryRoot);
+        _llmPackageService = new LlmPackageService(_library.LibraryRoot);
+        _llmPromptService = new LlmPromptService(_library.LibraryRoot);
+        _localLlm = new LocalLlmService(_llmPackageService, _llmPromptService);
         InitializeComponent();
         ResultCountComboBox.ItemsSource = new[] { "10", "20", "50", "100" };
         ResultCountComboBox.Text = "10";
@@ -56,7 +64,7 @@ public partial class MainWindow : Window
         GlobalCountComboBox.Text = "10";
         StandaloneSearchCountComboBox.ItemsSource = new[] { "10", "20", "50", "100" };
         StandaloneSearchCountComboBox.Text = "20";
-        VersionText.Text = $"版本 {typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "0.1.0"}";
+        VersionText.Text = $"版本 {typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "0.2.0"}";
         Loaded += MainWindow_Loaded;
         Closed += MainWindow_Closed;
     }
@@ -66,6 +74,7 @@ public partial class MainWindow : Window
         CombineFavoriteWorkspace();
         await RefreshHistoryAsync();
         await RefreshSearchDirectoriesAsync();
+        await RefreshLlmStatusAsync();
         StandaloneSearchKeywordTextBox.Focus();
     }
 
@@ -83,6 +92,7 @@ public partial class MainWindow : Window
         _globalSummaryCancellation?.Dispose();
         _gitHub.Dispose();
         _globalLeaderboard.Dispose();
+        _localLlm.Dispose();
     }
 
     private async void SearchButton_Click(object sender, RoutedEventArgs e)
@@ -340,7 +350,7 @@ public partial class MainWindow : Window
         DetailDescriptionText.Text = string.IsNullOrWhiteSpace(repository.Description)
             ? "无项目描述。"
             : repository.Description;
-        LoadFindSummary(repository.FullName, repository.Description);
+        LoadFindSummary(repository.FullName, repository.Description, repository.Topics);
         DetailStatsText.Text =
             $"Star：{repository.Stars:N0}\n" +
             $"Fork：{repository.Forks:N0}\n" +
@@ -366,6 +376,7 @@ public partial class MainWindow : Window
         DetailDescriptionText.Text = "查询结果会显示在这里。";
         _findSummaryCancellation?.Cancel();
         DetailSummaryText.Text = "选择项目后自动读取 README 简介。";
+        DetailLlmText.Text = "导入本地 LLM 包后自动生成。";
         DetailStatsText.Text = "";
         DetailTopicsText.Text = "";
         DetailDatesText.Text = "";
@@ -373,7 +384,10 @@ public partial class MainWindow : Window
         UpdateFavoriteActionState();
     }
 
-    private async void LoadFindSummary(string fullName, string fallbackDescription)
+    private async void LoadFindSummary(
+        string fullName,
+        string fallbackDescription,
+        IReadOnlyList<string> topics)
     {
         _findSummaryCancellation?.Cancel();
         _findSummaryCancellation?.Dispose();
@@ -390,6 +404,13 @@ public partial class MainWindow : Window
             if (!cancellationToken.IsCancellationRequested)
             {
                 DetailSummaryText.Text = summary;
+                await StreamLlmInsightAsync(
+                    fullName,
+                    fallbackDescription,
+                    topics,
+                    summary,
+                    DetailLlmText,
+                    cancellationToken);
             }
         }
         catch (OperationCanceledException)
@@ -417,6 +438,50 @@ public partial class MainWindow : Window
     private void OpenLibraryButton_Click(object sender, RoutedEventArgs e)
     {
         _library.OpenLibrary();
+    }
+
+    private void ImportLlmPackageButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new LlmSettingsDialog(
+            _llmPackageService,
+            _llmPromptService,
+            _localLlm,
+            GetAppVersion)
+        {
+            Owner = this
+        };
+        dialog.ShowDialog();
+        UpdateLlmStatus();
+        if (dialog.PromptChanged)
+        {
+            StatusText.Text = "LLM 提示词已更新，下一次生成时生效。";
+        }
+    }
+
+    private async Task RefreshLlmStatusAsync()
+    {
+        try
+        {
+            await _localLlm.RefreshPackageAsync();
+        }
+        catch (Exception exception)
+        {
+            AppDiagnostics.LogException("读取本地 LLM 状态", exception);
+        }
+
+        UpdateLlmStatus();
+    }
+
+    private void UpdateLlmStatus()
+    {
+        if (_localLlm.ActivePackage is not { } package)
+        {
+            LlmStatusText.Text = "本地 LLM：未安装（使用 README 摘录）";
+            return;
+        }
+
+        LlmStatusText.Text =
+            $"本地 LLM：{package.Manifest.DisplayName}（{FormatBytes(package.ModelSize)}）";
     }
 
     private async void ExportConfigurationButton_Click(object sender, RoutedEventArgs e)
@@ -698,39 +763,43 @@ public partial class MainWindow : Window
 
     private void SetStandaloneSearchBusyState(bool busy)
     {
+        _standaloneSearchBusy = busy;
         StandaloneSearchButton.IsEnabled = !busy;
         StandaloneSearchKeywordTextBox.IsEnabled = !busy;
         StandaloneSearchCountComboBox.IsEnabled = !busy;
         StandaloneSearchCancelButton.IsEnabled = busy;
-        SaveSearchResultsButton.IsEnabled =
-            !busy && _selectedSearchFolder is not null && _standaloneSearchResults.Count > 0;
-        FavoriteSelectedSearchResultsButton.IsEnabled =
-            !busy &&
-            _selectedSearchFolder is not null &&
-            StandaloneSearchResultsGrid.SelectedItems.OfType<RepositoryRecord>().Any();
+        UpdateStandaloneSearchActionState();
         Cursor = busy ? Cursors.Wait : Cursors.Arrow;
     }
 
-    private async Task RefreshSearchDirectoriesAsync(string? preferredFolderPath = null)
+    private async Task RefreshSearchDirectoriesAsync(string? preferredFolderId = null)
     {
         try
         {
-            var selectedId = preferredFolderPath ?? _selectedSearchFolder?.Id;
+            var selectedId = preferredFolderId ?? _selectedSearchFolder?.Id;
             _favoriteFolders = (await _favorites.LoadAsync()).ToList();
             _searchFolders = _favoriteFolders;
             SearchDirectoryList.ItemsSource = _searchFolders;
             SearchDirectoryCountText.Text = $"{_searchFolders.Count:N0} 个";
+            var previousDestinationFolderId =
+                (SearchFavoriteFolderComboBox.SelectedItem as FavoriteFolder)?.Id;
+            SearchFavoriteFolderComboBox.ItemsSource = _favoriteFolders;
 
             var selectedFolder = _searchFolders.FirstOrDefault(
                                      folder => folder.Id == selectedId)
                                  ?? _searchFolders.FirstOrDefault();
             SearchDirectoryList.SelectedItem = selectedFolder;
             _selectedSearchFolder = selectedFolder;
+            SearchFavoriteFolderComboBox.SelectedItem =
+                _favoriteFolders.FirstOrDefault(folder => folder.Id == preferredFolderId)
+                ?? _favoriteFolders.FirstOrDefault(folder => folder.Id == previousDestinationFolderId)
+                ?? selectedFolder;
             RenameCombinedFavoriteFolderButton.IsEnabled = selectedFolder is not null;
             CombinedFavoritesGrid.ItemsSource = selectedFolder?.Repositories
                 .OrderByDescending(repository => repository.SavedAt)
                 .ToList() ?? [];
             UpdateStandaloneSearchActionState();
+            UpdateFavoriteActionState();
         }
         catch (Exception exception)
         {
@@ -878,7 +947,7 @@ public partial class MainWindow : Window
             string.IsNullOrWhiteSpace(repository.Description)
                 ? "无项目描述。"
                 : repository.Description;
-        LoadCombinedSummary(repository.FullName, repository.Description);
+        LoadCombinedSummary(repository.FullName, repository.Description, repository.Topics);
         StandaloneDetailStatsText.Text =
             $"Star：{repository.Stars:N0}\n" +
             $"Fork：{repository.Forks:N0}\n" +
@@ -906,8 +975,16 @@ public partial class MainWindow : Window
 
     private async void SaveSearchResultsButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_selectedSearchFolder is null || _standaloneSearchResults.Count == 0)
+        var folder = _selectedSearchFolder;
+        if (folder is null || _standaloneSearchResults.Count == 0)
         {
+            return;
+        }
+
+        if (!_standaloneSearchResults.Any(repository => !folder.ContainsRepository(repository)))
+        {
+            SearchSaveFolderText.Text = $"当前搜索结果已全部收藏在“{folder.Name}”中。";
+            UpdateStandaloneSearchActionState();
             return;
         }
 
@@ -915,10 +992,10 @@ public partial class MainWindow : Window
         {
             var keyword = StandaloneSearchKeywordTextBox.Text.Trim();
             var result = await _favorites.AddFavoritesAsync(
-                _selectedSearchFolder.Id,
+                folder.Id,
                 keyword,
                 _standaloneSearchResults);
-            await RefreshSearchDirectoriesAsync(_selectedSearchFolder.Id);
+            await RefreshSearchDirectoriesAsync(folder.Id);
             StatusText.Text =
                 $"已收藏 {result.AddedCount:N0} 条到“{result.FolderName}”，" +
                 $"跳过 {result.DuplicateCount:N0} 条重复记录。";
@@ -940,7 +1017,8 @@ public partial class MainWindow : Window
         object sender,
         RoutedEventArgs e)
     {
-        if (_selectedSearchFolder is null)
+        var folder = _selectedSearchFolder;
+        if (folder is null)
         {
             return;
         }
@@ -948,18 +1026,31 @@ public partial class MainWindow : Window
         var selectedRepositories = StandaloneSearchResultsGrid.SelectedItems
             .OfType<RepositoryRecord>()
             .ToList();
+        if (selectedRepositories.Count == 0 &&
+            _selectedStandaloneRepository is { } selectedRepository)
+        {
+            selectedRepositories.Add(selectedRepository);
+        }
         if (selectedRepositories.Count == 0)
         {
+            return;
+        }
+
+        if (!selectedRepositories.Any(repository => !folder.ContainsRepository(repository)))
+        {
+            SearchSaveFolderText.Text =
+                $"所选结果已全部收藏在“{folder.Name}”中。";
+            UpdateStandaloneSearchActionState();
             return;
         }
 
         try
         {
             var result = await _favorites.AddFavoritesAsync(
-                _selectedSearchFolder.Id,
+                folder.Id,
                 StandaloneSearchKeywordTextBox.Text.Trim(),
                 selectedRepositories);
-            await RefreshSearchDirectoriesAsync(_selectedSearchFolder.Id);
+            await RefreshSearchDirectoriesAsync(folder.Id);
             StatusText.Text =
                 $"已收藏 {result.AddedCount:N0} 条到“{result.FolderName}”，" +
                 $"跳过 {result.DuplicateCount:N0} 条重复记录。";
@@ -1038,7 +1129,7 @@ public partial class MainWindow : Window
             string.IsNullOrWhiteSpace(repository.Description)
                 ? "无项目描述。"
                 : repository.Description;
-        LoadCombinedSummary(repository.FullName, repository.Description);
+        LoadCombinedSummary(repository.FullName, repository.Description, repository.Topics);
         StandaloneDetailStatsText.Text =
             $"Star：{repository.Stars:N0}\n" +
             $"Fork：{repository.Forks:N0}\n" +
@@ -1059,11 +1150,15 @@ public partial class MainWindow : Window
         StandaloneDetailNameText.Text = "选择一个仓库查看详情";
         StandaloneDetailDescriptionText.Text = message;
         StandaloneDetailSummaryText.Text = "选择项目后自动读取 README 简介。";
+        StandaloneDetailLlmText.Text = "导入本地 LLM 包后自动生成。";
         StandaloneDetailStatsText.Text = "";
         StandaloneDetailTopicsText.Text = "";
     }
 
-    private async void LoadCombinedSummary(string fullName, string fallbackDescription)
+    private async void LoadCombinedSummary(
+        string fullName,
+        string fallbackDescription,
+        IReadOnlyList<string> topics)
     {
         _combinedSummaryCancellation?.Cancel();
         _combinedSummaryCancellation?.Dispose();
@@ -1080,6 +1175,13 @@ public partial class MainWindow : Window
             if (!cancellationToken.IsCancellationRequested)
             {
                 StandaloneDetailSummaryText.Text = summary;
+                await StreamLlmInsightAsync(
+                    fullName,
+                    fallbackDescription,
+                    topics,
+                    summary,
+                    StandaloneDetailLlmText,
+                    cancellationToken);
             }
         }
         catch (OperationCanceledException)
@@ -1091,19 +1193,50 @@ public partial class MainWindow : Window
     private void UpdateStandaloneSearchActionState()
     {
         var searchViewActive = CombinedContentTabs.SelectedIndex == 0;
+        var folder = _selectedSearchFolder;
+        var selectedRepositories = StandaloneSearchResultsGrid.SelectedItems
+            .OfType<RepositoryRecord>()
+            .ToList();
+        var newResultCount = folder is null
+            ? 0
+            : _standaloneSearchResults.Count(repository => !folder.ContainsRepository(repository));
+        var newSelectedCount = folder is null
+            ? 0
+            : selectedRepositories.Count(repository => !folder.ContainsRepository(repository));
+        var duplicateResultCount = _standaloneSearchResults.Count - newResultCount;
+
         SaveSearchResultsButton.IsEnabled =
+            !_standaloneSearchBusy &&
             searchViewActive &&
-            _selectedSearchFolder is not null &&
-            _standaloneSearchResults.Count > 0;
+            folder is not null &&
+            newResultCount > 0;
         FavoriteSelectedSearchResultsButton.IsEnabled =
+            !_standaloneSearchBusy &&
             searchViewActive &&
-            _selectedSearchFolder is not null &&
-            StandaloneSearchResultsGrid.SelectedItems.OfType<RepositoryRecord>().Any();
+            folder is not null &&
+            newSelectedCount > 0;
+        SaveSearchResultsButton.Content = searchViewActive &&
+                                          folder is not null &&
+                                          newResultCount == 0 &&
+                                          _standaloneSearchResults.Count > 0
+            ? "搜索结果均已收藏"
+            : "收藏全部搜索结果";
+        FavoriteSelectedSearchResultsButton.Content = searchViewActive &&
+                                                      folder is not null &&
+                                                      newSelectedCount == 0 &&
+                                                      selectedRepositories.Count > 0
+            ? "所选结果均已收藏"
+            : "收藏所选结果";
         SearchSaveFolderText.Text = !searchViewActive
             ? "当前正在查看目录内容；切换到“搜索结果”后可批量收藏。"
-            : _selectedSearchFolder is null
+            : folder is null
                 ? "请先选择一个收藏目录。"
-                : $"收藏到：{_selectedSearchFolder.Name}（{_selectedSearchFolder.Repositories.Count:N0} 个仓库）";
+                : newResultCount == 0 && _standaloneSearchResults.Count > 0
+                    ? $"当前搜索结果已全部收藏在“{folder.Name}”中。"
+                    : $"收藏到：{folder.Name}（已有 {folder.Repositories.Count:N0} 个仓库；" +
+                      (duplicateResultCount == 0
+                          ? "本页没有重复记录）"
+                          : $"本页 {duplicateResultCount:N0} 条已收藏）");
     }
 
     private async Task RefreshFavoritesAsync(string? preferredFolderId = null)
@@ -1190,7 +1323,7 @@ public partial class MainWindow : Window
         try
         {
             var folder = await _favorites.CreateFolderAsync(dialog.FolderName);
-            await RefreshFavoritesAsync(folder.Id);
+            await RefreshSearchDirectoriesAsync(folder.Id);
             StatusText.Text = $"已创建收藏目录“{folder.Name}”。";
             if (switchToFavorites)
             {
@@ -1263,7 +1396,7 @@ public partial class MainWindow : Window
                 folder.Id,
                 _currentKeyword,
                 _selectedRepository);
-            await RefreshFavoritesAsync(folder.Id);
+            await RefreshSearchDirectoriesAsync(folder.Id);
             StatusText.Text = result.Message;
             SearchFavoriteHintText.Text = result.Message;
         }
@@ -1277,24 +1410,28 @@ public partial class MainWindow : Window
     {
         var folder = SearchFavoriteFolderComboBox.SelectedItem as FavoriteFolder;
         var repository = _selectedRepository;
-        FavoriteRepositoryButton.IsEnabled = repository is not null && folder is not null;
 
         if (repository is null)
         {
+            FavoriteRepositoryButton.IsEnabled = false;
+            FavoriteRepositoryButton.Content = "收藏到所选目录";
             SearchFavoriteHintText.Text = "先在搜索结果中选择一个仓库。";
             return;
         }
 
         if (folder is null)
         {
+            FavoriteRepositoryButton.IsEnabled = false;
+            FavoriteRepositoryButton.Content = "收藏到所选目录";
             SearchFavoriteHintText.Text = "请选择一个收藏目录。";
             return;
         }
 
-        var alreadyFavorited = folder.Repositories.Any(item =>
-            item.Id == repository.Id ||
-            string.Equals(item.FullName, repository.FullName, StringComparison.OrdinalIgnoreCase));
+        var alreadyFavorited = folder.ContainsRepository(repository);
         FavoriteRepositoryButton.IsEnabled = !alreadyFavorited;
+        FavoriteRepositoryButton.Content = alreadyFavorited
+            ? "已收藏到当前目录"
+            : "收藏到所选目录";
         SearchFavoriteHintText.Text = alreadyFavorited
             ? $"“{repository.FullName}”已经收藏在“{folder.Name}”中，不能重复收藏。"
             : $"将收藏到“{folder.Name}”。";
@@ -1508,6 +1645,7 @@ public partial class MainWindow : Window
         {
             _globalSummaryCancellation?.Cancel();
             GlobalDetailSummaryText.Text = "选择项目后自动读取 README 简介。";
+            GlobalDetailLlmText.Text = "导入本地 LLM 包后自动生成。";
             return;
         }
 
@@ -1515,7 +1653,10 @@ public partial class MainWindow : Window
         GlobalDetailDescriptionText.Text = string.IsNullOrWhiteSpace(_selectedGlobalEntry.Description)
             ? "无项目描述。"
             : _selectedGlobalEntry.Description;
-        LoadGlobalSummary(_selectedGlobalEntry.FullName, _selectedGlobalEntry.Description);
+        LoadGlobalSummary(
+            _selectedGlobalEntry.FullName,
+            _selectedGlobalEntry.Description,
+            []);
         GlobalDetailStatsText.Text = _currentGlobalLeaderboard?.Mode == GlobalLeaderboardMode.Current
             ? $"当前 Star：{_selectedGlobalEntry.CurrentStars:N0}"
             : $"Star 增量：{_selectedGlobalEntry.StarIncrease:+#,##0;-#,##0;0}\n" +
@@ -1527,7 +1668,10 @@ public partial class MainWindow : Window
             $"GitHub：{_selectedGlobalEntry.HtmlUrl}";
     }
 
-    private async void LoadGlobalSummary(string fullName, string fallbackDescription)
+    private async void LoadGlobalSummary(
+        string fullName,
+        string fallbackDescription,
+        IReadOnlyList<string> topics)
     {
         _globalSummaryCancellation?.Cancel();
         _globalSummaryCancellation?.Dispose();
@@ -1544,11 +1688,68 @@ public partial class MainWindow : Window
             if (!cancellationToken.IsCancellationRequested)
             {
                 GlobalDetailSummaryText.Text = summary;
+                await StreamLlmInsightAsync(
+                    fullName,
+                    fallbackDescription,
+                    topics,
+                    summary,
+                    GlobalDetailLlmText,
+                    cancellationToken);
             }
         }
         catch (OperationCanceledException)
         {
             // Selection changed before the README request completed.
+        }
+    }
+
+    private async Task StreamLlmInsightAsync(
+        string fullName,
+        string description,
+        IReadOnlyList<string> topics,
+        string readmeSummary,
+        TextBlock target,
+        CancellationToken cancellationToken)
+    {
+        if (!_localLlm.IsAvailable)
+        {
+            target.Text = "导入本地 LLM 包后启用中文总结和翻译。";
+            return;
+        }
+
+        target.Text = "正在加载本地模型并生成总结与翻译...";
+        var builder = new StringBuilder();
+        try
+        {
+            await foreach (var token in _localLlm.GenerateProjectInsightAsync(
+                               fullName,
+                               description,
+                               topics,
+                               readmeSummary,
+                               cancellationToken))
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                builder.Append(token);
+                target.Text = builder.ToString();
+            }
+
+            if (builder.Length == 0)
+            {
+                target.Text = "本地模型没有生成有效内容。";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // A different repository was selected.
+        }
+        catch (Exception exception)
+        {
+            AppDiagnostics.LogException("本地 LLM 推理", exception);
+            target.Text = $"本地模型运行失败：{AppDiagnostics.GetUserMessage(exception)}";
         }
     }
 
@@ -1711,6 +1912,7 @@ public partial class MainWindow : Window
         GlobalDetailDescriptionText.Text = result.SourceNote;
         _globalSummaryCancellation?.Cancel();
         GlobalDetailSummaryText.Text = "选择项目后自动读取 README 简介。";
+        GlobalDetailLlmText.Text = "导入本地 LLM 包后自动生成。";
         GlobalDetailStatsText.Text = result.Mode == GlobalLeaderboardMode.Current
             ? $"数据源：GitHub Search API\n生成时间：{result.GeneratedAt:yyyy-MM-dd HH:mm:ss}"
             : $"缓存状态：{result.CacheStatus}";
@@ -1741,6 +1943,7 @@ public partial class MainWindow : Window
         GlobalDetailDescriptionText.Text = "统计后选择项目查看详情。";
         _globalSummaryCancellation?.Cancel();
         GlobalDetailSummaryText.Text = "选择项目后自动读取 README 简介。";
+        GlobalDetailLlmText.Text = "导入本地 LLM 包后自动生成。";
         GlobalDetailStatsText.Text = "";
         GlobalDetailSourceText.Text = "";
         OpenGlobalRepositoryButton.IsEnabled = false;

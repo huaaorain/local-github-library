@@ -8,3 +8,5 @@ github-token.txt
 *.user
 *.suo
 *.tmp
+*.ghllm
+*.gguf

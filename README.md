@@ -2,11 +2,15 @@
 
 Local Github Library 是一个面向 Windows 的本地优先 GitHub 项目发现与整理工具。它可以按主题搜索仓库、查看当前 Star 排行、根据本地历史快照计算增长、整理全站 Star 总榜，并通过收藏目录和本地 TXT 报告建立自己的开源项目资料库。
 
-> 当前版本：`0.1.0`
+> 当前版本：`0.2.0`
 
 ### [⬇️ 下载最新版本](https://github.com/huaaorain/local-github-library/releases/latest)
 
-Windows x64 自包含版本，无需单独安装 .NET 运行时。
+Windows x64 自包含版本，无需单独安装 .NET 运行时。下载发布包后请完整解压，不要只移动其中的 EXE 文件。
+
+0.2.0 推荐下载 `LocalGithubLibrary-0.2.0-win-x64.zip`；
+需要包含 Qwen 模型的离线完整包时，请下载
+`LocalGithubLibrary-0.2.0-full-win-x64.zip`。
 
 ## 为什么使用 Local Github Library
 
@@ -47,6 +51,8 @@ Local Github Library 把这些操作集中到一个不需要数据库的桌面�
 - 在“搜索结果”和“目录内容”之间切换
 - 收藏单条、多条或全部搜索结果
 - 自动跳过同一目录中的重复仓库
+- 当前仓库已存在时禁用单条和批量收藏按钮
+- “查找项目”与“我的收藏”共用同一份目录数据
 - 在目录视图中查看收藏仓库详情
 - 双击打开 GitHub
 - 从目录中移除误收藏项目
@@ -55,9 +61,15 @@ Local Github Library 把这些操作集中到一个不需要数据库的桌面�
 
 - 从 GitHub README 自动提取项目概述
 - 过滤徽章、图片、代码块、目录、贡献说明和导航链接
+- 识别并跳过多语言切换栏、纯分隔符导航和 README 顶部警告块
 - README 不可用时回退到 GitHub Description
 - 使用请求取消和内存缓存，快速切换仓库时不会显示过期内容
-- 不依赖 OpenAI Key，不产生额外调用费用
+- 可选导入 `.ghllm` 本地模型包
+- 使用 Qwen2.5 1.5B CPU 推理时同时生成中文翻译和中文总结
+- 模型推理在后台执行并流式显示
+- 系统指令会阻止模型复述提示词和输出格式说明
+- 未安装模型包时继续使用 README 摘录，无需联网推理服务
+- 模型包与提示词分开管理，可单独导入、编辑和导出提示词
 
 ### 本地报告库
 
@@ -91,11 +103,26 @@ yyyyMMddHHmmss.txt
 - 搜索、README 简介和当前总榜需要联网
 - 收藏浏览和已下载的总榜缓存可以离线使用
 
-发布版为自包含单文件程序，目标电脑不需要单独安装 .NET 运行时。
+发布版的目标电脑不需要单独安装 .NET 运行时。主程序是单文件 EXE；本地 LLM 使用独立的 CPU 原生运行库目录。
 
 ## 下载与运行
 
-从 GitHub Releases 下载 `GitHubTopicReports.exe`，放到有写入权限的普通目录后运行。
+从 GitHub Releases 下载 Windows x64 发布包并完整解压，放到有写入权限的普通目录后运行 `GitHubTopicReports.exe`。
+
+发布目录至少应包含：
+
+```text
+GitHubTopicReports.exe
+runtimes/
+  win-x64/
+    native/
+      avx/
+      avx2/
+      avx512/
+      noavx/
+```
+
+主程序可以单独用于搜索、排行和收藏；如果使用本地 LLM，缺少 `runtimes` 目录会提示原生运行库缺失。请不要只复制 EXE 文件。
 
 不要把程序放在需要管理员权限的 `Program Files` 目录中，因为程序需要在 EXE 旁创建：
 
@@ -118,6 +145,69 @@ $env:GITHUB_TOKEN = "your_token"
 ```
 
 请勿把 `github-token.txt` 上传到 GitHub 或发送给其他人。
+
+## 本地 LLM 扩展包
+
+主窗口右上角的“导入 LLM”会打开 LLM 设置窗口。在该窗口中可以分别管理模型包和提示词。
+
+`.ghllm` 是 ZIP 容器，只包含：
+
+```text
+manifest.json
+models/
+  qwen2.5-1.5b-instruct-q4_k_m.gguf
+licenses/
+  Qwen-LICENSE.txt
+```
+
+它不包含可执行文件，也不包含提示词。推理运行时随主程序一起发布，位于发布包的 `runtimes\win-x64\native` 目录。
+
+推荐模型：
+
+```text
+Qwen2.5-1.5B-Instruct
+Q4_K_M
+```
+
+- 模型大小约 1.12 GB
+- 推荐 6–8 GB 可用内存
+- 实测首次模型加载约 2–10 秒
+- 实测总结与翻译生成约 8–10 秒
+- 支持流式显示和中途取消
+
+导入时会验证 `.ghllm` 格式、路径安全、解压体积、模型 SHA-256 和最低程序版本。模型安装到：
+
+```text
+GitHubReports/LLM/Packages/
+```
+
+详细打包说明见 [docs/LLM_PACKAGE.md](docs/LLM_PACKAGE.md)。
+
+### 提示词管理
+
+提示词保存在模型包之外的独立文件中：
+
+```text
+GitHubReports/LLM/prompt.txt
+```
+
+在 LLM 设置窗口中可以：
+
+- 导入 TXT 提示词；
+- 在只读状态下阅读当前提示词；
+- 点击右上角“修改提示词”，编辑后点击“保存”；
+- 将当前提示词导出为 EXE 同级目录下的 `LLM提示词-时间.txt`。
+
+提示词支持以下占位符：
+
+```text
+{{FullName}}
+{{Description}}
+{{Topics}}
+{{ReadmeSummary}}
+```
+
+其中 `{{FullName}}` 必须保留。保存或导入新提示词后，模型会在下一次生成时重新加载，并使用包含提示词内容的独立缓存键，避免旧提示词结果混入新结果。
 
 ## 本地数据
 
@@ -167,7 +257,7 @@ GitHub 没有提供“某主题过去 7 天新增 Star”的官方聚合接口�
 
 ### 功能简介
 
-功能简介是 README 的结构化摘录，不是生成式 AI 的完整翻译或重写。README 为英文时，简介通常仍为英文。
+功能简介最初是 README 的结构化摘录。导入本地 LLM 包后，详情面板会额外流式生成中文总结和中文翻译；如果未安装模型，则继续显示 README 摘录。
 
 ## 开发
 
@@ -193,16 +283,22 @@ dotnet build .\GitHubTopicReports.csproj -c Release
 dotnet run --project .\GitHubTopicReports.csproj
 ```
 
-### 发布 Windows x64 单文件
+### 发布 Windows x64 版本
 
 ```powershell
 .\publish.ps1
 ```
 
+发布脚本会生成单文件主程序，并把 LLamaSharp 的 CPU 原生运行库复制到 `dist\runtimes\win-x64\native`。分发时必须包含这个目录。
+
 输出目录：
 
 ```text
 dist/
+├─ GitHubTopicReports.exe
+└─ runtimes/
+   └─ win-x64/
+      └─ native/
 ```
 
 发布特性：
@@ -211,6 +307,7 @@ dist/
 - 单文件 EXE
 - 压缩内嵌程序集
 - 内嵌 WPF 原生依赖
+- 同目录部署 LLamaSharp CPU 原生运行库
 
 ## 项目结构
 
@@ -220,6 +317,7 @@ dist/
 │  ├─ ConfigurationPackageResult.cs
 │  ├─ FavoriteModels.cs
 │  ├─ GlobalLeaderboardModels.cs
+│  ├─ LlmPackageModels.cs
 │  └─ RepositoryRecord.cs
 ├─ Services/
 │  ├─ AppDiagnostics.cs
@@ -227,13 +325,21 @@ dist/
 │  ├─ FavoritesService.cs
 │  ├─ GitHubSearchService.cs
 │  ├─ GlobalLeaderboardService.cs
+│  ├─ LlmPackageService.cs
+│  ├─ LlmPromptService.cs
+│  ├─ LlmSummaryCacheService.cs
+│  ├─ LocalLlmService.cs
 │  └─ ReportLibraryService.cs
+├─ docs/
+├─ tools/
 ├─ App.xaml
 ├─ App.xaml.cs
 ├─ MainWindow.xaml
 ├─ MainWindow.xaml.cs
 ├─ FolderNameDialog.xaml
 ├─ FolderNameDialog.xaml.cs
+├─ LlmSettingsDialog.xaml
+├─ LlmSettingsDialog.xaml.cs
 ├─ GitHubTopicReports.csproj
 └─ publish.ps1
 ```
@@ -252,7 +358,7 @@ dist/
 - 全站增量榜受 OpenGithubs 日榜覆盖范围影响。
 - GitHub Search API 的结果数量上限为 1000 条。
 - 匿名 API 的频率限制较低。
-- 当前版本未嵌入本地大语言模型，功能简介为 README 摘录。
+- 本地大语言模型需要单独导入 `.ghllm` 包。
 - 当前只提供 Windows x64 构建。
 - 未签名的 EXE 可能触发 Windows SmartScreen 提示。
 
@@ -268,7 +374,7 @@ dist/
 
 ## 版本
 
-当前首发版本为 `0.1.0`。详细变更见 [CHANGELOG.md](CHANGELOG.md)。
+当前版本为 `0.2.0`。详细变更见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 致谢
 
