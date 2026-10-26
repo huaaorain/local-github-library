@@ -4,6 +4,10 @@ Local Github Library 是一个面向 Windows 的本地优先 GitHub 项目发现
 
 > 当前版本：`0.1.0`
 
+### [⬇️ 下载最新版本](https://github.com/huaaorain/local-github-library/releases/latest)
+
+Windows x64 自包含版本，无需单独安装 .NET 运行时。
+
 ## 为什么使用 Local Github Library
 
 GitHub 自带搜索适合查找单个仓库，但不容易同时回答下面这些问题：
