@@ -1,0 +1,10 @@
+bin/
+obj/
+dist/
+GitHubReports/
+github-token.txt
+.vs/
+.idea/
+*.user
+*.suo
+*.tmp

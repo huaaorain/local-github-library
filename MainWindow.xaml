@@ -1,0 +1,1087 @@
+<Window x:Class="GitHubTopicReports.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Local Github Library"
+        Height="800"
+        Width="1240"
+        MinHeight="680"
+        MinWidth="1040"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI Variable Text"
+        FontSize="14"
+        Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+        Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="24,20,24,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="Local Github Library"
+                           FontFamily="Segoe UI Variable Display"
+                           FontSize="26"
+                           FontWeight="SemiBold" />
+                <TextBlock Margin="0,4,0,0"
+                           Text="查询主题、保存完整报告，并把值得继续关注的仓库整理到自己的收藏目录。"
+                           Style="{StaticResource QuietTextStyle}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <StackPanel HorizontalAlignment="Right"
+                            Orientation="Horizontal">
+                    <Button x:Name="ImportConfigurationButton"
+                            Padding="14,8"
+                            Content="导入配置"
+                            Click="ImportConfigurationButton_Click" />
+                    <Button x:Name="ExportConfigurationButton"
+                            Margin="8,0,0,0"
+                            Padding="14,8"
+                            Content="导出配置"
+                            Click="ExportConfigurationButton_Click" />
+                    <Button x:Name="OpenLibraryButton"
+                            Margin="8,0,0,0"
+                            Content="打开本地文档库"
+                            Style="{StaticResource ToolbarButtonStyle}"
+                            Click="OpenLibraryButton_Click" />
+                </StackPanel>
+                <TextBlock x:Name="VersionText"
+                           Margin="0,5,0,0"
+                           HorizontalAlignment="Right"
+                           Style="{StaticResource QuietTextStyle}" />
+            </StackPanel>
+        </Grid>
+
+        <TabControl x:Name="WorkspaceTabs"
+                    Grid.Row="1"
+                    Margin="24,0,24,12"
+                    SelectionChanged="WorkspaceTabs_SelectionChanged">
+            <TabItem x:Name="CombinedFavoritesTab" Header="我的收藏">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            Margin="0,0,0,12"
+                            Padding="14"
+                            CornerRadius="6"
+                            Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock VerticalAlignment="Center"
+                                       Text="搜索关键词"
+                                       FontWeight="SemiBold" />
+                            <TextBox x:Name="StandaloneSearchKeywordTextBox"
+                                     Grid.Column="1"
+                                     MinHeight="38"
+                                     Margin="10,0,18,0"
+                                     Padding="10,7"
+                                     VerticalContentAlignment="Center"
+                                     FontSize="15"
+                                     PreviewKeyDown="StandaloneSearchKeywordTextBox_PreviewKeyDown" />
+                            <TextBlock Grid.Column="2"
+                                       VerticalAlignment="Center"
+                                       Text="数量"
+                                       FontWeight="SemiBold" />
+                            <ComboBox x:Name="StandaloneSearchCountComboBox"
+                                      Grid.Column="3"
+                                      Height="34"
+                                      Margin="10,0,18,0"
+                                      VerticalAlignment="Center"
+                                      VerticalContentAlignment="Center"
+                                      Padding="8,0"
+                                      IsEditable="True"
+                                      ToolTip="可选择 10、20、50、100，也可以直接输入 1-1000" />
+                            <Button x:Name="StandaloneSearchButton"
+                                    Grid.Column="4"
+                                    Padding="16,7"
+                                    Content="搜索 GitHub"
+                                    Click="StandaloneSearchButton_Click" />
+                            <Button x:Name="StandaloneSearchCancelButton"
+                                    Grid.Column="5"
+                                    Margin="8,0,0,0"
+                                    Padding="14,7"
+                                    Content="取消"
+                                    IsEnabled="False"
+                                    Click="StandaloneSearchCancelButton_Click" />
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="240" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="320" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0"
+                                BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid Margin="14,13,14,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="收藏目录"
+                                               Style="{StaticResource SectionTitleStyle}" />
+                                    <TextBlock x:Name="SearchDirectoryCountText"
+                                               Grid.Column="1"
+                                               VerticalAlignment="Center"
+                                               Style="{StaticResource QuietTextStyle}"
+                                               Text="0 个" />
+                                </Grid>
+                                <StackPanel Grid.Row="1"
+                                            Margin="12,0,12,8"
+                                            Orientation="Horizontal">
+                                    <Button x:Name="CreateSearchDirectoryButton"
+                                            Padding="10,6"
+                                            Content="新建目录"
+                                            Click="CreateSearchDirectoryButton_Click" />
+                                    <Button x:Name="RenameCombinedFavoriteFolderButton"
+                                            Margin="8,0,0,0"
+                                            Padding="10,6"
+                                            Content="重命名"
+                                            IsEnabled="False"
+                                            Click="RenameCombinedFavoriteFolderButton_Click" />
+                                </StackPanel>
+                                <ListBox x:Name="SearchDirectoryList"
+                                         Grid.Row="2"
+                                         Margin="6,0"
+                                         BorderThickness="0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         SelectionChanged="SearchDirectoryList_SelectionChanged">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="6,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Grid.Column="1"
+                                                           Margin="8,0,0,0"
+                                                           Text="{Binding CountDisplay}"
+                                                           Style="{StaticResource QuietTextStyle}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <Button x:Name="OpenSearchDirectoryButton"
+                                        Grid.Row="3"
+                                        Margin="12"
+                                        Padding="10,7"
+                                        Content="打开所选目录"
+                                        IsEnabled="False"
+                                        Visibility="Collapsed"
+                                        Click="OpenSearchDirectoryButton_Click" />
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Margin="0,0,0,8">
+                                <TextBlock x:Name="StandaloneSearchTitleText"
+                                           Text="搜索 GitHub 项目"
+                                           Style="{StaticResource SectionTitleStyle}" />
+                                <TextBlock x:Name="StandaloneSearchSummaryText"
+                                           Margin="0,3,0,0"
+                                           Text="搜索 GitHub 后，可选择一条或多条结果收藏到左侧目录。"
+                                           Style="{StaticResource QuietTextStyle}" />
+                            </StackPanel>
+                            <TabControl x:Name="CombinedContentTabs"
+                                        Grid.Row="1"
+                                        SelectionChanged="CombinedContentTabs_SelectionChanged">
+                                <TabItem Header="搜索结果">
+                            <DataGrid x:Name="StandaloneSearchResultsGrid"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      CanUserReorderColumns="False"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="Horizontal"
+                                      SelectionMode="Extended"
+                                      SelectionChanged="StandaloneSearchResultsGrid_SelectionChanged"
+                                      MouseDoubleClick="StandaloneSearchResultsGrid_MouseDoubleClick">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="#" Binding="{Binding Rank}" Width="42" />
+                                    <DataGridTextColumn Header="仓库" Binding="{Binding FullName}" Width="*" />
+                                    <DataGridTextColumn Header="Star" Binding="{Binding StarsDisplay}" Width="90" />
+                                    <DataGridTextColumn Header="语言" Binding="{Binding Language}" Width="95" />
+                                    <DataGridTextColumn Header="更新" Binding="{Binding UpdatedDisplay}" Width="95" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                                </TabItem>
+                                <TabItem Header="目录内容">
+                                    <DataGrid x:Name="CombinedFavoritesGrid"
+                                              AutoGenerateColumns="False"
+                                              IsReadOnly="True"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              CanUserReorderColumns="False"
+                                              HeadersVisibility="Column"
+                                              GridLinesVisibility="Horizontal"
+                                              SelectionMode="Single"
+                                              SelectionChanged="CombinedFavoritesGrid_SelectionChanged"
+                                              MouseDoubleClick="CombinedFavoritesGrid_MouseDoubleClick">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="仓库"
+                                                                Binding="{Binding FullName}"
+                                                                Width="*" />
+                                            <DataGridTextColumn Header="Star"
+                                                                Binding="{Binding StarsDisplay}"
+                                                                Width="90" />
+                                            <DataGridTextColumn Header="语言"
+                                                                Binding="{Binding Language}"
+                                                                Width="95" />
+                                            <DataGridTextColumn Header="收藏时间"
+                                                                Binding="{Binding SavedAtDisplay}"
+                                                                Width="125" />
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </TabItem>
+                            </TabControl>
+                        </Grid>
+
+                        <Border Grid.Column="4"
+                                BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Margin="14,13,14,10"
+                                           Text="仓库详解"
+                                           Style="{StaticResource SectionTitleStyle}" />
+                                <ScrollViewer Grid.Row="1"
+                                              Margin="14,0,14,8"
+                                              VerticalScrollBarVisibility="Auto">
+                                    <StackPanel>
+                                        <TextBlock x:Name="StandaloneDetailNameText"
+                                                   Text="选择一个仓库查看详情"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontSize="19"
+                                                   FontWeight="SemiBold"
+                                                   TextWrapping="Wrap" />
+                                        <TextBlock x:Name="StandaloneDetailDescriptionText"
+                                                   Margin="0,8,0,0"
+                                                   Text="搜索结果会显示在这里。"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="21" />
+                                        <TextBlock Margin="0,14,0,0"
+                                                   Text="功能简介"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Name="StandaloneDetailSummaryText"
+                                                   Margin="0,4,0,0"
+                                                   Text="选择项目后自动读取 README 简介。"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="21" />
+                                        <TextBlock x:Name="StandaloneDetailStatsText"
+                                                   Margin="0,14,0,0"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="22" />
+                                        <TextBlock x:Name="StandaloneDetailTopicsText"
+                                                   Margin="0,12,0,0"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="21" />
+                                    </StackPanel>
+                                </ScrollViewer>
+                                <StackPanel Grid.Row="2" Margin="14,0,14,14">
+                                    <TextBlock Margin="0,0,0,6"
+                                               Text="收藏到目录"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock x:Name="SearchSaveFolderText"
+                                               Margin="0,0,0,8"
+                                               Text="请先选择一个搜索目录。"
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource QuietTextStyle}" />
+                                    <Button x:Name="FavoriteSelectedSearchResultsButton"
+                                            Padding="10,7"
+                                            Content="收藏所选结果"
+                                            IsEnabled="False"
+                                            Click="FavoriteSelectedSearchResultsButton_Click" />
+                                    <Button x:Name="SaveSearchResultsButton"
+                                            Margin="0,8,0,0"
+                                            Padding="10,7"
+                                            Content="收藏全部搜索结果"
+                                            IsEnabled="False"
+                                            Click="SaveSearchResultsButton_Click" />
+                                    <Button x:Name="OpenStandaloneRepositoryButton"
+                                            Margin="0,8,0,0"
+                                            Padding="10,7"
+                                            Content="在 GitHub 中打开"
+                                            IsEnabled="False"
+                                            Click="OpenStandaloneRepositoryButton_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="查找项目">
+                <Grid Margin="12,12,12,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            Margin="0,0,0,12"
+                            Padding="14"
+                            CornerRadius="6"
+                            Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Margin="0,0,12,0"
+                                       VerticalAlignment="Center"
+                                       Text="搜索主题"
+                                       FontWeight="SemiBold" />
+                            <TextBox x:Name="KeywordTextBox"
+                                     Grid.Column="1"
+                                     MinHeight="38"
+                                     Padding="10,7"
+                                     VerticalContentAlignment="Center"
+                                     FontSize="15"
+                                     ToolTip="例如：machine learning、game engine、database"
+                                     PreviewKeyDown="KeywordTextBox_PreviewKeyDown" />
+                            <Button x:Name="SearchButton"
+                                    Grid.Column="2"
+                                    Margin="12,0,0,0"
+                                    Content="开始查找"
+                                    IsDefault="True"
+                                    Style="{StaticResource ToolbarButtonStyle}"
+                                    Click="SearchButton_Click" />
+                            <Button x:Name="CancelButton"
+                                    Grid.Column="3"
+                                    Margin="8,0,0,0"
+                                    Content="取消"
+                                    IsEnabled="False"
+                                    Style="{StaticResource ToolbarButtonStyle}"
+                                    Click="CancelButton_Click" />
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="240" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="310" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0"
+                                BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid Margin="14,13,14,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="查询记录" Style="{StaticResource SectionTitleStyle}" />
+                                    <TextBlock x:Name="HistoryCountText"
+                                               Grid.Column="1"
+                                               VerticalAlignment="Center"
+                                               Style="{StaticResource QuietTextStyle}"
+                                               Text="0 份" />
+                                </Grid>
+                                <ListBox x:Name="HistoryList"
+                                         Grid.Row="1"
+                                         Margin="6,0"
+                                         BorderThickness="0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         SelectionChanged="HistoryList_SelectionChanged"
+                                         MouseDoubleClick="HistoryList_MouseDoubleClick">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="6,7">
+                                                <TextBlock Text="{Binding Keyword}"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Margin="0,2,0,0"
+                                                           Text="{Binding DisplayTimestamp}"
+                                                           Style="{StaticResource QuietTextStyle}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <Button x:Name="OpenSelectedReportButton"
+                                        Grid.Row="2"
+                                        Margin="12"
+                                        Padding="10,7"
+                                        Content="打开所选报告"
+                                        IsEnabled="False"
+                                        Click="OpenSelectedReportButton_Click" />
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock x:Name="CurrentKeywordText"
+                                               Text="尚未查询"
+                                               Style="{StaticResource SectionTitleStyle}" />
+                                    <TextBlock x:Name="ResultSummaryText"
+                                               Margin="0,3,0,0"
+                                               Text="输入英文主题通常能获得更完整的 GitHub 搜索结果。"
+                                               Style="{StaticResource QuietTextStyle}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center">
+                                    <StackPanel HorizontalAlignment="Right"
+                                                Orientation="Horizontal">
+                                        <TextBlock VerticalAlignment="Center"
+                                                   Text="显示数量" />
+                                        <ComboBox x:Name="ResultCountComboBox"
+                                                  Width="92"
+                                                  MinHeight="32"
+                                                  Margin="8,0,0,0"
+                                                  IsEditable="True"
+                                                  ToolTip="可选择 10、20、50、100，也可以直接输入 1-1000" />
+                                    </StackPanel>
+                                    <TextBlock x:Name="LastGeneratedText"
+                                               Margin="0,4,0,0"
+                                               HorizontalAlignment="Right"
+                                               Style="{StaticResource QuietTextStyle}" />
+                                </StackPanel>
+                            </Grid>
+                            <TabControl Grid.Row="1">
+                                <TabItem Header="当前 Star 排行">
+                                    <DataGrid x:Name="CurrentGrid"
+                                              AutoGenerateColumns="False"
+                                              IsReadOnly="True"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              CanUserReorderColumns="False"
+                                              HeadersVisibility="Column"
+                                              GridLinesVisibility="Horizontal"
+                                              SelectionMode="Single"
+                                              SelectionChanged="RepositoryGrid_SelectionChanged"
+                                              MouseDoubleClick="RepositoryGrid_MouseDoubleClick">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="#" Binding="{Binding Rank}" Width="42" />
+                                            <DataGridTextColumn Header="仓库" Binding="{Binding FullName}" Width="*" />
+                                            <DataGridTextColumn Header="Star" Binding="{Binding StarsDisplay}" Width="92" />
+                                            <DataGridTextColumn Header="语言" Binding="{Binding Language}" Width="95" />
+                                            <DataGridTextColumn Header="更新" Binding="{Binding UpdatedDisplay}" Width="95" />
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </TabItem>
+                                <TabItem Header="本地周增长排行">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+                                        <Border Padding="10"
+                                                BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                                                BorderThickness="1,1,1,0">
+                                            <TextBlock x:Name="GrowthNoticeText"
+                                                       TextWrapping="Wrap"
+                                                       Style="{StaticResource QuietTextStyle}"
+                                                       Text="周增长使用同一关键词至少 7 天前的本机报告作为基线；首次查询需要先积累历史。" />
+                                        </Border>
+                                        <DataGrid x:Name="GrowthGrid"
+                                                  Grid.Row="1"
+                                                  AutoGenerateColumns="False"
+                                                  IsReadOnly="True"
+                                                  CanUserAddRows="False"
+                                                  CanUserDeleteRows="False"
+                                                  CanUserReorderColumns="False"
+                                                  HeadersVisibility="Column"
+                                                  GridLinesVisibility="Horizontal"
+                                                  SelectionMode="Single"
+                                                  SelectionChanged="RepositoryGrid_SelectionChanged"
+                                                  MouseDoubleClick="RepositoryGrid_MouseDoubleClick">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="#" Binding="{Binding Rank}" Width="42" />
+                                                <DataGridTextColumn Header="仓库" Binding="{Binding FullName}" Width="*" />
+                                                <DataGridTextColumn Header="新增" Binding="{Binding GrowthDisplay}" Width="82" />
+                                                <DataGridTextColumn Header="当前 Star" Binding="{Binding StarsDisplay}" Width="98" />
+                                                <DataGridTextColumn Header="语言" Binding="{Binding Language}" Width="90" />
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Grid>
+                                </TabItem>
+                            </TabControl>
+                        </Grid>
+
+                        <Border Grid.Column="4"
+                                BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Margin="14,13,14,10"
+                                           Text="仓库详解"
+                                           Style="{StaticResource SectionTitleStyle}" />
+                                <ScrollViewer Grid.Row="1"
+                                              Margin="14,0,14,8"
+                                              VerticalScrollBarVisibility="Auto">
+                                    <StackPanel>
+                                        <TextBlock x:Name="DetailNameText"
+                                                   Text="选择一个仓库查看详情"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontSize="19"
+                                                   FontWeight="SemiBold"
+                                                   TextWrapping="Wrap" />
+                                        <TextBlock x:Name="DetailDescriptionText"
+                                                   Margin="0,8,0,0"
+                                                   Text="查询结果会显示在这里。"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="21" />
+                                        <TextBlock Margin="0,14,0,0"
+                                                   Text="功能简介"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Name="DetailSummaryText"
+                                                   Margin="0,4,0,0"
+                                                   Text="选择项目后自动读取 README 简介。"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="21" />
+                                        <TextBlock x:Name="DetailStatsText"
+                                                   Margin="0,14,0,0"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="22" />
+                                        <TextBlock x:Name="DetailTopicsText"
+                                                   Margin="0,12,0,0"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="21" />
+                                        <TextBlock x:Name="DetailDatesText"
+                                                   Margin="0,12,0,0"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="21"
+                                                   Style="{StaticResource QuietTextStyle}" />
+                                    </StackPanel>
+                                </ScrollViewer>
+                                <StackPanel Grid.Row="2" Margin="14,0,14,14">
+                                    <TextBlock Margin="0,0,0,6"
+                                               Text="收藏到目录"
+                                               FontWeight="SemiBold" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox x:Name="SearchFavoriteFolderComboBox"
+                                                  MinHeight="34"
+                                                  DisplayMemberPath="Name"
+                                                  SelectionChanged="SearchFavoriteFolderComboBox_SelectionChanged" />
+                                        <Button Grid.Column="1"
+                                                Margin="8,0,0,0"
+                                                Padding="10,6"
+                                                Content="新建目录"
+                                                Click="CreateFolderFromSearch_Click" />
+                                    </Grid>
+                                    <Button x:Name="FavoriteRepositoryButton"
+                                            Margin="0,8,0,0"
+                                            Padding="10,7"
+                                            Content="收藏到所选目录"
+                                            IsEnabled="False"
+                                            Click="FavoriteRepositoryButton_Click" />
+                                    <TextBlock x:Name="SearchFavoriteHintText"
+                                               Margin="0,6,0,8"
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource QuietTextStyle}"
+                                               Text="先在搜索结果中选择一个仓库。" />
+                                    <Button x:Name="OpenRepositoryButton"
+                                            Padding="10,7"
+                                            Content="在 GitHub 中打开"
+                                            IsEnabled="False"
+                                            Click="OpenRepositoryButton_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="总榜">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            Margin="0,0,0,12"
+                            Padding="14"
+                            CornerRadius="6"
+                            Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="145" />
+                                <ColumnDefinition x:Name="GlobalPeriodLabelColumn" Width="Auto" />
+                                <ColumnDefinition x:Name="GlobalPeriodComboColumn" Width="200" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       VerticalAlignment="Center"
+                                       Text="榜单类型"
+                                       FontWeight="SemiBold" />
+                            <ComboBox x:Name="GlobalModeComboBox"
+                                      Grid.Column="1"
+                                      Height="34"
+                                      Margin="10,0,18,0"
+                                      VerticalAlignment="Center"
+                                      VerticalContentAlignment="Center"
+                                      Padding="8,0"
+                                      DisplayMemberPath="Name"
+                                      SelectionChanged="GlobalModeComboBox_SelectionChanged" />
+                            <TextBlock x:Name="GlobalPeriodLabelText"
+                                       Grid.Column="2"
+                                       VerticalAlignment="Center"
+                                       Text="统计周期"
+                                       FontWeight="SemiBold" />
+                            <ComboBox x:Name="GlobalPeriodComboBox"
+                                      Grid.Column="3"
+                                      Height="34"
+                                      Margin="10,0,18,0"
+                                      VerticalAlignment="Center"
+                                      VerticalContentAlignment="Center"
+                                      Padding="8,0"
+                                      DisplayMemberPath="Name"
+                                      SelectionChanged="GlobalRankingInput_Changed" />
+                            <TextBlock Grid.Column="4"
+                                       VerticalAlignment="Center"
+                                       Text="显示数量"
+                                       FontWeight="SemiBold" />
+                            <ComboBox x:Name="GlobalCountComboBox"
+                                      Grid.Column="5"
+                                      Height="34"
+                                      Margin="10,0,18,0"
+                                      VerticalAlignment="Center"
+                                      VerticalContentAlignment="Center"
+                                      Padding="8,0"
+                                      IsEditable="True"
+                                      SelectionChanged="GlobalRankingInput_Changed"
+                                      LostKeyboardFocus="GlobalCountComboBox_LostKeyboardFocus"
+                                      PreviewKeyDown="GlobalCountComboBox_PreviewKeyDown"
+                                      ToolTip="可选择 10、20、50、100，也可以直接输入 1-1000" />
+                            <Button x:Name="CollectGlobalButton"
+                                    Grid.Column="6"
+                                    VerticalAlignment="Center"
+                                    Padding="16,7"
+                                    Content="统计总榜"
+                                    Click="CollectGlobalButton_Click" />
+                            <Button x:Name="SaveGlobalButton"
+                                    Grid.Column="7"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Padding="16,7"
+                                    Content="保存此排行"
+                                    IsEnabled="False"
+                                    Click="SaveGlobalButton_Click" />
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="240" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="320" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0"
+                                BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid Margin="14,13,14,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="总榜记录"
+                                               Style="{StaticResource SectionTitleStyle}" />
+                                    <TextBlock x:Name="GlobalHistoryCountText"
+                                               Grid.Column="1"
+                                               VerticalAlignment="Center"
+                                               Style="{StaticResource QuietTextStyle}"
+                                               Text="0 份" />
+                                </Grid>
+                                <ListBox x:Name="GlobalHistoryList"
+                                         Grid.Row="1"
+                                         Margin="6,0"
+                                         BorderThickness="0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         SelectionChanged="GlobalHistoryList_SelectionChanged"
+                                         MouseDoubleClick="GlobalHistoryList_MouseDoubleClick">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="6,7">
+                                                <TextBlock Text="{Binding Keyword}"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Margin="0,2,0,0"
+                                                           Text="{Binding DisplayTimestamp}"
+                                                           Style="{StaticResource QuietTextStyle}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <Button x:Name="OpenGlobalHistoryButton"
+                                        Grid.Row="2"
+                                        Margin="12"
+                                        Padding="10,7"
+                                        Content="打开所选总榜报告"
+                                        IsEnabled="False"
+                                        Click="OpenGlobalHistoryButton_Click" />
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Margin="0,0,0,8">
+                                <TextBlock x:Name="GlobalLeaderboardTitleText"
+                                           Text="全站 Star 增量总榜"
+                                           Style="{StaticResource SectionTitleStyle}" />
+                                <TextBlock x:Name="GlobalLeaderboardSummaryText"
+                                           Margin="0,3,0,0"
+                                           Text="选择日、周、月、双月、半年或年，再点击“统计总榜”。"
+                                           Style="{StaticResource QuietTextStyle}" />
+                            </StackPanel>
+                            <DataGrid x:Name="GlobalLeaderboardGrid"
+                                      Grid.Row="1"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      CanUserReorderColumns="False"
+                                      CanUserSortColumns="False"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="Horizontal"
+                                      SelectionMode="Single"
+                                      SelectionChanged="GlobalLeaderboardGrid_SelectionChanged"
+                                      MouseDoubleClick="GlobalLeaderboardGrid_MouseDoubleClick">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn x:Name="GlobalRankColumn"
+                                                        Header="#"
+                                                        Binding="{Binding Rank}"
+                                                        Width="42" />
+                                    <DataGridTextColumn x:Name="GlobalRepositoryColumn"
+                                                        Header="仓库"
+                                                        Binding="{Binding FullName}"
+                                                        Width="*" />
+                                    <DataGridTextColumn x:Name="GlobalStarIncreaseColumn"
+                                                        Header="Star 增量"
+                                                        Binding="{Binding IncreaseDisplay}"
+                                                        Width="105" />
+                                    <DataGridTextColumn x:Name="GlobalCurrentStarsColumn"
+                                                        Header="当前 Star"
+                                                        Binding="{Binding CurrentStarsDisplay}"
+                                                        Width="100"
+                                                        Visibility="Collapsed" />
+                                    <DataGridTextColumn x:Name="GlobalAppearanceDaysColumn"
+                                                        Header="上榜天数"
+                                                        Binding="{Binding AppearanceDays}"
+                                                        Width="85" />
+                                    <DataGridTextColumn x:Name="GlobalLastSeenColumn"
+                                                        Header="最近上榜"
+                                                        Binding="{Binding LastSeenDisplay}"
+                                                        Width="105" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+
+                        <Border Grid.Column="4"
+                                BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Margin="14,13,14,10"
+                                           Text="榜单项目详解"
+                                           Style="{StaticResource SectionTitleStyle}" />
+                                <ScrollViewer Grid.Row="1"
+                                              Margin="14,0,14,10"
+                                              VerticalScrollBarVisibility="Auto">
+                                    <StackPanel>
+                                        <TextBlock x:Name="GlobalDetailNameText"
+                                                   Text="选择一个项目查看详情"
+                                                   FontFamily="Segoe UI Variable Display"
+                                                   FontSize="19"
+                                                   FontWeight="SemiBold"
+                                                   TextWrapping="Wrap" />
+                                        <TextBlock x:Name="GlobalDetailDescriptionText"
+                                                   Margin="0,8,0,0"
+                                                   Text="总榜项目详情会显示在这里。"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="21" />
+                                        <TextBlock Margin="0,14,0,0"
+                                                   Text="功能简介"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock x:Name="GlobalDetailSummaryText"
+                                                   Margin="0,4,0,0"
+                                                   Text="选择项目后自动读取 README 简介。"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="21" />
+                                        <TextBlock x:Name="GlobalDetailStatsText"
+                                                   Margin="0,14,0,0"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="22" />
+                                        <TextBlock x:Name="GlobalDetailSourceText"
+                                                   Margin="0,12,0,0"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="21"
+                                                   Style="{StaticResource QuietTextStyle}" />
+                                    </StackPanel>
+                                </ScrollViewer>
+                                <Button x:Name="OpenGlobalRepositoryButton"
+                                        Grid.Row="2"
+                                        Margin="14"
+                                        Padding="10,7"
+                                        Content="在 GitHub 中打开"
+                                        IsEnabled="False"
+                                        Click="OpenGlobalRepositoryButton_Click" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <TabItem x:Name="OriginalFavoritesTab" Header="我的收藏旧版">
+                <Grid Margin="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="280" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0"
+                            BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                            BorderThickness="1"
+                            CornerRadius="6">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Margin="14,13,14,10">
+                                <TextBlock Text="收藏目录" Style="{StaticResource SectionTitleStyle}" />
+                                <TextBlock Margin="0,3,0,0"
+                                           Text="按目录整理你关注的 GitHub 项目。"
+                                           Style="{StaticResource QuietTextStyle}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1"
+                                        Margin="12,0,12,10"
+                                        Orientation="Horizontal">
+                                <Button Padding="10,6"
+                                        Content="新建目录"
+                                        Click="CreateFavoriteFolderButton_Click" />
+                                <Button x:Name="RenameFavoriteFolderButton"
+                                        Margin="8,0,0,0"
+                                        Padding="10,6"
+                                        Content="重命名"
+                                        IsEnabled="False"
+                                        Click="RenameFavoriteFolderButton_Click" />
+                            </StackPanel>
+                            <ListBox x:Name="FavoriteFolderList"
+                                     Grid.Row="2"
+                                     Margin="6,0"
+                                     BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     SelectionChanged="FavoriteFolderList_SelectionChanged">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="6,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="8,0,0,0"
+                                                       Text="{Binding CountDisplay}"
+                                                       Style="{StaticResource QuietTextStyle}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="2"
+                            BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                            BorderThickness="1"
+                            CornerRadius="6">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid Margin="14,13,14,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock x:Name="FavoritesFolderTitleText"
+                                               Text="选择一个收藏目录"
+                                               Style="{StaticResource SectionTitleStyle}" />
+                                    <TextBlock x:Name="FavoritesFolderSummaryText"
+                                               Margin="0,3,0,0"
+                                               Style="{StaticResource QuietTextStyle}" />
+                                </StackPanel>
+                                <TextBlock x:Name="FavoritesCountText"
+                                           Grid.Column="1"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource QuietTextStyle}" />
+                            </Grid>
+                            <DataGrid x:Name="FavoritesGrid"
+                                      Grid.Row="1"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      CanUserReorderColumns="False"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="Horizontal"
+                                      SelectionMode="Single"
+                                      SelectionChanged="FavoritesGrid_SelectionChanged"
+                                      MouseDoubleClick="FavoritesGrid_MouseDoubleClick">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="仓库" Binding="{Binding FullName}" Width="200" />
+                                    <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*" />
+                                    <DataGridTextColumn Header="Star" Binding="{Binding StarsDisplay}" Width="90" />
+                                    <DataGridTextColumn Header="语言" Binding="{Binding Language}" Width="95" />
+                                    <DataGridTextColumn Header="收藏时间" Binding="{Binding SavedAtDisplay}" Width="125" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <Grid Grid.Row="2" Margin="14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="FavoriteSelectionText"
+                                           VerticalAlignment="Center"
+                                           Text="双击仓库可直接打开 GitHub。"
+                                           Style="{StaticResource QuietTextStyle}" />
+                                <Button x:Name="RemoveFavoriteButton"
+                                        Grid.Column="1"
+                                        Margin="12,0,0,0"
+                                        Padding="10,7"
+                                        Content="从目录移除"
+                                        IsEnabled="False"
+                                        Click="RemoveFavoriteButton_Click" />
+                                <Button x:Name="OpenFavoriteRepositoryButton"
+                                        Grid.Column="2"
+                                        Margin="8,0,0,0"
+                                        Padding="10,7"
+                                        Content="在 GitHub 中打开"
+                                        IsEnabled="False"
+                                        Click="OpenFavoriteRepositoryButton_Click" />
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <Border Grid.Row="2"
+                Padding="24,10"
+                Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="StatusText"
+                           VerticalAlignment="Center"
+                           Text="就绪。未配置 GITHUB_TOKEN 时将使用匿名 GitHub API。" />
+                <TextBlock x:Name="ReportPathText"
+                           Grid.Column="1"
+                           MaxWidth="560"
+                           Margin="20,0,0,0"
+                           VerticalAlignment="Center"
+                           Style="{StaticResource QuietTextStyle}"
+                           TextTrimming="CharacterEllipsis" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
