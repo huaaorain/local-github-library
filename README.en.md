@@ -63,11 +63,11 @@ GitHub is good at finding one repository, but it is not designed to answer quest
   </thead>
   <tbody>
     <tr>
-      <td><strong>Topic search</strong></td>
+      <td><strong>Topic&#8239;search</strong></td>
       <td>Search GitHub repositories by keyword, inspect Stars, forks, issues, language, license, topics, and update time, then generate a readable TXT report.</td>
     </tr>
     <tr>
-      <td><strong>Star trends</strong></td>
+      <td><strong>Star&#8239;trends</strong></td>
       <td>Save historical snapshots for a topic and calculate a local Star-growth ranking after at least seven days.</td>
     </tr>
     <tr>
@@ -83,7 +83,7 @@ GitHub is good at finding one repository, but it is not designed to answer quest
       <td>Extract project summaries from README files. An optional local LLM can create Chinese summaries and translations without a hosted inference API.</td>
     </tr>
     <tr>
-      <td><strong>Local data</strong></td>
+      <td><strong>Local&#8239;data</strong></td>
       <td>Bundle reports, query history, favorites, Star snapshots, and ranking caches into a `.ghconfig` package with an automatic backup before import.</td>
     </tr>
   </tbody>

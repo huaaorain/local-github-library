@@ -63,27 +63,27 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
   </thead>
   <tbody>
     <tr>
-      <td><strong>主題搜尋</strong></td>
+      <td><strong>主&#8239;題&#8239;搜&#8239;尋</strong></td>
       <td>依關鍵字搜尋 GitHub 倉庫，查看 Star、Fork、Issues、語言、License、Topics 與更新時間，並產生可閱讀的 TXT 報告。</td>
     </tr>
     <tr>
-      <td><strong>Star 趨勢</strong></td>
+      <td><strong>Star&#8239;趨&#8239;勢</strong></td>
       <td>為同一主題保存歷史快照；間隔至少 7 天後，可在本機計算 Star 成長排行。</td>
     </tr>
     <tr>
-      <td><strong>全站排行</strong></td>
+      <td><strong>全&#8239;站&#8239;排&#8239;行</strong></td>
       <td>查看日、週、月、雙月、半年和一年的 Star 增量榜，也可單獨查看目前 Star 總榜。</td>
     </tr>
     <tr>
-      <td><strong>本機收藏</strong></td>
+      <td><strong>本&#8239;機&#8239;收&#8239;藏</strong></td>
       <td>建立自訂目錄、搜尋、批次收藏並跳過重複倉庫，把專案長期整理成個人資料庫。</td>
     </tr>
     <tr>
-      <td><strong>專案理解</strong></td>
+      <td><strong>專&#8239;案&#8239;理&#8239;解</strong></td>
       <td>從 README 擷取專案概述；可選本機 LLM 產生中文摘要與翻譯，不需要雲端推理服務。</td>
     </tr>
     <tr>
-      <td><strong>資料移轉</strong></td>
+      <td><strong>資&#8239;料&#8239;移&#8239;轉</strong></td>
       <td>將報告、查詢記錄、收藏、Star 快照和榜單快取打包為 `.ghconfig`，匯入前自動備份。</td>
     </tr>
   </tbody>

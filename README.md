@@ -63,27 +63,27 @@ GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问�
   </thead>
   <tbody>
     <tr>
-      <td><strong>主题发现</strong></td>
+      <td><strong>主&#8239;题&#8239;发&#8239;现</strong></td>
       <td>按关键词搜索 GitHub 仓库，查看 Star、Fork、Issues、语言、License、Topics 与更新时间，并生成可阅读的 TXT 报告。</td>
     </tr>
     <tr>
-      <td><strong>Star 趋势</strong></td>
+      <td><strong>Star&#8239;趋&#8239;势</strong></td>
       <td>为同一主题保存历史快照；间隔至少 7 天后，可在本地计算 Star 增长排行。</td>
     </tr>
     <tr>
-      <td><strong>全站榜单</strong></td>
+      <td><strong>全&#8239;站&#8239;榜&#8239;单</strong></td>
       <td>查看日、周、月、双月、半年和年的 Star 增量榜，也可单独查看当前 Star 总榜。</td>
     </tr>
     <tr>
-      <td><strong>本地收藏</strong></td>
+      <td><strong>本&#8239;地&#8239;收&#8239;藏</strong></td>
       <td>创建自定义目录，搜索、批量收藏并跳过重复仓库，把项目长期整理成个人资料库。</td>
     </tr>
     <tr>
-      <td><strong>项目理解</strong></td>
+      <td><strong>项&#8239;目&#8239;理&#8239;解</strong></td>
       <td>从 README 提取项目概述；可选本地 LLM 生成中文摘要与翻译，无需云端推理服务。</td>
     </tr>
     <tr>
-      <td><strong>数据迁移</strong></td>
+      <td><strong>数&#8239;据&#8239;迁&#8239;移</strong></td>
       <td>将报告、查询记录、收藏、Star 快照和榜单缓存打包为 `.ghconfig`，导入前自动备份。</td>
     </tr>
   </tbody>
