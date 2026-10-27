@@ -24,6 +24,56 @@
   "artifact_policy": "release-only",
   "readme": {
     "path": "README.md",
+    "locales": [
+      {
+        "path": "README.md",
+        "label": "简体中文",
+        "catalog_labels": {
+          "latest": "最新版本",
+          "version": "版本",
+          "published": "发布时间",
+          "release_notes": "发布说明",
+          "downloads": "全部版本下载",
+          "open": "打开",
+          "source_zip": "源代码（zip）",
+          "source_tar": "源代码（tar.gz）",
+          "no_assets": "没有已上传的附件。",
+          "no_releases": "暂无已发布版本。"
+        }
+      },
+      {
+        "path": "README.zh-TW.md",
+        "label": "繁體中文",
+        "catalog_labels": {
+          "latest": "最新版本",
+          "version": "版本",
+          "published": "發佈時間",
+          "release_notes": "發佈說明",
+          "downloads": "全部版本下載",
+          "open": "開啟",
+          "source_zip": "原始碼（zip）",
+          "source_tar": "原始碼（tar.gz）",
+          "no_assets": "尚未上傳附件。",
+          "no_releases": "尚無已發佈版本。"
+        }
+      },
+      {
+        "path": "README.en.md",
+        "label": "English",
+        "catalog_labels": {
+          "latest": "Latest",
+          "version": "Version",
+          "published": "Published",
+          "release_notes": "Release notes",
+          "downloads": "All version downloads",
+          "open": "Open",
+          "source_zip": "Source code (zip)",
+          "source_tar": "Source code (tar.gz)",
+          "no_assets": "No uploaded assets.",
+          "no_releases": "No published releases yet."
+        }
+      }
+    ],
     "catalog_start": "<!-- release-catalog:start -->",
     "catalog_end": "<!-- release-catalog:end -->"
   },

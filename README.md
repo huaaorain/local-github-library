@@ -16,6 +16,14 @@
 </p>
 
 <p align="center">
+  <a href="README.en.md">English</a>
+  ·
+  <strong>简体中文</strong>
+  ·
+  <a href="README.zh-TW.md">繁體中文</a>
+</p>
+
+<p align="center">
   <a href="https://github.com/huaaorain/local-github-library/releases/latest"><strong>下载最新版本</strong></a>
   ·
   <a href="#核心能力">核心能力</a>
@@ -42,14 +50,44 @@ GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问�
 
 ## 核心能力
 
-| 模块 | 能做什么 |
-| --- | --- |
-| **主题发现** | 按关键词搜索 GitHub 仓库，查看 Star、Fork、Issues、语言、License、Topics 与更新时间，并生成可阅读的 TXT 报告。 |
-| **Star 趋势** | 为同一主题保存历史快照；间隔至少 7 天后，可在本地计算 Star 增长排行。 |
-| **全站榜单** | 查看日、周、月、双月、半年和年的 Star 增量榜，也可单独查看当前 Star 总榜。 |
-| **本地收藏** | 创建自定义目录，搜索、批量收藏并跳过重复仓库，把项目长期整理成个人资料库。 |
-| **项目理解** | 从 README 提取项目概述；可选本地 LLM 生成中文摘要与翻译，无需云端推理服务。 |
-| **数据迁移** | 将报告、查询记录、收藏、Star 快照和榜单缓存打包为 `.ghconfig`，导入前自动备份。 |
+<table>
+  <colgroup>
+    <col width="160">
+    <col>
+  </colgroup>
+  <thead>
+    <tr>
+      <th>模块</th>
+      <th>能做什么</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>主题发现</strong></td>
+      <td>按关键词搜索 GitHub 仓库，查看 Star、Fork、Issues、语言、License、Topics 与更新时间，并生成可阅读的 TXT 报告。</td>
+    </tr>
+    <tr>
+      <td><strong>Star 趋势</strong></td>
+      <td>为同一主题保存历史快照；间隔至少 7 天后，可在本地计算 Star 增长排行。</td>
+    </tr>
+    <tr>
+      <td><strong>全站榜单</strong></td>
+      <td>查看日、周、月、双月、半年和年的 Star 增量榜，也可单独查看当前 Star 总榜。</td>
+    </tr>
+    <tr>
+      <td><strong>本地收藏</strong></td>
+      <td>创建自定义目录，搜索、批量收藏并跳过重复仓库，把项目长期整理成个人资料库。</td>
+    </tr>
+    <tr>
+      <td><strong>项目理解</strong></td>
+      <td>从 README 提取项目概述；可选本地 LLM 生成中文摘要与翻译，无需云端推理服务。</td>
+    </tr>
+    <tr>
+      <td><strong>数据迁移</strong></td>
+      <td>将报告、查询记录、收藏、Star 快照和榜单缓存打包为 `.ghconfig`，导入前自动备份。</td>
+    </tr>
+  </tbody>
+</table>
 
 ## 功能流程
 
@@ -140,37 +178,37 @@ GitHubReports/
 ## 所有版本
 
 <!-- release-catalog:start -->
-最新版本：[Local GitHub Library 0.2.0](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.0)
+最新版本: [Local GitHub Library 0.2.0](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.0)
 
 | 版本 | 发布时间 | 发布说明 |
 | --- | --- | --- |
-| `v0.2.0` | 2026-10-26 | [Open](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.0) |
-| `v0.1.0` | 2026-10-26 | [Open](https://github.com/huaaorain/local-github-library/releases/tag/v0.1.0) |
+| `v0.2.0` | 2026-10-26 | [打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.0) |
+| `v0.1.0` | 2026-10-26 | [打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.1.0) |
 
 <details>
 <summary><strong>全部版本下载</strong></summary>
 
 ### Local GitHub Library 0.2.0
 
-发布说明：[打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.0)
+发布说明: [打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.0)
 
-- [LocalGithubLibrary-0.2.0-win-x64.zip](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/LocalGithubLibrary-0.2.0-win-x64.zip) — 73.2 MB
-- [LocalGithubLibrary-0.2.0-full-win-x64.zip](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/LocalGithubLibrary-0.2.0-full-win-x64.zip) — 1.1 GB
-- [Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm) — 1.0 GB
 - [GitHubTopicReports.exe](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/GitHubTopicReports.exe) — 70.6 MB
+- [LocalGithubLibrary-0.2.0-full-win-x64.zip](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/LocalGithubLibrary-0.2.0-full-win-x64.zip) — 1.1 GB
 - [LocalGithubLibrary-0.2.0-source.zip](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/LocalGithubLibrary-0.2.0-source.zip) — 75.3 KB
+- [LocalGithubLibrary-0.2.0-win-x64.zip](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/LocalGithubLibrary-0.2.0-win-x64.zip) — 73.2 MB
+- [Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm) — 1.0 GB
 - [RELEASE_NOTES_0.2.0.md](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/RELEASE_NOTES_0.2.0.md) — 3.1 KB
 - [SHA256SUMS.txt](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/SHA256SUMS.txt) — 598 B
-- [Source code (zip)](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.2.0.zip)
-- [Source code (tar.gz)](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.2.0.tar.gz)
+- [源代码（zip）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.2.0.zip)
+- [源代码（tar.gz）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.2.0.tar.gz)
 
 ### Local GitHub Library 0.1.0
 
-发布说明：[打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.1.0)
+发布说明: [打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.1.0)
 
 - [GitHubTopicReports-v0.1.0-win-x64.exe](https://github.com/huaaorain/local-github-library/releases/download/v0.1.0/GitHubTopicReports-v0.1.0-win-x64.exe) — 61.9 MB
-- [Source code (zip)](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.1.0.zip)
-- [Source code (tar.gz)](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.1.0.tar.gz)
+- [源代码（zip）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.1.0.zip)
+- [源代码（tar.gz）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.1.0.tar.gz)
 
 </details>
 <!-- release-catalog:end -->
