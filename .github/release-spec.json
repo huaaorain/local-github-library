@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "project": {
+    "name": "Local GitHub Library",
+    "description": "Local-first Windows desktop workbench for GitHub repository discovery, Star trends, rankings, favorites, and local reports.",
+    "repository": "huaaorain/local-github-library",
+    "homepage": "",
+    "topics": [
+      "github-api",
+      "github-search",
+      "wpf",
+      "dotnet",
+      "windows-desktop",
+      "local-first",
+      "repository-discovery",
+      "star-history"
+    ]
+  },
+  "release": {
+    "tag_prefix": "v",
+    "draft": true,
+    "prerelease": false
+  },
+  "artifact_policy": "release-only",
+  "readme": {
+    "path": "README.md",
+    "catalog_start": "<!-- release-catalog:start -->",
+    "catalog_end": "<!-- release-catalog:end -->"
+  },
+  "screenshots": [
+    {
+      "path": "docs/assets/workflow.svg",
+      "description": "功能流程示意，说明从 GitHub 搜索到本地报告的工作流。"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "release-build/LocalGithubLibrary-0.2.0-win-x64.zip",
+      "role": "standard",
+      "description": "推荐的 Windows x64 标准发布包，包含主程序、提示词与 CPU 原生运行库。",
+      "required": true,
+      "download_name": "LocalGithubLibrary-0.2.0-win-x64.zip"
+    },
+    {
+      "path": "release-build/LocalGithubLibrary-0.2.0-full-win-x64.zip",
+      "role": "offline",
+      "description": "完整离线包，额外包含 Qwen2.5 1.5B 本地模型。",
+      "required": false,
+      "download_name": "LocalGithubLibrary-0.2.0-full-win-x64.zip"
+    },
+    {
+      "path": "release-build/Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm",
+      "role": "extension",
+      "description": "可单独导入的本地 LLM 模型扩展包。",
+      "required": false,
+      "download_name": "Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm"
+    }
+  ]
+}
