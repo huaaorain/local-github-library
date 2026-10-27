@@ -184,15 +184,30 @@ GitHubReports/
 ## 所有版本
 
 <!-- release-catalog:start -->
-最新版本: [Local GitHub Library 0.2.0](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.0)
+最新版本: [Local GitHub Library 0.2.1](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.1)
 
 | 版本 | 发布时间 | 发布说明 |
 | --- | --- | --- |
+| `v0.2.1` | 2026-10-27 | [打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.1) |
 | `v0.2.0` | 2026-10-26 | [打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.0) |
 | `v0.1.0` | 2026-10-26 | [打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.1.0) |
 
 <details>
 <summary><strong>全部版本下载</strong></summary>
+
+### Local GitHub Library 0.2.1
+
+发布说明: [打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.1)
+
+- [FILE_MANIFEST.md](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/FILE_MANIFEST.md) — 1.0 KB
+- [GitHubTopicReports.exe](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/GitHubTopicReports.exe) — 70.6 MB
+- [LocalGithubLibrary-0.2.1-full-win-x64.zip](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/LocalGithubLibrary-0.2.1-full-win-x64.zip) — 1.1 GB
+- [LocalGithubLibrary-0.2.1-win-x64.zip](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/LocalGithubLibrary-0.2.1-win-x64.zip) — 72.8 MB
+- [Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm) — 1.0 GB
+- [release-manifest.json](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/release-manifest.json) — 2.0 KB
+- [SHA256SUMS.txt](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/SHA256SUMS.txt) — 401 B
+- [源代码（zip）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.2.1.zip)
+- [源代码（tar.gz）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.2.1.tar.gz)
 
 ### Local GitHub Library 0.2.0
 
