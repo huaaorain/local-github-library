@@ -643,6 +643,37 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ResetLayoutButton_Click(object sender, RoutedEventArgs e)
+    {
+        SetDefaultPanelWidths(
+            CombinedLeftColumn,
+            CombinedCenterColumn,
+            CombinedRightColumn,
+            320);
+        SetDefaultPanelWidths(
+            FindLeftColumn,
+            FindCenterColumn,
+            FindRightColumn,
+            310);
+        SetDefaultPanelWidths(
+            GlobalLeftColumn,
+            GlobalCenterColumn,
+            GlobalRightColumn,
+            320);
+        StatusText.Text = "已恢复默认面板布局。";
+    }
+
+    private static void SetDefaultPanelWidths(
+        ColumnDefinition left,
+        ColumnDefinition center,
+        ColumnDefinition right,
+        double rightWidth)
+    {
+        left.Width = new GridLength(240);
+        center.Width = new GridLength(1, GridUnitType.Star);
+        right.Width = new GridLength(rightWidth);
+    }
+
     private void CombineFavoriteWorkspace()
     {
         if (_workspaceReady)

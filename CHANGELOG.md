@@ -2,6 +2,20 @@
 
 All notable changes to Local Github Library will be documented in this file.
 
+## [0.2.1] - 2026-10-27
+
+### Added
+
+- Draggable single-line splitter controls for the three main workspaces.
+- Compact rounded reset-layout icon button.
+- Subtle gradient separator between the window title bar and content area.
+- Horizontal separator between the application header and workspace tabs.
+
+### Changed
+
+- Restored visible panel borders with wider spacing around each splitter.
+- Splitter lines are black only while dragging and return to gray on release.
+
 ## [0.2.0] - 2026-10-26
 
 ### Fixed

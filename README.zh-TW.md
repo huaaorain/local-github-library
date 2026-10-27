@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.0-ff7a45?style=flat-square" alt="版本 0.2.0">
+  <img src="https://img.shields.io/badge/version-0.2.1-ff7a45?style=flat-square" alt="版本 0.2.1">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="本機優先">
@@ -97,14 +97,20 @@ _上圖是依據目前原始碼與公開功能說明繪製的流程示意，不�
 
 從 GitHub API 與公開日榜取得資料，在工作台中形成搜尋、趨勢、收藏和摘要，再保存為本機檔案。網路資料用於發現，本機快照與報告負責持續追蹤。
 
+### 主工作區
+
+![Local GitHub Library 主工作區](docs/assets/main-workflow.png)
+
+_截圖使用非敏感示範資料，展示主題查詢、倉庫詳情、本機 AI 摘要和收藏目錄。_
+
 ## 快速開始
 
 ### 1. 下載
 
 | 發佈包 | 大小 | 適用情境 |
 | --- | ---: | --- |
-| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/LocalGithubLibrary-0.2.0-win-x64.zip) | 約 77 MB | 搜尋、排行、收藏與 README 摘要 |
-| [完整離線版](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/LocalGithubLibrary-0.2.0-full-win-x64.zip) | 約 1.21 GB | 額外包含 Qwen2.5 1.5B 本機模型 |
+| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/LocalGithubLibrary-0.2.1-win-x64.zip) | 約 77 MB | 搜尋、排行、收藏與 README 摘要 |
+| [完整離線版](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/LocalGithubLibrary-0.2.1-full-win-x64.zip) | 約 1.17 GB | 額外包含 Qwen2.5 1.5B 本機模型 |
 
 ### 2. 解壓縮並執行
 
@@ -260,6 +266,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 更新記錄
 
+- [0.2.1：可調面板佈局、恢復佈局按鈕與介面細節最佳化](docs/releases/v0.2.1.md)
 - [0.2.0：本機 LLM、提示詞管理與收藏體驗修正](docs/releases/v0.2.0.md)
 - [0.1.0：首個公開版本](docs/releases/v0.1.0.md)
 - 完整歷史見 [CHANGELOG.md](CHANGELOG.md)

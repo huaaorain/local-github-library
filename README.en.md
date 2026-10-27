@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.0-ff7a45?style=flat-square" alt="Version 0.2.0">
+  <img src="https://img.shields.io/badge/version-0.2.1-ff7a45?style=flat-square" alt="Version 0.2.1">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -97,14 +97,20 @@ _This is a workflow diagram based on the current source and public feature docum
 
 GitHub APIs and public daily rankings supply discovery data. The workspace turns that data into search results, growth trends, favorites, and summaries, then stores everything in local files. Network access powers discovery; snapshots and reports provide continuity.
 
+### Main workspace
+
+![Local GitHub Library main workspace](docs/assets/main-workflow.png)
+
+_The screenshot uses non-sensitive demo data and shows topic search, repository details, local AI summary, and favorites._
+
 ## Quick start
 
 ### 1. Download
 
 | Package | Size | Best for |
 | --- | ---: | --- |
-| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/LocalGithubLibrary-0.2.0-win-x64.zip) | About 77 MB | Search, rankings, favorites, and README summaries |
-| [Full offline package](https://github.com/huaaorain/local-github-library/releases/download/v0.2.0/LocalGithubLibrary-0.2.0-full-win-x64.zip) | About 1.21 GB | Adds the Qwen2.5 1.5B local model |
+| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/LocalGithubLibrary-0.2.1-win-x64.zip) | About 77 MB | Search, rankings, favorites, and README summaries |
+| [Full offline package](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/LocalGithubLibrary-0.2.1-full-win-x64.zip) | About 1.17 GB | Adds the Qwen2.5 1.5B local model |
 
 ### 2. Extract and run
 
@@ -260,6 +266,7 @@ Issues and pull requests are welcome. Before submitting:
 
 ## Release history
 
+- [0.2.1: resizable workspace panes, reset-layout control, and UI polish](docs/releases/v0.2.1.md)
 - [0.2.0: local LLM, prompt management, and favorites fixes](docs/releases/v0.2.0.md)
 - [0.1.0: first public release](docs/releases/v0.1.0.md)
 - Full history: [CHANGELOG.md](CHANGELOG.md)

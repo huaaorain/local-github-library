@@ -21,6 +21,19 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <Border Grid.Row="0"
+                Height="9"
+                VerticalAlignment="Top"
+                IsHitTestVisible="False">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#E4E7EB" Offset="0" />
+                    <GradientStop Color="#F4F5F7" Offset="0.55" />
+                    <GradientStop Color="#00FFFFFF" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+
         <Grid Grid.Row="0" Margin="24,20,24,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -69,10 +82,15 @@
                            Text="本地 LLM：未安装" />
             </StackPanel>
         </Grid>
+        <Border Grid.Row="0"
+                Height="1"
+                Margin="24,0,24,0"
+                VerticalAlignment="Bottom"
+                Background="#D7DBE1"
+                IsHitTestVisible="False" />
 
+        <Grid Grid.Row="1" Margin="24,0,24,12">
         <TabControl x:Name="WorkspaceTabs"
-                    Grid.Row="1"
-                    Margin="24,0,24,12"
                     SelectionChanged="WorkspaceTabs_SelectionChanged">
             <TabItem x:Name="CombinedFavoritesTab" Header="我的收藏">
                 <Grid Margin="12">
@@ -136,12 +154,24 @@
 
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="240" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="320" />
+                            <ColumnDefinition x:Name="CombinedLeftColumn"
+                                              Width="240"
+                                              MinWidth="190" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition x:Name="CombinedCenterColumn"
+                                              Width="*"
+                                              MinWidth="360" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition x:Name="CombinedRightColumn"
+                                              Width="320"
+                                              MinWidth="260" />
                         </Grid.ColumnDefinitions>
+                        <GridSplitter Grid.Column="1"
+                                      AutomationProperties.Name="调整左侧收藏目录宽度"
+                                      Style="{StaticResource PanelSplitterStyle}" />
+                        <GridSplitter Grid.Column="3"
+                                      AutomationProperties.Name="调整右侧仓库详情宽度"
+                                      Style="{StaticResource PanelSplitterStyle}" />
 
                         <Border Grid.Column="0"
                                 BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
@@ -232,10 +262,12 @@
                             </StackPanel>
                             <TabControl x:Name="CombinedContentTabs"
                                         Grid.Row="1"
+                                        BorderThickness="1"
                                         SelectionChanged="CombinedContentTabs_SelectionChanged">
                                 <TabItem Header="搜索结果">
                             <DataGrid x:Name="StandaloneSearchResultsGrid"
                                       AutoGenerateColumns="False"
+                                      BorderThickness="1"
                                       IsReadOnly="True"
                                       CanUserAddRows="False"
                                       CanUserDeleteRows="False"
@@ -257,6 +289,7 @@
                                 <TabItem Header="目录内容">
                                     <DataGrid x:Name="CombinedFavoritesGrid"
                                               AutoGenerateColumns="False"
+                                              BorderThickness="1"
                                               IsReadOnly="True"
                                               CanUserAddRows="False"
                                               CanUserDeleteRows="False"
@@ -423,12 +456,24 @@
 
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="240" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="310" />
+                            <ColumnDefinition x:Name="FindLeftColumn"
+                                              Width="240"
+                                              MinWidth="190" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition x:Name="FindCenterColumn"
+                                              Width="*"
+                                              MinWidth="360" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition x:Name="FindRightColumn"
+                                              Width="310"
+                                              MinWidth="280" />
                         </Grid.ColumnDefinitions>
+                        <GridSplitter Grid.Column="1"
+                                      AutomationProperties.Name="调整左侧查询记录宽度"
+                                      Style="{StaticResource PanelSplitterStyle}" />
+                        <GridSplitter Grid.Column="3"
+                                      AutomationProperties.Name="调整右侧仓库详情宽度"
+                                      Style="{StaticResource PanelSplitterStyle}" />
 
                         <Border Grid.Column="0"
                                 BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
@@ -524,10 +569,12 @@
                                                Style="{StaticResource QuietTextStyle}" />
                                 </StackPanel>
                             </Grid>
-                            <TabControl Grid.Row="1">
+                            <TabControl Grid.Row="1"
+                                        BorderThickness="1">
                                 <TabItem Header="当前 Star 排行">
                                     <DataGrid x:Name="CurrentGrid"
                                               AutoGenerateColumns="False"
+                                              BorderThickness="1"
                                               IsReadOnly="True"
                                               CanUserAddRows="False"
                                               CanUserDeleteRows="False"
@@ -563,6 +610,7 @@
                                         <DataGrid x:Name="GrowthGrid"
                                                   Grid.Row="1"
                                                   AutoGenerateColumns="False"
+                                                  BorderThickness="1"
                                                   IsReadOnly="True"
                                                   CanUserAddRows="False"
                                                   CanUserDeleteRows="False"
@@ -775,12 +823,24 @@
 
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="240" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="320" />
+                            <ColumnDefinition x:Name="GlobalLeftColumn"
+                                              Width="240"
+                                              MinWidth="190" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition x:Name="GlobalCenterColumn"
+                                              Width="*"
+                                              MinWidth="360" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition x:Name="GlobalRightColumn"
+                                              Width="320"
+                                              MinWidth="260" />
                         </Grid.ColumnDefinitions>
+                        <GridSplitter Grid.Column="1"
+                                      AutomationProperties.Name="调整左侧总榜记录宽度"
+                                      Style="{StaticResource PanelSplitterStyle}" />
+                        <GridSplitter Grid.Column="3"
+                                      AutomationProperties.Name="调整右侧仓库详情宽度"
+                                      Style="{StaticResource PanelSplitterStyle}" />
 
                         <Border Grid.Column="0"
                                 BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
@@ -852,6 +912,7 @@
                             <DataGrid x:Name="GlobalLeaderboardGrid"
                                       Grid.Row="1"
                                       AutoGenerateColumns="False"
+                                      BorderThickness="1"
                                       IsReadOnly="True"
                                       CanUserAddRows="False"
                                       CanUserDeleteRows="False"
@@ -1102,6 +1163,32 @@
                 </Grid>
             </TabItem>
         </TabControl>
+        <Button x:Name="ResetLayoutButton"
+                Margin="0,1,4,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Panel.ZIndex="2"
+                AutomationProperties.Name="恢复默认布局"
+                ToolTip="恢复三个工作区的默认面板宽度"
+                Style="{StaticResource CompactIconButtonStyle}"
+                Click="ResetLayoutButton_Click">
+            <StackPanel Width="11"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <Border Height="1.5"
+                        Margin="0,0,0,2"
+                        Background="#3F4650"
+                        CornerRadius="1" />
+                <Border Height="1.5"
+                        Margin="0,0,0,2"
+                        Background="#3F4650"
+                        CornerRadius="1" />
+                <Border Height="1.5"
+                        Background="#3F4650"
+                        CornerRadius="1" />
+            </StackPanel>
+        </Button>
+        </Grid>
 
         <Border Grid.Row="2"
                 Padding="24,10"

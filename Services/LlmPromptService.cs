@@ -59,8 +59,9 @@ public sealed class LlmPromptService
     {
         if (!File.Exists(ActivePromptFile))
         {
-            await SaveAsync(DefaultPrompt, cancellationToken);
-            return DefaultPrompt;
+            var defaultPrompt = ValidateAndNormalize(DefaultPrompt);
+            await SaveAsync(defaultPrompt, cancellationToken);
+            return defaultPrompt;
         }
 
         var prompt = await File.ReadAllTextAsync(ActivePromptFile, cancellationToken);
