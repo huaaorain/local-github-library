@@ -276,11 +276,21 @@
                                       GridLinesVisibility="Horizontal"
                                       SelectionMode="Extended"
                                       SelectionChanged="StandaloneSearchResultsGrid_SelectionChanged"
+                                      Sorting="SearchResultsGrid_Sorting"
                                       MouseDoubleClick="StandaloneSearchResultsGrid_MouseDoubleClick">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="#" Binding="{Binding Rank}" Width="42" />
-                                    <DataGridTextColumn Header="仓库" Binding="{Binding FullName}" Width="*" />
-                                    <DataGridTextColumn Header="Star" Binding="{Binding StarsDisplay}" Width="90" />
+                                    <DataGridTextColumn Header="#"
+                                                        Binding="{Binding Rank}"
+                                                        SortMemberPath="Rank"
+                                                        Width="42" />
+                                    <DataGridTextColumn Header="仓库"
+                                                        Binding="{Binding FullName}"
+                                                        SortMemberPath="FullName"
+                                                        Width="*" />
+                                    <DataGridTextColumn Header="Star"
+                                                        Binding="{Binding StarsDisplay}"
+                                                        SortMemberPath="Stars"
+                                                        Width="90" />
                                     <DataGridTextColumn Header="语言" Binding="{Binding Language}" Width="95" />
                                     <DataGridTextColumn Header="更新" Binding="{Binding UpdatedDisplay}" Width="95" />
                                 </DataGrid.Columns>
@@ -305,6 +315,7 @@
                                                                 Width="*" />
                                             <DataGridTextColumn Header="Star"
                                                                 Binding="{Binding StarsDisplay}"
+                                                                SortMemberPath="Stars"
                                                                 Width="90" />
                                             <DataGridTextColumn Header="语言"
                                                                 Binding="{Binding Language}"
@@ -583,11 +594,21 @@
                                               GridLinesVisibility="Horizontal"
                                               SelectionMode="Single"
                                               SelectionChanged="RepositoryGrid_SelectionChanged"
+                                              Sorting="SearchResultsGrid_Sorting"
                                               MouseDoubleClick="RepositoryGrid_MouseDoubleClick">
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Header="#" Binding="{Binding Rank}" Width="42" />
-                                            <DataGridTextColumn Header="仓库" Binding="{Binding FullName}" Width="*" />
-                                            <DataGridTextColumn Header="Star" Binding="{Binding StarsDisplay}" Width="92" />
+                                            <DataGridTextColumn Header="#"
+                                                                Binding="{Binding Rank}"
+                                                                SortMemberPath="Rank"
+                                                                Width="42" />
+                                            <DataGridTextColumn Header="仓库"
+                                                                Binding="{Binding FullName}"
+                                                                SortMemberPath="FullName"
+                                                                Width="*" />
+                                            <DataGridTextColumn Header="Star"
+                                                                Binding="{Binding StarsDisplay}"
+                                                                SortMemberPath="Stars"
+                                                                Width="92" />
                                             <DataGridTextColumn Header="语言" Binding="{Binding Language}" Width="95" />
                                             <DataGridTextColumn Header="更新" Binding="{Binding UpdatedDisplay}" Width="95" />
                                         </DataGrid.Columns>
@@ -624,7 +645,10 @@
                                                 <DataGridTextColumn Header="#" Binding="{Binding Rank}" Width="42" />
                                                 <DataGridTextColumn Header="仓库" Binding="{Binding FullName}" Width="*" />
                                                 <DataGridTextColumn Header="新增" Binding="{Binding GrowthDisplay}" Width="82" />
-                                                <DataGridTextColumn Header="当前 Star" Binding="{Binding StarsDisplay}" Width="98" />
+                                                <DataGridTextColumn Header="当前 Star"
+                                                                    Binding="{Binding StarsDisplay}"
+                                                                    SortMemberPath="Stars"
+                                                                    Width="98" />
                                                 <DataGridTextColumn Header="语言" Binding="{Binding Language}" Width="90" />
                                             </DataGrid.Columns>
                                         </DataGrid>
@@ -1128,7 +1152,10 @@
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="仓库" Binding="{Binding FullName}" Width="200" />
                                     <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*" />
-                                    <DataGridTextColumn Header="Star" Binding="{Binding StarsDisplay}" Width="90" />
+                                    <DataGridTextColumn Header="Star"
+                                                        Binding="{Binding StarsDisplay}"
+                                                        SortMemberPath="Stars"
+                                                        Width="90" />
                                     <DataGridTextColumn Header="语言" Binding="{Binding Language}" Width="95" />
                                     <DataGridTextColumn Header="收藏时间" Binding="{Binding SavedAtDisplay}" Width="125" />
                                 </DataGrid.Columns>

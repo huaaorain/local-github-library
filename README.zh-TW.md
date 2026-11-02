@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.1-ff7a45?style=flat-square" alt="版本 0.2.1">
+  <img src="https://img.shields.io/badge/version-0.2.2-ff7a45?style=flat-square" alt="版本 0.2.2">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="本機優先">
@@ -64,7 +64,7 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
   <tbody>
     <tr>
       <td><strong>主&#8239;題&#8239;搜&#8239;尋</strong></td>
-      <td>依關鍵字搜尋 GitHub 倉庫，查看 Star、Fork、Issues、語言、License、Topics 與更新時間，並產生可閱讀的 TXT 報告。</td>
+      <td>優先透過 GitHub Topics 找出領域，再用名稱與描述補充候選並過濾無關匹配；點擊「倉庫」依匹配度排序，點擊「Star」嚴格依數值排序，並可產生 TXT 報告。</td>
     </tr>
     <tr>
       <td><strong>Star&#8239;趨&#8239;勢</strong></td>
@@ -109,8 +109,8 @@ _截圖使用非敏感示範資料，展示主題查詢、倉庫詳情、本機 
 
 | 發佈包 | 大小 | 適用情境 |
 | --- | ---: | --- |
-| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/LocalGithubLibrary-0.2.1-win-x64.zip) | 約 77 MB | 搜尋、排行、收藏與 README 摘要 |
-| [完整離線版](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/LocalGithubLibrary-0.2.1-full-win-x64.zip) | 約 1.17 GB | 額外包含 Qwen2.5 1.5B 本機模型 |
+| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.2/LocalGithubLibrary-0.2.2-win-x64.zip) | 約 77 MB | 搜尋、排行、收藏與 README 摘要 |
+| [完整離線版](https://github.com/huaaorain/local-github-library/releases/download/v0.2.2/LocalGithubLibrary-0.2.2-full-win-x64.zip) | 約 1.17 GB | 額外包含 Qwen2.5 1.5B 本機模型 |
 
 ### 2. 解壓縮並執行
 
@@ -281,6 +281,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 更新記錄
 
+- [0.2.2：跨領域搜尋相關性、數值排序與結果穩定性修正](docs/releases/v0.2.2.md)
 - [0.2.1：可調面板佈局、恢復佈局按鈕與介面細節最佳化](docs/releases/v0.2.1.md)
 - [0.2.0：本機 LLM、提示詞管理與收藏體驗修正](docs/releases/v0.2.0.md)
 - [0.1.0：首個公開版本](docs/releases/v0.1.0.md)

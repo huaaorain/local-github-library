@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.1-ff7a45?style=flat-square" alt="Version 0.2.1">
+  <img src="https://img.shields.io/badge/version-0.2.2-ff7a45?style=flat-square" alt="Version 0.2.2">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -64,7 +64,7 @@ GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问�
   <tbody>
     <tr>
       <td><strong>主&#8239;题&#8239;发&#8239;现</strong></td>
-      <td>按关键词搜索 GitHub 仓库，查看 Star、Fork、Issues、语言、License、Topics 与更新时间，并生成可阅读的 TXT 报告。</td>
+      <td>优先通过 GitHub Topics 定位领域，再用名称与描述补足候选并过滤无关匹配；点击“仓库”按匹配度排序，点击“Star”严格按数值排序，并可生成 TXT 报告。</td>
     </tr>
     <tr>
       <td><strong>Star&#8239;趋&#8239;势</strong></td>
@@ -109,8 +109,8 @@ _截图使用非敏感演示数据，展示主题查询、仓库详情、本地 
 
 | 发布包 | 大小 | 适用场景 |
 | --- | ---: | --- |
-| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/LocalGithubLibrary-0.2.1-win-x64.zip) | 约 77 MB | 搜索、排行、收藏与 README 摘要 |
-| [完整离线版](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/LocalGithubLibrary-0.2.1-full-win-x64.zip) | 约 1.17 GB | 额外包含 Qwen2.5 1.5B 本地模型 |
+| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.2/LocalGithubLibrary-0.2.2-win-x64.zip) | 约 77 MB | 搜索、排行、收藏与 README 摘要 |
+| [完整离线版](https://github.com/huaaorain/local-github-library/releases/download/v0.2.2/LocalGithubLibrary-0.2.2-full-win-x64.zip) | 约 1.17 GB | 额外包含 Qwen2.5 1.5B 本地模型 |
 
 ### 2. 解压并运行
 
@@ -281,6 +281,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 更新记录
 
+- [0.2.2：跨领域搜索相关性、数值排序与结果稳定性修复](docs/releases/v0.2.2.md)
 - [0.2.1：可调面板布局、恢复布局按钮与界面细节优化](docs/releases/v0.2.1.md)
 - [0.2.0：本地 LLM、提示词管理与收藏体验修复](docs/releases/v0.2.0.md)
 - [0.1.0：首个公开版本](docs/releases/v0.1.0.md)

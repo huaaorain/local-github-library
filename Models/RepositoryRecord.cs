@@ -83,6 +83,25 @@ public sealed class RepositoryRecord
         : WeeklyGrowth.Value.ToString("+#,##0;-#,##0;0");
     public string UpdatedDisplay => UpdatedAt?.ToLocalTime().ToString("yyyy-MM-dd") ?? "未知";
     public string TopicsDisplay => Topics.Count == 0 ? "无" : string.Join(", ", Topics);
+
+    public RepositoryRecord CloneWithRank(int rank) => new()
+    {
+        Id = Id,
+        Rank = rank,
+        FullName = FullName,
+        HtmlUrl = HtmlUrl,
+        Description = Description,
+        Stars = Stars,
+        Forks = Forks,
+        OpenIssues = OpenIssues,
+        Language = Language,
+        Topics = Topics,
+        UpdatedAt = UpdatedAt,
+        CreatedAt = CreatedAt,
+        PushedAt = PushedAt,
+        License = License,
+        WeeklyGrowth = WeeklyGrowth
+    };
 }
 
 public sealed class HistoryEntry

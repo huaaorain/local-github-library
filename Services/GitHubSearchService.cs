@@ -122,31 +122,80 @@ public sealed class GitHubSearchService : IDisposable
             return await ExecuteSearchAsync(
                 "stars:>0 archived:false fork:false",
                 maxResults,
-                cancellationToken);
+                cancellationToken,
+                sortByStars: true);
         }
 
-        var repositories = await SearchTextAsync(
-            keyword.Trim(),
-            maxResults,
+        var normalizedKeyword = keyword.Trim();
+        var topicCandidateLimit = Math.Clamp(maxResults * 2, 100, 1000);
+        var metadataCandidateLimit = Math.Clamp(maxResults * 6, 200, 800);
+        var topicResults = await SearchTopicAsync(
+            normalizedKeyword,
+            topicCandidateLimit,
             cancellationToken);
-        if (repositories.Count == 0 && !keyword.Contains(' '))
+
+        var candidates = new Dictionary<long, SearchCandidate>();
+        foreach (var repository in topicResults)
         {
-            repositories = await SearchTopicAsync(
-                keyword.Trim(),
-                maxResults,
-                cancellationToken);
+            candidates[repository.Id] = new SearchCandidate
+            {
+                Repository = repository,
+                MatchedTopic = true,
+                TopicRank = repository.Rank
+            };
         }
 
-        return repositories;
+        var metadataResults = await SearchMetadataAsync(
+            normalizedKeyword,
+            metadataCandidateLimit,
+            cancellationToken);
+        foreach (var repository in metadataResults)
+        {
+            if (candidates.TryGetValue(repository.Id, out var candidate))
+            {
+                candidate.MatchedMetadata = true;
+                candidate.MetadataRank = repository.Rank;
+            }
+            else
+            {
+                candidates[repository.Id] = new SearchCandidate
+                {
+                    Repository = repository,
+                    MatchedMetadata = true,
+                    MetadataRank = repository.Rank
+                };
+            }
+        }
+
+        var scoredCandidates = candidates.Values
+            .Select(candidate => new ScoredSearchCandidate(
+                candidate,
+                SearchRelevanceScorer.Score(candidate, normalizedKeyword)))
+            .Where(result => result.Score >= SearchRelevanceScorer.MinimumScore)
+            .ToList();
+
+        var selected = SearchRelevanceScorer
+            .SelectDiverse(scoredCandidates, normalizedKeyword, maxResults);
+        for (var index = 0; index < selected.Count; index++)
+        {
+            selected[index].Rank = index + 1;
+        }
+
+        return selected;
     }
 
-    private async Task<List<RepositoryRecord>> SearchTextAsync(
+    private async Task<List<RepositoryRecord>> SearchMetadataAsync(
         string keyword,
         int maxResults,
         CancellationToken cancellationToken)
     {
-        var query = $"{keyword.Trim()} in:name,description,readme archived:false";
-        return await ExecuteSearchAsync(query, maxResults, cancellationToken);
+        var query =
+            $"{keyword.Trim()} in:name,description archived:false fork:false";
+        return await ExecuteSearchAsync(
+            query,
+            maxResults,
+            cancellationToken,
+            sortByStars: false);
     }
 
     private async Task<List<RepositoryRecord>> SearchTopicAsync(
@@ -154,17 +203,24 @@ public sealed class GitHubSearchService : IDisposable
         int maxResults,
         CancellationToken cancellationToken)
     {
-        var safeTopic = keyword.Trim().ToLowerInvariant().Replace(' ', '-');
+        var safeTopic = SearchRelevanceScorer.NormalizeTopic(keyword);
+        if (string.IsNullOrWhiteSpace(safeTopic))
+        {
+            return [];
+        }
+
         return await ExecuteSearchAsync(
-            $"topic:{safeTopic} archived:false",
+            $"topic:{safeTopic} archived:false fork:false",
             maxResults,
-            cancellationToken);
+            cancellationToken,
+            sortByStars: true);
     }
 
     private async Task<List<RepositoryRecord>> ExecuteSearchAsync(
         string query,
         int maxResults,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool sortByStars)
     {
         var collected = new List<RepositoryRecord>();
         var required = Math.Clamp(maxResults, 1, 1000);
@@ -177,7 +233,8 @@ public sealed class GitHubSearchService : IDisposable
             var url =
                 "https://api.github.com/search/repositories" +
                 $"?q={Uri.EscapeDataString(query)}" +
-                $"&sort=stars&order=desc&per_page={pageSize}&page={page}";
+                (sortByStars ? "&sort=stars&order=desc" : "") +
+                $"&per_page={pageSize}&page={page}";
 
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             HttpResponseMessage response;
@@ -309,6 +366,377 @@ public sealed class GitHubNetworkException : Exception
     public GitHubNetworkException(string message, Exception innerException)
         : base(message, innerException)
     {
+    }
+}
+
+internal sealed class SearchCandidate
+{
+    public required RepositoryRecord Repository { get; init; }
+    public bool MatchedMetadata { get; set; }
+    public bool MatchedTopic { get; set; }
+    public int? MetadataRank { get; set; }
+    public int? TopicRank { get; set; }
+}
+
+internal sealed record ScoredSearchCandidate(
+    SearchCandidate Candidate,
+    int Score);
+
+internal static class SearchRelevanceScorer
+{
+    public const int MinimumScore = 35;
+
+    private static readonly char[] TokenSeparators =
+    [
+        ' ',
+        '\t',
+        '\r',
+        '\n',
+        '-',
+        '_',
+        '/',
+        '\\',
+        '.',
+        ',',
+        ':',
+        ';',
+        '|',
+        '(',
+        ')',
+        '[',
+        ']'
+    ];
+
+    public static int Score(SearchCandidate candidate, string keyword)
+    {
+        var repository = candidate.Repository;
+        var normalizedKeyword = keyword.Trim();
+        var queryTokens = Tokenize(normalizedKeyword);
+        var topicSlug = NormalizeTopic(normalizedKeyword);
+        var repositoryName = repository.FullName
+            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+            .LastOrDefault() ?? repository.FullName;
+        var repositoryNameContainsKeyword =
+            ContainsWholeTerm(repositoryName, normalizedKeyword);
+        var repositoryNameContainsAllTokens =
+            queryTokens.Count > 0 &&
+            queryTokens.All(token => ContainsWholeTerm(repositoryName, token));
+        var descriptionContainsKeyword =
+            ContainsWholeTerm(repository.Description, normalizedKeyword);
+        var descriptionContainsAllTokens =
+            queryTokens.Count > 0 &&
+            queryTokens.All(token => ContainsWholeTerm(repository.Description, token));
+        var hasDirectTextMatch =
+            repositoryNameContainsKeyword ||
+            ContainsWholeTerm(repository.FullName, normalizedKeyword) ||
+            repositoryNameContainsAllTokens ||
+            descriptionContainsKeyword ||
+            descriptionContainsAllTokens;
+
+        var score = 0;
+        if (candidate.MatchedMetadata)
+        {
+            score += 8;
+        }
+
+        if (candidate.MetadataRank is > 0 and var metadataRank)
+        {
+            // GitHub's native best-match order is a useful generic signal. It
+            // keeps canonical projects near the top without special-casing any
+            // repository. Only the leading matches receive a bonus so that a
+            // large ecosystem of similarly named add-ons cannot bury a precise
+            // match that GitHub ranks slightly later.
+            score += metadataRank switch
+            {
+                1 => 100,
+                2 => 85,
+                3 => 70,
+                4 => 60,
+                5 => 50,
+                <= 10 => 30,
+                <= 25 => 15,
+                _ => 0
+            };
+        }
+
+        if (candidate.MatchedTopic && !hasDirectTextMatch)
+        {
+            score += 18;
+        }
+
+        if (repositoryNameContainsKeyword)
+        {
+            score += 100;
+            if (queryTokens.Count > 1 &&
+                repositoryName.StartsWith(
+                    normalizedKeyword,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                score += 20;
+            }
+        }
+        else if (ContainsWholeTerm(repository.FullName, normalizedKeyword))
+        {
+            score += 58;
+        }
+        else if (queryTokens.Count > 0 &&
+                 queryTokens.All(token => ContainsWholeTerm(repository.FullName, token)))
+        {
+            score += 42;
+        }
+
+        var exactTopicMatch = !string.IsNullOrWhiteSpace(topicSlug) &&
+                              repository.Topics.Any(topic =>
+                                  string.Equals(
+                                      NormalizeTopic(topic),
+                                      topicSlug,
+                                      StringComparison.OrdinalIgnoreCase));
+        if (exactTopicMatch && !hasDirectTextMatch)
+        {
+            score += 55;
+        }
+        else if (!hasDirectTextMatch &&
+                 queryTokens.Count > 0 &&
+                 queryTokens.All(token =>
+                     repository.Topics.Any(topic =>
+                         ContainsWholeTerm(topic, token))))
+        {
+            score += 32;
+        }
+
+        if (!hasDirectTextMatch && candidate.TopicRank is > 0 and var topicRank)
+        {
+            // Topic candidates are ordered by Stars, giving a stable popularity
+            // signal for domain-only matches such as "data visualization".
+            score += topicRank switch
+            {
+                1 => 60,
+                2 => 50,
+                3 => 40,
+                4 => 30,
+                5 => 25,
+                <= 10 => 15,
+                <= 25 => 5,
+                _ => 0
+            };
+        }
+
+        if (descriptionContainsKeyword)
+        {
+            score += 35;
+        }
+        else if (descriptionContainsAllTokens)
+        {
+            score += 25;
+        }
+        else if (queryTokens.Any(token =>
+                     ContainsWholeTerm(repository.Description, token)))
+        {
+            score += 8;
+        }
+
+        score += Math.Min(
+            15,
+            (int)Math.Round(Math.Log10(repository.Stars + 1d) * 2.5));
+        return score;
+    }
+
+    public static IReadOnlyList<RepositoryRecord> SelectDiverse(
+        IReadOnlyList<ScoredSearchCandidate> candidates,
+        string keyword,
+        int limit)
+    {
+        var remaining = candidates.ToList();
+        var selected = new List<RepositoryRecord>(Math.Min(limit, remaining.Count));
+        var categoryCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var queryTokens = Tokenize(keyword).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var contentType in remaining
+                     .Select(candidate => GetContentType(candidate.Candidate.Repository))
+                     .Where(type => type is not null)
+                     .Distinct(StringComparer.OrdinalIgnoreCase)
+                     .Take(limit)
+                     .ToList())
+        {
+            var representative = remaining
+                .Where(candidate =>
+                    string.Equals(
+                        GetContentType(candidate.Candidate.Repository),
+                        contentType,
+                        StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(candidate => candidate.Score)
+                .ThenByDescending(candidate => candidate.Candidate.Repository.Stars)
+                .First();
+            remaining.Remove(representative);
+            selected.Add(representative.Candidate.Repository);
+            var category = GetDiversityCategory(
+                representative.Candidate.Repository,
+                queryTokens);
+            if (category is not null)
+            {
+                categoryCounts[category] =
+                    categoryCounts.GetValueOrDefault(category) + 1;
+            }
+        }
+
+        while (selected.Count < limit && remaining.Count > 0)
+        {
+            var bestIndex = 0;
+            var bestAdjustedScore = double.NegativeInfinity;
+            for (var index = 0; index < remaining.Count; index++)
+            {
+                var candidate = remaining[index];
+                var category = GetDiversityCategory(
+                    candidate.Candidate.Repository,
+                    queryTokens);
+                var repeatedCount = category is null
+                    ? 0
+                    : categoryCounts.GetValueOrDefault(category);
+                var adjustedScore = candidate.Score
+                                    - repeatedCount * 35d
+                                    + Math.Log10(
+                                        candidate.Candidate.Repository.Stars + 1d) * 5d;
+                if (adjustedScore > bestAdjustedScore)
+                {
+                    bestAdjustedScore = adjustedScore;
+                    bestIndex = index;
+                }
+            }
+
+            var best = remaining[bestIndex];
+            remaining.RemoveAt(bestIndex);
+            selected.Add(best.Candidate.Repository);
+            var bestCategory = GetDiversityCategory(
+                best.Candidate.Repository,
+                queryTokens);
+            if (bestCategory is not null)
+            {
+                categoryCounts[bestCategory] =
+                    categoryCounts.GetValueOrDefault(bestCategory) + 1;
+            }
+        }
+
+        return selected;
+    }
+
+    public static string NormalizeTopic(string value)
+    {
+        var topic = Regex.Replace(
+            value.Trim().ToLowerInvariant(),
+            @"\s+",
+            "-",
+            RegexOptions.CultureInvariant);
+        topic = topic.Trim('-');
+        return Regex.IsMatch(
+            topic,
+            @"^[a-z0-9][a-z0-9-]*$",
+            RegexOptions.CultureInvariant)
+            ? topic
+            : "";
+    }
+
+    private static List<string> Tokenize(string value) =>
+        value.ToLowerInvariant()
+            .Split(
+                TokenSeparators,
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+    private static string? GetDiversityCategory(
+        RepositoryRecord repository,
+        IReadOnlySet<string> queryTokens)
+    {
+        var repositoryName = repository.FullName
+            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+            .LastOrDefault() ?? repository.FullName;
+        var searchable = $"{repositoryName} {repository.Description}";
+        string[] learningMarkers =
+        [
+            "awesome",
+            "cookbook",
+            "tutorial",
+            "course",
+            "guide",
+            "handbook",
+            "learn",
+            "learning",
+            "example",
+            "入门",
+            "教程",
+            "指南",
+            "手册",
+            "知识"
+        ];
+        if (learningMarkers.Any(marker =>
+                searchable.Contains(marker, StringComparison.OrdinalIgnoreCase)))
+        {
+            return "learning-resources";
+        }
+
+        var repositoryTokens = Tokenize(repositoryName);
+        if (repositoryTokens.Count > 0 &&
+            repositoryTokens.All(queryTokens.Contains))
+        {
+            return "query-only-name";
+        }
+
+        return repositoryTokens
+            .FirstOrDefault(token =>
+                token.Length >= 3 &&
+                !queryTokens.Contains(token));
+    }
+
+    private static string? GetContentType(RepositoryRecord repository)
+    {
+        var text =
+            $"{repository.FullName} {repository.Description}"
+                .ToLowerInvariant();
+        if (text.Contains("awesome", StringComparison.Ordinal) ||
+            text.Contains("curated list", StringComparison.Ordinal))
+        {
+            return "awesome-list";
+        }
+
+        string[] tutorialMarkers =
+        [
+            "cookbook",
+            "tutorial",
+            "guide",
+            "handbook",
+            "course",
+            "learning",
+            "入门",
+            "教程",
+            "指南",
+            "手册"
+        ];
+        return tutorialMarkers.Any(marker =>
+            text.Contains(marker, StringComparison.Ordinal))
+            ? "tutorial"
+            : null;
+    }
+
+    private static bool ContainsWholeTerm(string? text, string keyword)
+    {
+        if (string.IsNullOrWhiteSpace(text) || string.IsNullOrWhiteSpace(keyword))
+        {
+            return false;
+        }
+
+        if (Regex.IsMatch(keyword, @"[\u3400-\u9fff]", RegexOptions.CultureInvariant))
+        {
+            return text.Contains(keyword, StringComparison.OrdinalIgnoreCase);
+        }
+
+        var pattern =
+            $@"(?<![\p{{L}}\p{{N}}_]){Regex.Escape(keyword.Trim())}" +
+            @"(?![\p{L}\p{N}_])";
+        return Regex.IsMatch(
+            text,
+            pattern,
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
+            TimeSpan.FromMilliseconds(100));
     }
 }
 

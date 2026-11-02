@@ -133,12 +133,8 @@ public sealed class ReportLibraryService
             .OrderByDescending(repository => repository.WeeklyGrowth)
             .ThenByDescending(repository => repository.Stars)
             .Take(Math.Clamp(maxResults, 1, 1000))
+            .Select((repository, index) => repository.CloneWithRank(index + 1))
             .ToList();
-
-        for (var i = 0; i < ranked.Count; i++)
-        {
-            ranked[i].Rank = i + 1;
-        }
 
         var baselineEntry = new HistoryEntry
         {

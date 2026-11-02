@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.1-ff7a45?style=flat-square" alt="Version 0.2.1">
+  <img src="https://img.shields.io/badge/version-0.2.2-ff7a45?style=flat-square" alt="Version 0.2.2">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -64,7 +64,7 @@ GitHub is good at finding one repository, but it is not designed to answer quest
   <tbody>
     <tr>
       <td><strong>Topic&#8239;search</strong></td>
-      <td>Search GitHub repositories by keyword, inspect Stars, forks, issues, language, license, topics, and update time, then generate a readable TXT report.</td>
+      <td>Find the domain through GitHub Topics first, supplement with repository names and descriptions, and filter unrelated matches. Click Repository to sort by match relevance or Star to sort strictly by numeric Stars, then generate a readable TXT report.</td>
     </tr>
     <tr>
       <td><strong>Star&#8239;trends</strong></td>
@@ -109,8 +109,8 @@ _The screenshot uses non-sensitive demo data and shows topic search, repository 
 
 | Package | Size | Best for |
 | --- | ---: | --- |
-| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/LocalGithubLibrary-0.2.1-win-x64.zip) | About 77 MB | Search, rankings, favorites, and README summaries |
-| [Full offline package](https://github.com/huaaorain/local-github-library/releases/download/v0.2.1/LocalGithubLibrary-0.2.1-full-win-x64.zip) | About 1.17 GB | Adds the Qwen2.5 1.5B local model |
+| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.2/LocalGithubLibrary-0.2.2-win-x64.zip) | About 77 MB | Search, rankings, favorites, and README summaries |
+| [Full offline package](https://github.com/huaaorain/local-github-library/releases/download/v0.2.2/LocalGithubLibrary-0.2.2-full-win-x64.zip) | About 1.17 GB | Adds the Qwen2.5 1.5B local model |
 
 ### 2. Extract and run
 
@@ -281,6 +281,7 @@ Issues and pull requests are welcome. Before submitting:
 
 ## Release history
 
+- [0.2.2: cross-domain search relevance, numeric sorting, and stable result ordering](docs/releases/v0.2.2.md)
 - [0.2.1: resizable workspace panes, reset-layout control, and UI polish](docs/releases/v0.2.1.md)
 - [0.2.0: local LLM, prompt management, and favorites fixes](docs/releases/v0.2.0.md)
 - [0.1.0: first public release](docs/releases/v0.1.0.md)

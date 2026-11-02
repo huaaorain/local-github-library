@@ -1,6 +1,8 @@
 using System.Text;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using Microsoft.Win32;
 using GitHubTopicReports.Models;
@@ -156,6 +158,7 @@ public partial class MainWindow : Window
             if (_allRepositories.Count == 0)
             {
                 CurrentGrid.ItemsSource = Array.Empty<RepositoryRecord>();
+                ResetSearchResultSort(CurrentGrid);
                 GrowthGrid.ItemsSource = Array.Empty<RepositoryRecord>();
                 ClearRepositoryDetails();
                 CurrentKeywordText.Text = keyword;
@@ -182,10 +185,11 @@ public partial class MainWindow : Window
                 cancellationToken);
 
             CurrentGrid.ItemsSource = currentTop;
+            ResetSearchResultSort(CurrentGrid);
             GrowthGrid.ItemsSource = growth.Repositories;
             CurrentKeywordText.Text = keyword;
             ResultSummaryText.Text =
-                $"指定主题 · 显示 {currentTop.Count:N0} 条 · " +
+                $"领域匹配结果 · 匹配度优先 · 显示 {currentTop.Count:N0} 条 · " +
                 $"本地周增长 {growth.Repositories.Count:N0} 条";
             LastGeneratedText.Text = $"生成于 {saved.GeneratedAt.ToLocalTime():yyyy-MM-dd HH:mm:ss}";
             StatusText.Text = _gitHub.HasToken
@@ -221,6 +225,85 @@ public partial class MainWindow : Window
         finally
         {
             SetBusyState(false);
+        }
+    }
+
+    private void SearchResultsGrid_Sorting(object sender, DataGridSortingEventArgs e)
+    {
+        if (sender is not DataGrid grid)
+        {
+            return;
+        }
+
+        var sortByStars = string.Equals(
+            e.Column.SortMemberPath,
+            nameof(RepositoryRecord.Stars),
+            StringComparison.Ordinal);
+        var sortByMatch = string.Equals(
+                              e.Column.SortMemberPath,
+                              nameof(RepositoryRecord.FullName),
+                              StringComparison.Ordinal) ||
+                          string.Equals(
+                              e.Column.SortMemberPath,
+                              nameof(RepositoryRecord.Rank),
+                              StringComparison.Ordinal);
+        if (!sortByStars && !sortByMatch)
+        {
+            return;
+        }
+
+        var direction = e.Column.SortDirection switch
+        {
+            null when sortByStars => ListSortDirection.Descending,
+            null => ListSortDirection.Ascending,
+            ListSortDirection.Ascending => ListSortDirection.Descending,
+            _ => ListSortDirection.Ascending
+        };
+
+        e.Handled = true;
+        if (grid.ItemsSource is null)
+        {
+            return;
+        }
+
+        var view = CollectionViewSource.GetDefaultView(grid.ItemsSource);
+        if (!view.CanSort)
+        {
+            return;
+        }
+
+        using (view.DeferRefresh())
+        {
+            view.SortDescriptions.Clear();
+            view.SortDescriptions.Add(
+                new SortDescription(
+                    sortByStars ? nameof(RepositoryRecord.Stars) : nameof(RepositoryRecord.Rank),
+                    direction));
+            if (sortByStars)
+            {
+                view.SortDescriptions.Add(
+                    new SortDescription(nameof(RepositoryRecord.Rank), ListSortDirection.Ascending));
+            }
+        }
+
+        foreach (var column in grid.Columns)
+        {
+            column.SortDirection = null;
+        }
+        e.Column.SortDirection = direction;
+    }
+
+    private static void ResetSearchResultSort(DataGrid grid)
+    {
+        if (grid.ItemsSource is not null)
+        {
+            var view = CollectionViewSource.GetDefaultView(grid.ItemsSource);
+            view.SortDescriptions.Clear();
+        }
+
+        foreach (var column in grid.Columns)
+        {
+            column.SortDirection = null;
         }
     }
 
@@ -745,10 +828,12 @@ public partial class MainWindow : Window
                 resultCount,
                 cancellationToken)).ToList();
             StandaloneSearchResultsGrid.ItemsSource = _standaloneSearchResults;
+            ResetSearchResultSort(StandaloneSearchResultsGrid);
             CombinedContentTabs.SelectedIndex = 0;
             StandaloneSearchTitleText.Text = keyword;
             StandaloneSearchSummaryText.Text =
-                $"GitHub 搜索结果 · {_standaloneSearchResults.Count:N0} 条 · " +
+                $"GitHub 领域相关结果 · 匹配度优先 · " +
+                $"{_standaloneSearchResults.Count:N0} 条 · " +
                 "选择底部目录后可保存整份结果";
             _selectedStandaloneRepository = null;
             OpenStandaloneRepositoryButton.IsEnabled = false;

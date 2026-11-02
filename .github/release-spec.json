@@ -89,18 +89,18 @@
   ],
   "artifacts": [
     {
-      "path": "release-build/LocalGithubLibrary-0.2.1-win-x64.zip",
+      "path": "release-build/LocalGithubLibrary-0.2.2-win-x64.zip",
       "role": "standard",
       "description": "推荐的 Windows x64 标准发布包，包含主程序、提示词与 CPU 原生运行库。",
       "required": true,
-      "download_name": "LocalGithubLibrary-0.2.1-win-x64.zip"
+      "download_name": "LocalGithubLibrary-0.2.2-win-x64.zip"
     },
     {
-      "path": "release-build/LocalGithubLibrary-0.2.1-full-win-x64.zip",
+      "path": "release-build/LocalGithubLibrary-0.2.2-full-win-x64.zip",
       "role": "offline",
       "description": "完整离线包，额外包含 Qwen2.5 1.5B 本地模型。",
       "required": true,
-      "download_name": "LocalGithubLibrary-0.2.1-full-win-x64.zip"
+      "download_name": "LocalGithubLibrary-0.2.2-full-win-x64.zip"
     },
     {
       "path": "release-build/Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm",

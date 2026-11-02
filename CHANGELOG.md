@@ -2,6 +2,33 @@
 
 All notable changes to Local Github Library will be documented in this file.
 
+## [0.2.2] - 2026-11-02
+
+### Changed
+
+- Search now uses GitHub topics first and falls back to repository names and
+  descriptions instead of treating README mentions as primary matches.
+- Candidate results require a whole-term or topic-domain match before they are
+  sorted by Stars.
+- Prefer repositories whose names or descriptions directly contain the query;
+  redundant Topic and exact-name signals no longer let generic same-name
+  repositories outrank a specific project description.
+- Preserve GitHub's leading native match order and topic popularity as generic
+  ranking signals while expanding metadata candidates for broader recall.
+- Treat repositories whose names contain only the query terms as one diversity
+  group, preventing generic same-name projects from filling several results.
+
+### Fixed
+
+- Sort the Star column by its numeric value instead of its comma-formatted
+  display text.
+- Sort the repository column by keyword match rank, while the Star column uses
+  strict numeric Star ordering.
+- Keep search relevance ranks unchanged when calculating the local weekly
+  growth ranking.
+- Restore the default relevance ordering and clear stale sort indicators when a
+  new search starts.
+
 ## [0.2.1] - 2026-10-27
 
 ### Added
