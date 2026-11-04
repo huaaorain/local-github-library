@@ -2,6 +2,16 @@
 
 All notable changes to Local Github Library will be documented in this file.
 
+## [0.2.3] - 2026-11-04
+
+### Changed
+
+- Applied a shared light/dark design system across the main workspaces and LLM
+  settings dialog.
+- Reworked workspace navigation, command bars, panels, tables, inputs, buttons,
+  lists, empty states, focus states, and compact-window behavior.
+- Added a runtime theme switch and updated the localized project screenshots.
+
 ## [0.2.2] - 2026-11-02
 
 ### Changed

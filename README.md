@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.2-ff7a45?style=flat-square" alt="Version 0.2.2">
+  <img src="https://img.shields.io/badge/version-0.2.3-ff7a45?style=flat-square" alt="Version 0.2.3">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -86,6 +86,10 @@ GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问�
       <td><strong>数&#8239;据&#8239;迁&#8239;移</strong></td>
       <td>将报告、查询记录、收藏、Star 快照和榜单缓存打包为 `.ghconfig`，导入前自动备份。</td>
     </tr>
+    <tr>
+      <td><strong>界&#8239;面&#8239;主&#8239;题</strong></td>
+      <td>默认跟随 Windows 应用主题，可在顶部切换浅色或深色模式；表格、输入框、焦点和滚动条会同步切换。</td>
+    </tr>
   </tbody>
 </table>
 
@@ -103,14 +107,20 @@ _上图是依据当前源码与公开功能说明绘制的流程示意，不是�
 
 _截图使用非敏感演示数据，展示主题查询、仓库详情、本地 AI 总结和收藏目录。_
 
+### 浅色与深色主题
+
+![Local GitHub Library 深色模式](docs/assets/main-workflow-dark.png)
+
+_顶部“深色模式 / 浅色模式”按钮可即时切换主题，不改变查询、收藏或报告数据。_
+
 ## 快速开始
 
 ### 1. 下载
 
 | 发布包 | 大小 | 适用场景 |
 | --- | ---: | --- |
-| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.2/LocalGithubLibrary-0.2.2-win-x64.zip) | 约 77 MB | 搜索、排行、收藏与 README 摘要 |
-| [完整离线版](https://github.com/huaaorain/local-github-library/releases/download/v0.2.2/LocalGithubLibrary-0.2.2-full-win-x64.zip) | 约 1.17 GB | 额外包含 Qwen2.5 1.5B 本地模型 |
+| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-win-x64.zip) | 约 77 MB | 搜索、排行、收藏与 README 摘要 |
+| [完整离线版](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-full-win-x64.zip) | 约 1.17 GB | 额外包含 Qwen2.5 1.5B 本地模型 |
 
 ### 2. 解压并运行
 
@@ -296,6 +306,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 更新记录
 
+- [0.2.3：应用级设计系统、深浅色主题与交互状态重做](docs/releases/v0.2.3.zh-CN.md)
 - [0.2.2：跨领域搜索相关性、数值排序与结果稳定性修复](docs/releases/v0.2.2.md)
 - [0.2.1：可调面板布局、恢复布局按钮与界面细节优化](docs/releases/v0.2.1.md)
 - [0.2.0：本地 LLM、提示词管理与收藏体验修复](docs/releases/v0.2.0.md)

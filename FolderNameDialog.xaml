@@ -49,6 +49,7 @@
                     Padding="10,7"
                     Content="确定"
                     IsDefault="True"
+                    Style="{StaticResource PrimaryButtonStyle}"
                     Click="OkButton_Click" />
         </StackPanel>
     </Grid>

@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.2-ff7a45?style=flat-square" alt="Version 0.2.2">
+  <img src="https://img.shields.io/badge/version-0.2.3-ff7a45?style=flat-square" alt="Version 0.2.3">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -86,6 +86,10 @@ GitHub is good at finding one repository, but it is not designed to answer quest
       <td><strong>Local&#8239;data</strong></td>
       <td>Bundle reports, query history, favorites, Star snapshots, and ranking caches into a `.ghconfig` package with an automatic backup before import.</td>
     </tr>
+    <tr>
+      <td><strong>Appearance</strong></td>
+      <td>Follow the Windows application theme by default, or switch between light and dark mode from the header. Tables, inputs, focus states, and scrollbars update together.</td>
+    </tr>
   </tbody>
 </table>
 
@@ -103,14 +107,20 @@ GitHub APIs and public daily rankings supply discovery data. The workspace turns
 
 _The screenshot uses non-sensitive demo data and shows topic search, repository details, local AI summary, and favorites._
 
+### Light and dark themes
+
+![Local GitHub Library dark mode](docs/assets/main-workflow-dark.png)
+
+_The Light mode / Dark mode header button switches themes immediately without changing queries, favorites, or reports._
+
 ## Quick start
 
 ### 1. Download
 
 | Package | Size | Best for |
 | --- | ---: | --- |
-| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.2/LocalGithubLibrary-0.2.2-win-x64.zip) | About 77 MB | Search, rankings, favorites, and README summaries |
-| [Full offline package](https://github.com/huaaorain/local-github-library/releases/download/v0.2.2/LocalGithubLibrary-0.2.2-full-win-x64.zip) | About 1.17 GB | Adds the Qwen2.5 1.5B local model |
+| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-win-x64.zip) | About 77 MB | Search, rankings, favorites, and README summaries |
+| [Full offline package](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-full-win-x64.zip) | About 1.17 GB | Adds the Qwen2.5 1.5B local model |
 
 ### 2. Extract and run
 
@@ -296,6 +306,7 @@ Issues and pull requests are welcome. Before submitting:
 
 ## Release history
 
+- [0.2.3: application-wide design system, light/dark themes, and interaction states](docs/releases/v0.2.3.en.md)
 - [0.2.2: cross-domain search relevance, numeric sorting, and stable result ordering](docs/releases/v0.2.2.md)
 - [0.2.1: resizable workspace panes, reset-layout control, and UI polish](docs/releases/v0.2.1.md)
 - [0.2.0: local LLM, prompt management, and favorites fixes](docs/releases/v0.2.0.md)

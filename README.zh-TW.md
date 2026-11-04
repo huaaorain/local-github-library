@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.2-ff7a45?style=flat-square" alt="版本 0.2.2">
+  <img src="https://img.shields.io/badge/version-0.2.3-ff7a45?style=flat-square" alt="版本 0.2.3">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="本機優先">
@@ -86,6 +86,10 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
       <td><strong>資&#8239;料&#8239;移&#8239;轉</strong></td>
       <td>將報告、查詢記錄、收藏、Star 快照和榜單快取打包為 `.ghconfig`，匯入前自動備份。</td>
     </tr>
+    <tr>
+      <td><strong>介&#8239;面&#8239;主&#8239;題</strong></td>
+      <td>預設跟隨 Windows 應用程式主題，可在頂部切換淺色或深色模式；表格、輸入框、焦點和捲軸會同步切換。</td>
+    </tr>
   </tbody>
 </table>
 
@@ -103,14 +107,20 @@ _上圖是依據目前原始碼與公開功能說明繪製的流程示意，不�
 
 _截圖使用非敏感示範資料，展示主題查詢、倉庫詳情、本機 AI 摘要和收藏目錄。_
 
+### 淺色與深色主題
+
+![Local GitHub Library 深色模式](docs/assets/main-workflow-dark.png)
+
+_頂部「深色模式 / 淺色模式」按鈕可即時切換主題，不改變查詢、收藏或報告資料。_
+
 ## 快速開始
 
 ### 1. 下載
 
 | 發佈包 | 大小 | 適用情境 |
 | --- | ---: | --- |
-| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.2/LocalGithubLibrary-0.2.2-win-x64.zip) | 約 77 MB | 搜尋、排行、收藏與 README 摘要 |
-| [完整離線版](https://github.com/huaaorain/local-github-library/releases/download/v0.2.2/LocalGithubLibrary-0.2.2-full-win-x64.zip) | 約 1.17 GB | 額外包含 Qwen2.5 1.5B 本機模型 |
+| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-win-x64.zip) | 約 77 MB | 搜尋、排行、收藏與 README 摘要 |
+| [完整離線版](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-full-win-x64.zip) | 約 1.17 GB | 額外包含 Qwen2.5 1.5B 本機模型 |
 
 ### 2. 解壓縮並執行
 
@@ -296,6 +306,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 更新記錄
 
+- [0.2.3：應用程式級設計系統、深淺色主題與互動狀態重做](docs/releases/v0.2.3.zh-TW.md)
 - [0.2.2：跨領域搜尋相關性、數值排序與結果穩定性修正](docs/releases/v0.2.2.md)
 - [0.2.1：可調面板佈局、恢復佈局按鈕與介面細節最佳化](docs/releases/v0.2.1.md)
 - [0.2.0：本機 LLM、提示詞管理與收藏體驗修正](docs/releases/v0.2.0.md)

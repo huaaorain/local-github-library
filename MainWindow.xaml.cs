@@ -1,6 +1,7 @@
 using System.Text;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -55,7 +56,9 @@ public partial class MainWindow : Window
         _llmPackageService = new LlmPackageService(_library.LibraryRoot);
         _llmPromptService = new LlmPromptService(_library.LibraryRoot);
         _localLlm = new LocalLlmService(_llmPackageService, _llmPromptService);
+        ThemeManager.ApplySystemTheme();
         InitializeComponent();
+        UpdateThemeToggleButton();
         ResultCountComboBox.ItemsSource = new[] { "10", "20", "50", "100" };
         ResultCountComboBox.Text = "10";
         GlobalPeriodComboBox.ItemsSource = GlobalLeaderboardPeriodOption.All;
@@ -78,6 +81,35 @@ public partial class MainWindow : Window
         await RefreshSearchDirectoriesAsync();
         await RefreshLlmStatusAsync();
         StandaloneSearchKeywordTextBox.Focus();
+    }
+
+    private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        ApplyResponsiveLayout(e.NewSize.Width);
+    }
+
+    private void ApplyResponsiveLayout(double width)
+    {
+        HeaderDescriptionText.Visibility =
+            width < 1100 ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        var isDark = ThemeManager.Toggle();
+        UpdateThemeToggleButton();
+        StatusText.Text = isDark ? "已切换到深色模式。" : "已切换到浅色模式。";
+    }
+
+    private void UpdateThemeToggleButton()
+    {
+        ThemeToggleButton.Content = ThemeManager.IsDark ? "浅色模式" : "深色模式";
+        ThemeToggleButton.ToolTip = ThemeManager.IsDark
+            ? "切换到浅色模式"
+            : "切换到深色模式";
+        AutomationProperties.SetName(
+            ThemeToggleButton,
+            ThemeManager.IsDark ? "切换到浅色模式" : "切换到深色模式");
     }
 
     private void MainWindow_Closed(object? sender, EventArgs e)
@@ -732,17 +764,17 @@ public partial class MainWindow : Window
             CombinedLeftColumn,
             CombinedCenterColumn,
             CombinedRightColumn,
-            320);
+            280);
         SetDefaultPanelWidths(
             FindLeftColumn,
             FindCenterColumn,
             FindRightColumn,
-            310);
+            280);
         SetDefaultPanelWidths(
             GlobalLeftColumn,
             GlobalCenterColumn,
             GlobalRightColumn,
-            320);
+            280);
         StatusText.Text = "已恢复默认面板布局。";
     }
 
@@ -752,7 +784,7 @@ public partial class MainWindow : Window
         ColumnDefinition right,
         double rightWidth)
     {
-        left.Width = new GridLength(240);
+        left.Width = new GridLength(220);
         center.Width = new GridLength(1, GridUnitType.Star);
         right.Width = new GridLength(rightWidth);
     }

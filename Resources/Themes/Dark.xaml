@@ -1,0 +1,29 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#0E141D" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#151D28" />
+    <SolidColorBrush x:Key="SurfaceAltBrush" Color="#1B2634" />
+    <SolidColorBrush x:Key="SurfaceSubtleBrush" Color="#202C3B" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F2F6FB" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#B8C5D6" />
+    <SolidColorBrush x:Key="AppBorderBrush" Color="#46566D" />
+    <SolidColorBrush x:Key="DividerBrush" Color="#2B384A" />
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#8FB6FF" />
+    <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#A8C6FF" />
+    <SolidColorBrush x:Key="PrimaryPressedBrush" Color="#729DEB" />
+    <SolidColorBrush x:Key="OnPrimaryBrush" Color="#08111E" />
+    <SolidColorBrush x:Key="SelectionBrush" Color="#253956" />
+    <SolidColorBrush x:Key="FocusBrush" Color="#A8C6FF" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#4ADE80" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#F7C35F" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#FF8A80" />
+    <SolidColorBrush x:Key="OverlayBrush" Color="#99060B12" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#0E141D" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="#F2F6FB" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#1B2634" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="#F2F6FB" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlDarkBrushKey}" Color="#46566D" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#253956" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#F2F6FB" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.ScrollBarBrushKey}" Color="#1B2634" />
+</ResourceDictionary>

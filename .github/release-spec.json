@@ -77,6 +77,54 @@
     "catalog_start": "<!-- release-catalog:start -->",
     "catalog_end": "<!-- release-catalog:end -->"
   },
+  "release_notes": {
+    "layout": "accordion",
+    "open_locale": "zh-CN",
+    "prompt": "点击语言名称展开对应版本说明。 / Select a language to expand its release notes.",
+    "locales": [
+      {
+        "id": "zh-CN",
+        "label": "简体中文",
+        "path_template": "docs/releases/{tag}.zh-CN.md"
+      },
+      {
+        "id": "zh-TW",
+        "label": "繁體中文",
+        "path_template": "docs/releases/{tag}.zh-TW.md"
+      },
+      {
+        "id": "en",
+        "label": "English",
+        "path_template": "docs/releases/{tag}.en.md"
+      }
+    ],
+    "file_table": {
+      "title": "发布文件 / Release files",
+      "description_locales": [
+        "zh-CN",
+        "zh-TW",
+        "en"
+      ],
+      "columns": {
+        "file": "文件 / File",
+        "role": "类型 / Role",
+        "purpose": "用途 / Purpose",
+        "size": "大小 / Size",
+        "download": "下载 / Download",
+        "download_link": "Download"
+      }
+    },
+    "metadata": {
+      "title": "校验与元数据 / Checksums and metadata"
+    },
+    "source": {
+      "title": "源代码 / Source",
+      "commit_label": "提交 / Commit",
+      "source_zip_label": "源代码 ZIP / Source ZIP",
+      "source_tar_label": "源代码 TAR.GZ / Source TAR.GZ",
+      "verify": "下载后请使用 `SHA256SUMS.txt` 校验文件完整性。  \nVerify downloaded files against `SHA256SUMS.txt`."
+    }
+  },
   "screenshots": [
     {
       "path": "docs/assets/workflow.svg",
@@ -85,27 +133,46 @@
     {
       "path": "docs/assets/main-workflow.png",
       "description": "主工作区展示主题查询、仓库详情、本地 AI 总结和收藏目录。"
+    },
+    {
+      "path": "docs/assets/main-workflow-dark.png",
+      "description": "深色主题展示统一表格、输入框、焦点与滚动条状态。"
     }
   ],
   "artifacts": [
     {
-      "path": "release-build/LocalGithubLibrary-0.2.2-win-x64.zip",
+      "path": "release-build/LocalGithubLibrary-0.2.3-win-x64.zip",
       "role": "standard",
       "description": "推荐的 Windows x64 标准发布包，包含主程序、提示词与 CPU 原生运行库。",
+      "localized_descriptions": {
+        "zh-CN": "推荐的 Windows x64 标准发布包，包含主程序、提示词与 CPU 原生运行库。",
+        "zh-TW": "推薦的 Windows x64 標準發佈包，包含主程式、提示詞與 CPU 原生執行階段。",
+        "en": "Recommended Windows x64 package with the application, prompt, and CPU runtime."
+      },
       "required": true,
-      "download_name": "LocalGithubLibrary-0.2.2-win-x64.zip"
+      "download_name": "LocalGithubLibrary-0.2.3-win-x64.zip"
     },
     {
-      "path": "release-build/LocalGithubLibrary-0.2.2-full-win-x64.zip",
+      "path": "release-build/LocalGithubLibrary-0.2.3-full-win-x64.zip",
       "role": "offline",
       "description": "完整离线包，额外包含 Qwen2.5 1.5B 本地模型。",
+      "localized_descriptions": {
+        "zh-CN": "完整离线包，额外包含 Qwen2.5 1.5B 本地模型。",
+        "zh-TW": "完整離線包，額外包含 Qwen2.5 1.5B 本機模型。",
+        "en": "Full offline package with the Qwen2.5 1.5B local model."
+      },
       "required": true,
-      "download_name": "LocalGithubLibrary-0.2.2-full-win-x64.zip"
+      "download_name": "LocalGithubLibrary-0.2.3-full-win-x64.zip"
     },
     {
       "path": "release-build/Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm",
       "role": "extension",
       "description": "可单独导入的本地 LLM 模型扩展包。",
+      "localized_descriptions": {
+        "zh-CN": "可单独导入的本地 LLM 模型扩展包。",
+        "zh-TW": "可單獨匯入的本機 LLM 模型擴充包。",
+        "en": "Optional local LLM model package."
+      },
       "required": true,
       "download_name": "Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm"
     },
@@ -113,6 +180,11 @@
       "path": "release-build/GitHubTopicReports.exe",
       "role": "executable",
       "description": "主程序 EXE，适合已有 runtimes 目录的用户升级。",
+      "localized_descriptions": {
+        "zh-CN": "主程序 EXE，适合已有 runtimes 目录的用户升级。",
+        "zh-TW": "主程式 EXE，適合已有 runtimes 目錄的使用者升級。",
+        "en": "Standalone executable for upgrades that already include the runtime directory."
+      },
       "required": true,
       "download_name": "GitHubTopicReports.exe"
     }
