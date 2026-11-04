@@ -26,18 +26,24 @@
 <p align="center">
   <a href="https://github.com/huaaorain/local-github-library/releases/latest"><strong>Download latest</strong></a>
   ·
-  <a href="#core-capabilities">Core capabilities</a>
+  <a href="#user-content-features">Core capabilities</a>
   ·
-  <a href="#quick-start">Quick start</a>
+  <a href="#user-content-screenshots">Screenshots</a>
   ·
-  <a href="#all-releases">All releases</a>
+  <a href="#user-content-quick-start">Quick start</a>
+  ·
+  <a href="#user-content-releases">All releases</a>
   ·
   <a href="https://github.com/huaaorain/local-github-library/issues">Report an issue</a>
 </p>
 
 ---
 
-## Why it exists
+> [!TIP]
+> **Best for** people who need to discover repositories across topics, follow Star movement, and organize them into a durable local library.
+> **It does not replace** a Git client, code editor, or the GitHub website itself.
+
+## 💡 Why it exists
 
 GitHub is good at finding one repository, but it is not designed to answer questions across topics and time:
 
@@ -48,7 +54,9 @@ GitHub is good at finding one repository, but it is not designed to answer quest
 
 **Local GitHub Library** brings those tasks into a database-free Windows desktop tool that requires no cloud account. Business data is stored in readable TXT, JSON, JSONL, and ZIP files that are easy to inspect, back up, and move.
 
-## Core capabilities
+<a id="features"></a>
+
+## ✨ Core capabilities
 
 <table>
   <colgroup>
@@ -93,7 +101,7 @@ GitHub is good at finding one repository, but it is not designed to answer quest
   </tbody>
 </table>
 
-## Workflow
+## 🧩 Workflow
 
 ![Local GitHub Library workflow diagram](docs/assets/workflow.svg)
 
@@ -101,19 +109,19 @@ _This is a workflow diagram based on the current source and public feature docum
 
 GitHub APIs and public daily rankings supply discovery data. The workspace turns that data into search results, growth trends, favorites, and summaries, then stores everything in local files. Network access powers discovery; snapshots and reports provide continuity.
 
-### Main workspace
+<a id="screenshots"></a>
 
-![Local GitHub Library main workspace](docs/assets/main-workflow.png)
+## 🖼️ Screenshots
 
-_The screenshot uses non-sensitive demo data and shows topic search, repository details, local AI summary, and favorites._
+| Light mode | Dark mode |
+| --- | --- |
+| ![Local GitHub Library light workspace](docs/assets/main-workflow.png) | ![Local GitHub Library dark workspace](docs/assets/main-workflow-dark.png) |
 
-### Light and dark themes
+_Screenshots use non-sensitive demo data. The header theme button switches modes immediately without changing queries, favorites, or reports._
 
-![Local GitHub Library dark mode](docs/assets/main-workflow-dark.png)
+<a id="quick-start"></a>
 
-_The Light mode / Dark mode header button switches themes immediately without changing queries, favorites, or reports._
-
-## Quick start
+## 🚀 Quick start
 
 ### 1. Download
 
@@ -140,7 +148,7 @@ $env:GITHUB_TOKEN = "your_token"
 
 Do not commit or share the token.
 
-## Local LLM
+## 🧠 Local LLM
 
 `v0.2.0` adds an optional `.ghllm` extension package. After installation, repository details can stream Chinese translations and summaries. Without the package, search, rankings, favorites, and README summaries remain available.
 
@@ -167,7 +175,7 @@ See [docs/LLM_PACKAGE.md](docs/LLM_PACKAGE.md) for package validation and build 
 
 </details>
 
-## Data and privacy
+## 🛡️ Data and privacy
 
 The application maintains a `GitHubReports/` directory beside the executable:
 
@@ -191,7 +199,9 @@ GitHubReports/
 - Imports create a backup and validate format, size, and path safety.
 - Reports, favorites, and Star snapshots are not uploaded to third-party analytics or inference services.
 
-## All releases
+<a id="releases"></a>
+
+## 📦 All releases
 
 <!-- release-catalog:start -->
 Latest: [Local GitHub Library 0.2.3](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.3)
@@ -274,7 +284,7 @@ Release notes: [Open](https://github.com/huaaorain/local-github-library/releases
 </details>
 <!-- release-catalog:end -->
 
-## Requirements
+## 🖥️ Requirements
 
 - Windows 10 or Windows 11, 64-bit
 - Intel or AMD processor
@@ -282,7 +292,7 @@ Release notes: [Open](https://github.com/huaaorain/local-github-library/releases
 - Network access for search, README retrieval, and current rankings
 - Favorite browsing and downloaded ranking caches work offline
 
-## Known limitations
+## ⚠️ Known limitations
 
 - GitHub Search API returns at most 1000 results, and anonymous requests have a low quota.
 - The all-site growth ranking depends on the coverage of the public [OpenGithubs daily ranking](https://github.com/OpenGithubs/github-daily-rank).
@@ -290,7 +300,7 @@ Release notes: [Open](https://github.com/huaaorain/local-github-library/releases
 - The unsigned EXE may trigger a Windows SmartScreen warning.
 - The repository does not currently declare an open-source license.
 
-## Build from source
+## 🔧 Build from source
 
 <details>
 <summary><strong>Build, run, and publish</strong></summary>
@@ -311,7 +321,7 @@ The publish script creates a single-file application and copies the LLamaSharp C
 
 </details>
 
-## Contributing
+## 🤝 Contributing
 
 Issues and pull requests are welcome. Before submitting:
 
@@ -319,7 +329,7 @@ Issues and pull requests are welcome. Before submitting:
 - Complete a Release build.
 - Increment `formatVersion` when changing the configuration format.
 
-## Release history
+## 📝 Release history
 
 - [0.2.3: application-wide design system, light/dark themes, and interaction states](docs/releases/v0.2.3.en.md)
 - [0.2.2: cross-domain search relevance, numeric sorting, and stable result ordering](docs/releases/v0.2.2.md)
@@ -328,7 +338,7 @@ Issues and pull requests are welcome. Before submitting:
 - [0.1.0: first public release](docs/releases/v0.1.0.md)
 - Full history: [CHANGELOG.md](CHANGELOG.md)
 
-## Acknowledgements
+## 🙏 Acknowledgements
 
 - [GitHub REST API](https://docs.github.com/rest)
 - [OpenGithubs GitHub Daily Rank](https://github.com/OpenGithubs/github-daily-rank)
@@ -336,6 +346,6 @@ Issues and pull requests are welcome. Before submitting:
 - [LLamaSharp](https://github.com/SciSharp/LLamaSharp) and [llama.cpp](https://github.com/ggml-org/llama.cpp)
 - Qwen2.5 model (Apache-2.0)
 
-## License
+## 📄 License
 
 This repository does not currently declare an open-source license. Until a license is added, do not use the code as part of a commercial or redistributed product.

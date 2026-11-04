@@ -26,18 +26,24 @@
 <p align="center">
   <a href="https://github.com/huaaorain/local-github-library/releases/latest"><strong>下载最新版本</strong></a>
   ·
-  <a href="#核心能力">核心能力</a>
+  <a href="#user-content-features">核心能力</a>
   ·
-  <a href="#快速开始">快速开始</a>
+  <a href="#user-content-screenshots">界面预览</a>
   ·
-  <a href="#所有版本">所有版本</a>
+  <a href="#user-content-quick-start">快速开始</a>
+  ·
+  <a href="#user-content-releases">所有版本</a>
   ·
   <a href="https://github.com/huaaorain/local-github-library/issues">反馈问题</a>
 </p>
 
 ---
 
-## 解决的问题
+> [!TIP]
+> **适合**需要跨主题发现项目、观察 Star 变化并长期整理仓库的人。
+> **不替代** Git 客户端、代码编辑器或 GitHub 网页本身。
+
+## 💡 解决的问题
 
 GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问题：
 
@@ -48,7 +54,9 @@ GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问�
 
 **Local GitHub Library** 把这些任务放进一个无需数据库、无需云端账户的 Windows 桌面工具中。业务数据使用 TXT、JSON、JSONL 和 ZIP 等普通文件，便于查看、备份和迁移。
 
-## 核心能力
+<a id="features"></a>
+
+## ✨ 核心能力
 
 <table>
   <colgroup>
@@ -93,7 +101,7 @@ GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问�
   </tbody>
 </table>
 
-## 功能流程
+## 🧩 功能流程
 
 ![Local GitHub Library 功能流程示意](docs/assets/workflow.svg)
 
@@ -101,19 +109,19 @@ _上图是依据当前源码与公开功能说明绘制的流程示意，不是�
 
 从 GitHub API 与公开日榜获取数据，在工作台中形成搜索、趋势、收藏和摘要，再保存为本地文件。网络数据用于发现，本地快照与报告负责持续跟踪。
 
-### 主工作区
+<a id="screenshots"></a>
 
-![Local GitHub Library 主工作区](docs/assets/main-workflow.png)
+## 🖼️ 界面预览
 
-_截图使用非敏感演示数据，展示主题查询、仓库详情、本地 AI 总结和收藏目录。_
+| 浅色模式 | 深色模式 |
+| --- | --- |
+| ![Local GitHub Library 浅色主工作区](docs/assets/main-workflow.png) | ![Local GitHub Library 深色主工作区](docs/assets/main-workflow-dark.png) |
 
-### 浅色与深色主题
+_截图使用非敏感演示数据。顶部主题按钮可在浅色与深色之间即时切换，不改变查询、收藏或报告数据。_
 
-![Local GitHub Library 深色模式](docs/assets/main-workflow-dark.png)
+<a id="quick-start"></a>
 
-_顶部“深色模式 / 浅色模式”按钮可即时切换主题，不改变查询、收藏或报告数据。_
-
-## 快速开始
+## 🚀 快速开始
 
 ### 1. 下载
 
@@ -140,7 +148,7 @@ $env:GITHUB_TOKEN = "your_token"
 
 请勿提交或分享 Token。
 
-## 本地 LLM
+## 🧠 本地 LLM
 
 `v0.2.0` 引入可选 `.ghllm` 扩展包。安装后，仓库详情可以流式生成中文翻译和中文总结；未安装时，搜索、排行、收藏与 README 摘要仍可正常使用。
 
@@ -167,7 +175,7 @@ $env:GITHUB_TOKEN = "your_token"
 
 </details>
 
-## 数据与隐私
+## 🛡️ 数据与隐私
 
 程序在 EXE 旁维护 `GitHubReports/`：
 
@@ -191,7 +199,9 @@ GitHubReports/
 - 导入前自动备份，并校验格式、体积与路径安全。
 - 报告、收藏和 Star 快照不会上传到第三方分析或推理服务。
 
-## 所有版本
+<a id="releases"></a>
+
+## 📦 所有版本
 
 <!-- release-catalog:start -->
 最新版本: [Local GitHub Library 0.2.3](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.3)
@@ -274,7 +284,7 @@ GitHubReports/
 </details>
 <!-- release-catalog:end -->
 
-## 系统要求
+## 🖥️ 系统要求
 
 - Windows 10 或 Windows 11，64 位
 - Intel 或 AMD 处理器
@@ -282,7 +292,7 @@ GitHubReports/
 - 搜索、README 读取与当前榜单需要联网
 - 收藏浏览和已下载的榜单缓存可离线使用
 
-## 已知限制
+## ⚠️ 已知限制
 
 - GitHub Search API 最多返回 1000 条结果，匿名请求额度较低。
 - 全站增量榜依赖 [OpenGithubs 公开日榜](https://github.com/OpenGithubs/github-daily-rank) 的覆盖范围。
@@ -290,7 +300,7 @@ GitHubReports/
 - 未签名 EXE 可能触发 Windows SmartScreen 提示。
 - 当前仓库尚未声明开源许可证。
 
-## 从源码构建
+## 🔧 从源码构建
 
 <details>
 <summary><strong>构建、运行与发布</strong></summary>
@@ -311,7 +321,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 </details>
 
-## 参与贡献
+## 🤝 参与贡献
 
 欢迎提交 Issue 和 Pull Request。提交前请确认：
 
@@ -319,7 +329,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 - 已完成 Release 构建。
 - 修改配置格式时同步升级 `formatVersion`。
 
-## 更新记录
+## 📝 更新记录
 
 - [0.2.3：应用级设计系统、深浅色主题与交互状态重做](docs/releases/v0.2.3.zh-CN.md)
 - [0.2.2：跨领域搜索相关性、数值排序与结果稳定性修复](docs/releases/v0.2.2.md)
@@ -328,7 +338,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 - [0.1.0：首个公开版本](docs/releases/v0.1.0.md)
 - 完整历史见 [CHANGELOG.md](CHANGELOG.md)
 
-## 致谢
+## 🙏 致谢
 
 - [GitHub REST API](https://docs.github.com/rest)
 - [OpenGithubs GitHub Daily Rank](https://github.com/OpenGithubs/github-daily-rank)
@@ -336,6 +346,6 @@ dotnet run --project .\GitHubTopicReports.csproj
 - [LLamaSharp](https://github.com/SciSharp/LLamaSharp) 与 [llama.cpp](https://github.com/ggml-org/llama.cpp)
 - Qwen2.5 模型（Apache-2.0）
 
-## License
+## 📄 License
 
 当前仓库尚未指定开源许可证。在添加许可证前，请勿直接将代码作为商业或再分发项目的一部分使用。
