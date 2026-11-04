@@ -194,10 +194,11 @@ GitHubReports/
 ## 所有版本
 
 <!-- release-catalog:start -->
-最新版本: [Local GitHub Library 0.2.2](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.2)
+最新版本: [Local GitHub Library 0.2.3](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.3)
 
 | 版本 | 发布时间 | 发布说明 |
 | --- | --- | --- |
+| `v0.2.3` | 2026-11-04 | [打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.3) |
 | `v0.2.2` | 2026-11-02 | [打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.2) |
 | `v0.2.1` | 2026-10-27 | [打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.1) |
 | `v0.2.0` | 2026-10-26 | [打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.0) |
@@ -205,6 +206,20 @@ GitHubReports/
 
 <details>
 <summary><strong>全部版本下载</strong></summary>
+
+### Local GitHub Library 0.2.3
+
+发布说明: [打开](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.3)
+
+- [FILE_MANIFEST.md](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/FILE_MANIFEST.md) — 1.0 KB
+- [GitHubTopicReports.exe](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/GitHubTopicReports.exe) — 70.6 MB
+- [LocalGithubLibrary-0.2.3-full-win-x64.zip](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-full-win-x64.zip) — 1.1 GB
+- [LocalGithubLibrary-0.2.3-win-x64.zip](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-win-x64.zip) — 73.0 MB
+- [Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm) — 1.0 GB
+- [release-manifest.json](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/release-manifest.json) — 3.1 KB
+- [SHA256SUMS.txt](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/SHA256SUMS.txt) — 401 B
+- [源代码（zip）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.2.3.zip)
+- [源代码（tar.gz）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.2.3.tar.gz)
 
 ### Local GitHub Library 0.2.2
 
