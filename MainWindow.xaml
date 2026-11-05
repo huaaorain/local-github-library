@@ -182,13 +182,13 @@
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <Grid Margin="14,13,14,8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="收藏目录"
@@ -198,23 +198,24 @@
                                                VerticalAlignment="Center"
                                                Style="{StaticResource QuietTextStyle}"
                                                Text="0 个" />
-                                </Grid>
-                                <StackPanel Grid.Row="1"
-                                            Margin="12,0,12,8"
-                                            Orientation="Horizontal">
                                     <Button x:Name="CreateSearchDirectoryButton"
-                                            Padding="10,6"
-                                            Content="新建目录"
-                                            Click="CreateSearchDirectoryButton_Click" />
-                                    <Button x:Name="RenameCombinedFavoriteFolderButton"
+                                            Grid.Column="2"
                                             Margin="8,0,0,0"
-                                            Padding="10,6"
-                                            Content="重命名"
-                                            IsEnabled="False"
-                                            Click="RenameCombinedFavoriteFolderButton_Click" />
-                                </StackPanel>
+                                            AutomationProperties.Name="新建收藏目录"
+                                            ToolTip="新建收藏目录"
+                                            Style="{StaticResource CompactIconButtonStyle}"
+                                            Click="CreateSearchDirectoryButton_Click">
+                                        <Path Width="12"
+                                              Height="12"
+                                              Data="M 1,6 H 11 M 6,1 V 11"
+                                              Stroke="{DynamicResource TextSecondaryBrush}"
+                                              StrokeThickness="1.6"
+                                              StrokeStartLineCap="Round"
+                                              StrokeEndLineCap="Round" />
+                                    </Button>
+                                </Grid>
                                 <ListBox x:Name="SearchDirectoryList"
-                                         Grid.Row="2"
+                                         Grid.Row="1"
                                          Margin="6,0"
                                          BorderThickness="0"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -225,21 +226,92 @@
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="{Binding Name}"
                                                            FontWeight="SemiBold"
+                                                           VerticalAlignment="Center"
                                                            ToolTip="{Binding Name}"
                                                            TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Grid.Column="1"
                                                            Margin="8,0,0,0"
+                                                           VerticalAlignment="Center"
                                                            Text="{Binding CountDisplay}"
                                                            Style="{StaticResource QuietTextStyle}" />
+                                                <Button Grid.Column="2"
+                                                        Width="24"
+                                                        Height="24"
+                                                        Margin="6,0,0,0"
+                                                        Padding="0"
+                                                        VerticalAlignment="Center"
+                                                        AutomationProperties.Name="重命名此目录"
+                                                        ToolTip="重命名此目录"
+                                                        Style="{StaticResource BorderlessIconButtonStyle}"
+                                                        Click="RenameSearchDirectoryButton_Click">
+                                                    <Grid Width="20" Height="20">
+                                                        <Border Width="13"
+                                                                Height="12"
+                                                                HorizontalAlignment="Left"
+                                                                VerticalAlignment="Bottom"
+                                                                Margin="0,0,0,2"
+                                                                BorderBrush="{DynamicResource TextSecondaryBrush}"
+                                                                BorderThickness="1"
+                                                                CornerRadius="1.5" />
+                                                        <Path Data="M 2,15 L 3.25,11.5 L 11.8,3.7 L 14.2,6.3 L 5.6,14.1 Z"
+                                                              Fill="{DynamicResource SurfaceBrush}"
+                                                              Stroke="{DynamicResource TextSecondaryBrush}"
+                                                              StrokeThickness="0.95"
+                                                              StrokeLineJoin="Round" />
+                                                        <Path Data="M 10.7,4.7 L 13.1,7.3"
+                                                              Stroke="{DynamicResource TextSecondaryBrush}"
+                                                              StrokeThickness="0.8"
+                                                              StrokeStartLineCap="Round"
+                                                              StrokeEndLineCap="Round" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button Grid.Column="3"
+                                                        Width="24"
+                                                        Height="24"
+                                                        Margin="4,0,0,0"
+                                                        Padding="0"
+                                                        VerticalAlignment="Center"
+                                                        AutomationProperties.Name="删除此目录"
+                                                        ToolTip="删除此目录"
+                                                        Style="{StaticResource DangerBorderlessIconButtonStyle}"
+                                                        Click="DeleteSearchDirectoryButton_Click">
+                                                    <Grid Width="16"
+                                                          Height="16">
+                                                        <Grid.Resources>
+                                                            <Style TargetType="Path">
+                                                                <Setter Property="Stroke"
+                                                                        Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                                                            </Style>
+                                                        </Grid.Resources>
+                                                        <Path Data="M 2,4 H 14"
+                                                              StrokeThickness="1.1"
+                                                              StrokeStartLineCap="Round"
+                                                              StrokeEndLineCap="Round" />
+                                                        <Path Data="M 5,4 V 2 H 11 V 4"
+                                                              Fill="Transparent"
+                                                              StrokeThickness="1.1"
+                                                              StrokeLineJoin="Round" />
+                                                        <Path Data="M 3.5,4.5 L 4.5,14.5 H 11.5 L 12.5,4.5"
+                                                              Fill="Transparent"
+                                                              StrokeThickness="1.1"
+                                                              StrokeLineJoin="Round" />
+                                                        <Path Data="M 6.5,7 V 12 M 9.5,7 V 12"
+                                                              StrokeThickness="1"
+                                                              StrokeStartLineCap="Round"
+                                                              StrokeEndLineCap="Round" />
+                                                    </Grid>
+                                                </Button>
                                             </Grid>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
-                                <TextBlock Grid.Row="2"
-                                           Text="暂无收藏目录。&#10;点击“新建目录”开始整理项目。">
+                                <TextBlock Grid.Row="1"
+                                           Text="暂无收藏目录。&#10;点击右上角“+”开始整理项目。">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock"
                                                BasedOn="{StaticResource EmptyStateTextStyle}">
@@ -254,7 +326,7 @@
                                     </TextBlock.Style>
                                 </TextBlock>
                                 <Button x:Name="OpenSearchDirectoryButton"
-                                        Grid.Row="3"
+                                        Grid.Row="2"
                                         Margin="12"
                                         Padding="10,7"
                                         Content="打开所选目录"
@@ -262,7 +334,7 @@
                                         Visibility="Collapsed"
                                         Click="OpenSearchDirectoryButton_Click" />
                                 <Button x:Name="ExportFavoriteNotesButton"
-                                        Grid.Row="3"
+                                        Grid.Row="2"
                                         Margin="12,0,12,12"
                                         Padding="10,7"
                                         Content="导出备注"
@@ -1312,7 +1384,7 @@
             </TabItem>
         </TabControl>
         <Button x:Name="ResetLayoutButton"
-                Margin="0,12,16,0"
+                Margin="0,8,16,0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 Panel.ZIndex="2"

@@ -943,7 +943,6 @@ public partial class MainWindow : Window
                 _favoriteFolders.FirstOrDefault(folder => folder.Id == preferredFolderId)
                 ?? _favoriteFolders.FirstOrDefault(folder => folder.Id == previousDestinationFolderId)
                 ?? selectedFolder;
-            RenameCombinedFavoriteFolderButton.IsEnabled = selectedFolder is not null;
             CombinedFavoritesGrid.ItemsSource = selectedFolder?.Repositories
                 .OrderByDescending(repository => repository.SavedAt)
                 .ToList() ?? [];
@@ -966,7 +965,6 @@ public partial class MainWindow : Window
     private void SearchDirectoryList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         _selectedSearchFolder = SearchDirectoryList.SelectedItem as FavoriteFolder;
-        RenameCombinedFavoriteFolderButton.IsEnabled = _selectedSearchFolder is not null;
         CombinedFavoritesGrid.ItemsSource = _selectedSearchFolder?.Repositories
             .OrderByDescending(repository => repository.SavedAt)
             .ToList() ?? [];
@@ -1021,17 +1019,18 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void RenameCombinedFavoriteFolderButton_Click(object sender, RoutedEventArgs e)
+    private async void RenameSearchDirectoryButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_selectedSearchFolder is null)
+        if (sender is not FrameworkElement { DataContext: FavoriteFolder folder })
         {
             return;
         }
 
+        SearchDirectoryList.SelectedItem = folder;
         var dialog = new FolderNameDialog(
             "重命名收藏目录",
             "输入新的目录名称。",
-            _selectedSearchFolder.Name)
+            folder.Name)
         {
             Owner = this
         };
@@ -1042,7 +1041,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var folderId = _selectedSearchFolder.Id;
+            var folderId = folder.Id;
             await _favorites.RenameFolderAsync(folderId, dialog.FolderName);
             await RefreshSearchDirectoriesAsync(folderId);
             StatusText.Text = $"收藏目录已重命名为“{dialog.FolderName}”。";
@@ -1057,6 +1056,47 @@ public partial class MainWindow : Window
                 "目录已存在",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
+        }
+        catch (Exception exception)
+        {
+            ShowFavoriteError(exception);
+        }
+    }
+
+    private async void DeleteSearchDirectoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: FavoriteFolder folder })
+        {
+            return;
+        }
+
+        var message = folder.Repositories.Count == 0
+            ? $"确定删除收藏目录“{folder.Name}”吗？"
+            : $"确定删除收藏目录“{folder.Name}”吗？\n\n" +
+              $"目录中的 {folder.Repositories.Count:N0} 个收藏项目及备注也会从本地删除。";
+        var result = MessageBox.Show(
+            this,
+            message + "\n\n此操作不可撤销。",
+            "删除收藏目录",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning,
+            MessageBoxResult.No);
+        if (result != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        try
+        {
+            SearchDirectoryList.SelectedItem = folder;
+            var removed = await _favorites.DeleteFolderAsync(folder.Id);
+            if (!removed)
+            {
+                throw new InvalidOperationException("所选收藏目录已经不存在。");
+            }
+
+            await RefreshSearchDirectoriesAsync();
+            StatusText.Text = $"已删除收藏目录“{folder.Name}”。";
         }
         catch (Exception exception)
         {

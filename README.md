@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.3-ff7a45?style=flat-square" alt="Version 0.2.3">
+  <img src="https://img.shields.io/badge/version-0.2.4-ff7a45?style=flat-square" alt="Version 0.2.4">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -84,7 +84,7 @@ GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问�
     </tr>
     <tr>
       <td><strong>本&#8239;地&#8239;收&#8239;藏</strong></td>
-      <td>创建自定义目录，搜索、批量收藏并跳过重复仓库；可为每个项目添加、修改或删除本地备注，并导出带时间戳的 TXT 备注文件。</td>
+      <td>创建、重命名或删除自定义目录，搜索、批量收藏并跳过重复仓库；可为每个项目添加、修改或删除本地备注，并导出带时间戳的 TXT 备注文件。</td>
     </tr>
     <tr>
       <td><strong>项&#8239;目&#8239;理&#8239;解</strong></td>
@@ -127,7 +127,7 @@ _截图使用非敏感演示数据。顶部主题按钮可在浅色与深色之�
 
 | 发布包 | 大小 | 适用场景 |
 | --- | ---: | --- |
-| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-win-x64.zip) | 约 77 MB | 搜索、排行、收藏与 README 摘要 |
+| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.4/LocalGithubLibrary-0.2.4-win-x64.zip) | 约 77 MB | 搜索、排行、收藏、备注与 README 摘要 |
 | [LLM 模型（可选）](docs/models/README.md) | 约 1.04 GB | 独立下载，升级程序时无需重复下载 |
 
 ### 2. 解压并运行
@@ -333,6 +333,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 📝 更新记录
 
+- [0.2.4：收藏备注、目录管理图标与独立模型发布](docs/releases/v0.2.4.zh-CN.md)
 - [0.2.3：应用级设计系统、深浅色主题与交互状态重做](docs/releases/v0.2.3.zh-CN.md)
 - [0.2.2：跨领域搜索相关性、数值排序与结果稳定性修复](docs/releases/v0.2.2.md)
 - [0.2.1：可调面板布局、恢复布局按钮与界面细节优化](docs/releases/v0.2.1.md)

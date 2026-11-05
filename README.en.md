@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.3-ff7a45?style=flat-square" alt="Version 0.2.3">
+  <img src="https://img.shields.io/badge/version-0.2.4-ff7a45?style=flat-square" alt="Version 0.2.4">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -84,7 +84,7 @@ GitHub is good at finding one repository, but it is not designed to answer quest
     </tr>
     <tr>
       <td><strong>Favorites</strong></td>
-      <td>Create custom folders, search and batch-favorite repositories, and skip duplicates. Add, edit, or delete a local note for each project and export all notes to a timestamped TXT file.</td>
+      <td>Create, rename, or delete custom folders; search and batch-favorite repositories while skipping duplicates. Add, edit, or delete a local note for each project and export all notes to a timestamped TXT file.</td>
     </tr>
     <tr>
       <td><strong>Insights</strong></td>
@@ -127,7 +127,7 @@ _Screenshots use non-sensitive demo data. The header theme button switches modes
 
 | Package | Size | Best for |
 | --- | ---: | --- |
-| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-win-x64.zip) | About 77 MB | Search, rankings, favorites, and README summaries |
+| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.4/LocalGithubLibrary-0.2.4-win-x64.zip) | About 77 MB | Search, rankings, favorites, notes, and README summaries |
 | [LLM model (optional)](docs/models/README.md) | About 1.04 GB | Downloaded separately; application upgrades reuse it |
 
 ### 2. Extract and run
@@ -333,6 +333,7 @@ Issues and pull requests are welcome. Before submitting:
 
 ## 📝 Release history
 
+- [0.2.4: favorite notes, folder management actions, and reusable model releases](docs/releases/v0.2.4.en.md)
 - [0.2.3: application-wide design system, light/dark themes, and interaction states](docs/releases/v0.2.3.en.md)
 - [0.2.2: cross-domain search relevance, numeric sorting, and stable result ordering](docs/releases/v0.2.2.md)
 - [0.2.1: resizable workspace panes, reset-layout control, and UI polish](docs/releases/v0.2.1.md)

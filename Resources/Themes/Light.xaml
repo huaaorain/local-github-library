@@ -17,6 +17,9 @@
     <SolidColorBrush x:Key="SuccessBrush" Color="#0F7A58" />
     <SolidColorBrush x:Key="WarningBrush" Color="#8A5200" />
     <SolidColorBrush x:Key="DangerBrush" Color="#B42318" />
+    <SolidColorBrush x:Key="DangerIconBrush" Color="#D68B8B" />
+    <SolidColorBrush x:Key="DangerIconHoverBrush" Color="#C96F6F" />
+    <SolidColorBrush x:Key="DangerIconPressedBrush" Color="#E1192D" />
     <SolidColorBrush x:Key="OverlayBrush" Color="#66142033" />
     <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#F4F7FB" />
     <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="#142033" />

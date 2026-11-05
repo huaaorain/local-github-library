@@ -2,18 +2,21 @@
 
 All notable changes to Local Github Library will be documented in this file.
 
-## [Unreleased]
+## [0.2.4] - 2026-11-05
 
 ### Added
 
 - Add, edit, view, and delete a local note for each favorited repository.
 - Export all non-empty favorite notes as a timestamped UTF-8 TXT file.
+- Delete favorite folders from each directory row with confirmation before
+  removing the folder and its locally saved repositories and notes.
 
 ### Changed
 
 - Publish reusable LLM packages separately from application versions.
 - Application releases now contain only the standard package and executable;
   the large offline package and `.ghllm` asset are no longer uploaded per version.
+- Center the layout reset control and favorite-folder row actions consistently.
 
 ## [0.2.3] - 2026-11-04
 

@@ -82,6 +82,28 @@ public sealed class FavoritesService
         }
     }
 
+    public async Task<bool> DeleteFolderAsync(
+        string folderId,
+        CancellationToken cancellationToken = default)
+    {
+        await _writeLock.WaitAsync(cancellationToken);
+        try
+        {
+            var document = await LoadDocumentInternalAsync(cancellationToken);
+            var removed = document.Folders.RemoveAll(item => item.Id == folderId) > 0;
+            if (removed)
+            {
+                await SaveDocumentInternalAsync(document, cancellationToken);
+            }
+
+            return removed;
+        }
+        finally
+        {
+            _writeLock.Release();
+        }
+    }
+
     public async Task<FavoriteAddResult> AddFavoriteAsync(
         string folderId,
         string sourceKeyword,

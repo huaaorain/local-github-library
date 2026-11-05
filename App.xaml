@@ -207,6 +207,96 @@
                 <Setter Property="FontSize" Value="15" />
             </Style>
 
+            <Style x:Key="BorderlessIconButtonStyle"
+                   TargetType="Button">
+                <Setter Property="Width" Value="24" />
+                <Setter Property="Height" Value="24" />
+                <Setter Property="MinHeight" Value="0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="FocusVisualStyle"
+                        Value="{StaticResource ControlFocusVisual}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid x:Name="IconHitTarget"
+                                  Background="Transparent">
+                                <Border x:Name="FocusRing"
+                                        BorderBrush="Transparent"
+                                        BorderThickness="1"
+                                        CornerRadius="4" />
+                                <ContentPresenter HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center" />
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="IconHitTarget"
+                                            Property="Opacity"
+                                            Value="0.7" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="IconHitTarget"
+                                            Property="Opacity"
+                                            Value="0.5" />
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="FocusRing"
+                                            Property="BorderBrush"
+                                            Value="{DynamicResource FocusBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.45" />
+                                    <Setter Property="Cursor" Value="Arrow" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="DangerBorderlessIconButtonStyle"
+                   TargetType="Button"
+                   BasedOn="{StaticResource BorderlessIconButtonStyle}">
+                <Setter Property="Foreground"
+                        Value="{DynamicResource DangerIconBrush}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid x:Name="IconHitTarget"
+                                  Background="Transparent">
+                                <Border x:Name="FocusRing"
+                                        BorderBrush="Transparent"
+                                        BorderThickness="1"
+                                        CornerRadius="4" />
+                                <ContentPresenter HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center" />
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground"
+                                            Value="{DynamicResource DangerIconHoverBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Foreground"
+                                            Value="{DynamicResource DangerIconPressedBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="FocusRing"
+                                            Property="BorderBrush"
+                                            Value="{DynamicResource DangerIconPressedBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.45" />
+                                    <Setter Property="Cursor" Value="Arrow" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
             <Style TargetType="TextBox">
                 <Setter Property="MinHeight" Value="36" />
                 <Setter Property="Padding" Value="10,7" />
