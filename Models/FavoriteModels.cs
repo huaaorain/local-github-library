@@ -44,10 +44,12 @@ public sealed class FavoriteRepository
     public string License { get; init; } = "";
     public string SourceKeyword { get; init; } = "";
     public DateTimeOffset SavedAt { get; init; } = DateTimeOffset.Now;
+    public string Note { get; set; } = "";
 
     public string StarsDisplay => Stars.ToString("N0");
     public string TopicsDisplay => Topics.Count == 0 ? "无" : string.Join(", ", Topics);
     public string SavedAtDisplay => SavedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+    public bool HasNote => !string.IsNullOrWhiteSpace(Note);
 }
 
 public sealed class FavoriteAddResult

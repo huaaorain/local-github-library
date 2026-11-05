@@ -165,6 +165,79 @@ public sealed class FavoritesService
         }
     }
 
+    public async Task SetNoteAsync(
+        string folderId,
+        long repositoryId,
+        string note,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedNote = note.Trim();
+        if (normalizedNote.Length > 4000)
+        {
+            throw new InvalidOperationException("备注不能超过 4000 个字符。");
+        }
+
+        await _writeLock.WaitAsync(cancellationToken);
+        try
+        {
+            var document = await LoadDocumentInternalAsync(cancellationToken);
+            var folder = document.Folders.FirstOrDefault(item => item.Id == folderId)
+                ?? throw new InvalidOperationException("所选收藏目录不存在。");
+            var repository = folder.Repositories.FirstOrDefault(item => item.Id == repositoryId)
+                ?? throw new InvalidOperationException("所选收藏仓库不存在。");
+            repository.Note = normalizedNote;
+            await SaveDocumentInternalAsync(document, cancellationToken);
+        }
+        finally
+        {
+            _writeLock.Release();
+        }
+    }
+
+    public async Task<string> BuildNotesTextAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var document = await LoadDocumentInternalAsync(cancellationToken);
+        var builder = new StringBuilder();
+        builder.AppendLine("Local GitHub Library - 收藏备注");
+        builder.AppendLine($"导出时间：{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss}");
+        builder.AppendLine();
+
+        var exportedCount = 0;
+        foreach (var folder in document.Folders.OrderBy(item => item.CreatedAt))
+        {
+            var notedRepositories = folder.Repositories
+                .Where(item => item.HasNote)
+                .OrderByDescending(item => item.SavedAt)
+                .ToList();
+            if (notedRepositories.Count == 0)
+            {
+                continue;
+            }
+
+            builder.AppendLine($"目录：{folder.Name}");
+            builder.AppendLine(new string('-', 48));
+            foreach (var repository in notedRepositories)
+            {
+                exportedCount++;
+                builder.AppendLine($"仓库：{repository.FullName}");
+                builder.AppendLine($"GitHub：{repository.HtmlUrl}");
+                builder.AppendLine($"收藏时间：{repository.SavedAtDisplay}");
+                builder.AppendLine("备注：");
+                builder.AppendLine(repository.Note);
+                builder.AppendLine();
+            }
+        }
+
+        if (exportedCount == 0)
+        {
+            return "";
+        }
+
+        builder.AppendLine($"共导出 {exportedCount:N0} 条备注。");
+        return builder.ToString();
+    }
+
     public async Task<FavoriteBatchAddResult> AddFavoritesAsync(
         string folderId,
         string sourceKeyword,

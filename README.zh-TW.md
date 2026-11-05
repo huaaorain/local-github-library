@@ -84,7 +84,7 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
     </tr>
     <tr>
       <td><strong>本&#8239;機&#8239;收&#8239;藏</strong></td>
-      <td>建立自訂目錄、搜尋、批次收藏並跳過重複倉庫，把專案長期整理成個人資料庫。</td>
+      <td>建立自訂目錄、搜尋、批次收藏並跳過重複倉庫；可為每個專案新增、修改或刪除本機備註，並匯出帶時間戳的 TXT 備註檔案。</td>
     </tr>
     <tr>
       <td><strong>專&#8239;案&#8239;理&#8239;解</strong></td>
@@ -92,7 +92,7 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
     </tr>
     <tr>
       <td><strong>資&#8239;料&#8239;移&#8239;轉</strong></td>
-      <td>將報告、查詢記錄、收藏、Star 快照和榜單快取打包為 `.ghconfig`，匯入前自動備份。</td>
+      <td>將報告、查詢記錄、收藏及備註、Star 快照和榜單快取打包為 `.ghconfig`，匯入前自動備份。</td>
     </tr>
     <tr>
       <td><strong>介&#8239;面&#8239;主&#8239;題</strong></td>
@@ -128,7 +128,7 @@ _截圖使用非敏感示範資料。頂部主題按鈕可在淺色與深色之�
 | 發佈包 | 大小 | 適用情境 |
 | --- | ---: | --- |
 | [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-win-x64.zip) | 約 77 MB | 搜尋、排行、收藏與 README 摘要 |
-| [完整離線版](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-full-win-x64.zip) | 約 1.17 GB | 額外包含 Qwen2.5 1.5B 本機模型 |
+| [LLM 模型（選用）](docs/models/README.md) | 約 1.04 GB | 獨立下載，升級程式時無需重複下載 |
 
 ### 2. 解壓縮並執行
 
@@ -152,6 +152,8 @@ $env:GITHUB_TOKEN = "your_token"
 
 `v0.2.0` 加入可選 `.ghllm` 擴充包。安裝後，倉庫詳情可以串流產生中文翻譯和摘要；未安裝時，搜尋、排行、收藏與 README 摘要仍可正常使用。
 
+從下一個程式版本開始，模型改為獨立的 GitHub Pre-release。請從 [LLM 模型庫](docs/models/README.md) 下載，程式升級時無需重新下載模型。
+
 <details>
 <summary><strong>模型需求與提示詞機制</strong></summary>
 
@@ -171,7 +173,7 @@ $env:GITHUB_TOKEN = "your_token"
 {{ReadmeSummary}}
 ```
 
-完整打包與驗證規則見 [docs/LLM_PACKAGE.md](docs/LLM_PACKAGE.md)。
+模型下載入口見 [LLM 模型庫](docs/models/README.md)，完整打包與驗證規則見 [docs/LLM_PACKAGE.md](docs/LLM_PACKAGE.md)。
 
 </details>
 

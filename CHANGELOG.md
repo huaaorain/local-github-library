@@ -2,6 +2,19 @@
 
 All notable changes to Local Github Library will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Add, edit, view, and delete a local note for each favorited repository.
+- Export all non-empty favorite notes as a timestamped UTF-8 TXT file.
+
+### Changed
+
+- Publish reusable LLM packages separately from application versions.
+- Application releases now contain only the standard package and executable;
+  the large offline package and `.ghllm` asset are no longer uploaded per version.
+
 ## [0.2.3] - 2026-11-04
 
 ### Changed

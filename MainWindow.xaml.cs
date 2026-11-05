@@ -1,5 +1,6 @@
 using System.Text;
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -969,6 +970,11 @@ public partial class MainWindow : Window
         CombinedFavoritesGrid.ItemsSource = _selectedSearchFolder?.Repositories
             .OrderByDescending(repository => repository.SavedAt)
             .ToList() ?? [];
+        _selectedCombinedFavoriteRepository = null;
+        if (CombinedContentTabs.SelectedIndex == 1)
+        {
+            ClearStandaloneDetails("在目录内容中选择一个仓库查看详情。");
+        }
         UpdateStandaloneSearchActionState();
     }
 
@@ -1088,6 +1094,9 @@ public partial class MainWindow : Window
 
     private void ShowSearchRepositoryDetails(RepositoryRecord repository)
     {
+        FavoriteNoteButton.Visibility = Visibility.Collapsed;
+        StandaloneNoteSection.Visibility = Visibility.Collapsed;
+        StandaloneDetailNoteText.Text = "尚未添加备注。";
         _standaloneDetailUrl = repository.HtmlUrl;
         OpenStandaloneRepositoryButton.IsEnabled = true;
         StandaloneDetailNameText.Text = repository.FullName;
@@ -1288,6 +1297,17 @@ public partial class MainWindow : Window
         StandaloneDetailTopicsText.Text =
             $"Topics：{repository.TopicsDisplay}\n" +
             $"来源关键词：{(string.IsNullOrWhiteSpace(repository.SourceKeyword) ? "未记录" : repository.SourceKeyword)}";
+        UpdateFavoriteNotePresentation(repository);
+    }
+
+    private void UpdateFavoriteNotePresentation(FavoriteRepository repository)
+    {
+        FavoriteNoteButton.Visibility = Visibility.Visible;
+        FavoriteNoteButton.Content = repository.HasNote ? "查看备注" : "添加备注";
+        StandaloneNoteSection.Visibility = Visibility.Visible;
+        StandaloneDetailNoteText.Text = repository.HasNote
+            ? repository.Note
+            : "尚未添加备注。";
     }
 
     private void ClearStandaloneDetails(string message)
@@ -1301,6 +1321,86 @@ public partial class MainWindow : Window
         StandaloneDetailLlmText.Text = "导入本地 LLM 包后自动生成。";
         StandaloneDetailStatsText.Text = "";
         StandaloneDetailTopicsText.Text = "";
+        FavoriteNoteButton.Visibility = Visibility.Collapsed;
+        StandaloneNoteSection.Visibility = Visibility.Collapsed;
+        StandaloneDetailNoteText.Text = "尚未添加备注。";
+    }
+
+    private async void FavoriteNoteButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedSearchFolder is not { } folder ||
+            _selectedCombinedFavoriteRepository is not { } repository)
+        {
+            return;
+        }
+
+        var dialog = new FavoriteNoteDialog(repository.FullName, repository.Note)
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            await _favorites.SetNoteAsync(folder.Id, repository.Id, dialog.Note);
+            repository.Note = dialog.Note;
+            FavoriteNoteButton.Content = repository.HasNote ? "查看备注" : "添加备注";
+            StandaloneDetailNoteText.Text = repository.HasNote
+                ? repository.Note
+                : "尚未添加备注。";
+            StatusText.Text = repository.HasNote
+                ? $"已保存“{repository.FullName}”的收藏备注。"
+                : $"已删除“{repository.FullName}”的收藏备注。";
+        }
+        catch (Exception exception)
+        {
+            ShowFavoriteError(exception);
+        }
+    }
+
+    private async void ExportFavoriteNotesButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var content = await _favorites.BuildNotesTextAsync();
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                MessageBox.Show(
+                    this,
+                    "当前没有可导出的收藏备注。",
+                    "导出备注",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            var dialog = new SaveFileDialog
+            {
+                Title = "导出收藏备注",
+                Filter = "TXT 文件 (*.txt)|*.txt|所有文件 (*.*)|*.*",
+                DefaultExt = ".txt",
+                AddExtension = true,
+                InitialDirectory = AppContext.BaseDirectory,
+                FileName = $"收藏备注-{DateTime.Now:yyyyMMdd-HHmmss}.txt"
+            };
+            if (dialog.ShowDialog(this) != true)
+            {
+                return;
+            }
+
+            await File.WriteAllTextAsync(
+                dialog.FileName,
+                content,
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            StatusText.Text = $"收藏备注已导出：{dialog.FileName}";
+        }
+        catch (Exception exception)
+        {
+            ShowFavoriteError(exception);
+        }
     }
 
     private async void LoadCombinedSummary(

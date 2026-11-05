@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "project": {
+    "name": "Local GitHub Library",
+    "description": "Reusable local LLM packages for Local GitHub Library.",
+    "repository": "huaaorain/local-github-library"
+  },
+  "release": {
+    "tag_prefix": "models-",
+    "draft": true,
+    "prerelease": true
+  },
+  "artifact_policy": "release-only",
+  "artifacts": [
+    {
+      "path": "release-build/Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm",
+      "role": "model",
+      "description": "Recommended Qwen2.5 1.5B Instruct Q4_K_M package for Local GitHub Library 0.2.0 and later.",
+      "localized_descriptions": {
+        "zh-CN": "推荐的 Qwen2.5 1.5B Instruct Q4_K_M 模型包，适用于 0.2.0 及更高版本。",
+        "zh-TW": "推薦的 Qwen2.5 1.5B Instruct Q4_K_M 模型包，適用於 0.2.0 及更高版本。",
+        "en": "Recommended Qwen2.5 1.5B Instruct Q4_K_M package for Local GitHub Library 0.2.0 and later."
+      },
+      "required": true,
+      "download_name": "Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm"
+    }
+  ]
+}

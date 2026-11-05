@@ -84,7 +84,7 @@ GitHub is good at finding one repository, but it is not designed to answer quest
     </tr>
     <tr>
       <td><strong>Favorites</strong></td>
-      <td>Create custom folders, search and batch-favorite repositories, skip duplicates, and maintain a long-term local library.</td>
+      <td>Create custom folders, search and batch-favorite repositories, and skip duplicates. Add, edit, or delete a local note for each project and export all notes to a timestamped TXT file.</td>
     </tr>
     <tr>
       <td><strong>Insights</strong></td>
@@ -92,7 +92,7 @@ GitHub is good at finding one repository, but it is not designed to answer quest
     </tr>
     <tr>
       <td><strong>Local&#8239;data</strong></td>
-      <td>Bundle reports, query history, favorites, Star snapshots, and ranking caches into a `.ghconfig` package with an automatic backup before import.</td>
+      <td>Bundle reports, query history, favorites and notes, Star snapshots, and ranking caches into a `.ghconfig` package with an automatic backup before import.</td>
     </tr>
     <tr>
       <td><strong>Appearance</strong></td>
@@ -128,7 +128,7 @@ _Screenshots use non-sensitive demo data. The header theme button switches modes
 | Package | Size | Best for |
 | --- | ---: | --- |
 | [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-win-x64.zip) | About 77 MB | Search, rankings, favorites, and README summaries |
-| [Full offline package](https://github.com/huaaorain/local-github-library/releases/download/v0.2.3/LocalGithubLibrary-0.2.3-full-win-x64.zip) | About 1.17 GB | Adds the Qwen2.5 1.5B local model |
+| [LLM model (optional)](docs/models/README.md) | About 1.04 GB | Downloaded separately; application upgrades reuse it |
 
 ### 2. Extract and run
 
@@ -152,6 +152,8 @@ Do not commit or share the token.
 
 `v0.2.0` adds an optional `.ghllm` extension package. After installation, repository details can stream Chinese translations and summaries. Without the package, search, rankings, favorites, and README summaries remain available.
 
+Starting with the next application version, models are published as a separate GitHub Pre-release. Download them from the [LLM model library](docs/models/README.md); application upgrades do not require downloading the model again.
+
 <details>
 <summary><strong>Model requirements and prompt behavior</strong></summary>
 
@@ -171,7 +173,7 @@ Model packages and prompts are managed separately. Prompts can be imported, edit
 {{ReadmeSummary}}
 ```
 
-See [docs/LLM_PACKAGE.md](docs/LLM_PACKAGE.md) for package validation and build details.
+See the [LLM model library](docs/models/README.md) to download a model and [docs/LLM_PACKAGE.md](docs/LLM_PACKAGE.md) for package validation and build details.
 
 </details>
 

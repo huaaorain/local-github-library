@@ -2,6 +2,15 @@
 
 Local Github Library supports optional local LLM packages for Chinese project summaries and translations.
 
+## Download
+
+Download the recommended model from the dedicated model release:
+
+[LLM 模型库 / LLM model downloads](MODELS.md)
+
+The model package is versioned independently from the application. Updating the
+application does not require downloading the model again.
+
 ## Package Format
 
 The `.ghllm` file is a ZIP container containing only data and license files:

@@ -261,6 +261,14 @@
                                         IsEnabled="False"
                                         Visibility="Collapsed"
                                         Click="OpenSearchDirectoryButton_Click" />
+                                <Button x:Name="ExportFavoriteNotesButton"
+                                        Grid.Row="3"
+                                        Margin="12,0,12,12"
+                                        Padding="10,7"
+                                        Content="导出备注"
+                                        AutomationProperties.Name="导出全部收藏备注"
+                                        ToolTip="将所有目录中的非空备注导出为 TXT 文件"
+                                        Click="ExportFavoriteNotesButton_Click" />
                             </Grid>
                         </Border>
 
@@ -369,9 +377,24 @@
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <TextBlock Margin="14,13,14,10"
-                                           Text="仓库详解"
-                                           Style="{StaticResource SectionTitleStyle}" />
+                                <Grid Margin="14,9,14,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center"
+                                               Text="仓库详解"
+                                               Style="{StaticResource SectionTitleStyle}" />
+                                    <Button x:Name="FavoriteNoteButton"
+                                            Grid.Column="1"
+                                            MinHeight="30"
+                                            Padding="9,4"
+                                            FontSize="12"
+                                            Content="添加备注"
+                                            Visibility="Collapsed"
+                                            AutomationProperties.Name="添加或查看收藏备注"
+                                            Click="FavoriteNoteButton_Click" />
+                                </Grid>
                                 <ScrollViewer Grid.Row="1"
                                               Margin="14,0,14,8"
                                               VerticalScrollBarVisibility="Auto">
@@ -411,6 +434,17 @@
                                                    Margin="0,12,0,0"
                                                    TextWrapping="Wrap"
                                                    LineHeight="21" />
+                                        <StackPanel x:Name="StandaloneNoteSection"
+                                                    Margin="0,14,0,0"
+                                                    Visibility="Collapsed">
+                                            <TextBlock Text="我的备注"
+                                                       FontWeight="SemiBold" />
+                                            <TextBlock x:Name="StandaloneDetailNoteText"
+                                                       Margin="0,4,0,0"
+                                                       Text="尚未添加备注。"
+                                                       TextWrapping="Wrap"
+                                                       LineHeight="21" />
+                                        </StackPanel>
                                     </StackPanel>
                                 </ScrollViewer>
                                 <StackPanel Grid.Row="2" Margin="14,0,14,14">
