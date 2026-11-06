@@ -22,6 +22,12 @@ public partial class MainWindow : Window
     private readonly LlmPackageService _llmPackageService;
     private readonly LlmPromptService _llmPromptService;
     private readonly LocalLlmService _localLlm;
+    private readonly AppSettingsService _appSettingsService;
+    private AppSettings _appSettings;
+    private System.Windows.Forms.NotifyIcon? _trayIcon;
+    private System.Windows.Forms.ContextMenuStrip? _trayMenu;
+    private System.Drawing.Icon? _trayIconImage;
+    private bool _isExiting;
     private CancellationTokenSource? _searchCancellation;
     private CancellationTokenSource? _standaloneSearchCancellation;
     private CancellationTokenSource? _findSummaryCancellation;
@@ -57,6 +63,16 @@ public partial class MainWindow : Window
         _llmPackageService = new LlmPackageService(_library.LibraryRoot);
         _llmPromptService = new LlmPromptService(_library.LibraryRoot);
         _localLlm = new LocalLlmService(_llmPackageService, _llmPromptService);
+        _appSettingsService = new AppSettingsService(_library.LibraryRoot);
+        try
+        {
+            _appSettings = _appSettingsService.Load();
+        }
+        catch (Exception exception)
+        {
+            AppDiagnostics.LogException("读取软件设置", exception);
+            _appSettings = new AppSettings();
+        }
         ThemeManager.ApplySystemTheme();
         InitializeComponent();
         UpdateThemeToggleButton();
@@ -72,6 +88,7 @@ public partial class MainWindow : Window
         StandaloneSearchCountComboBox.Text = "20";
         VersionText.Text = $"版本 {typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "0.2.0"}";
         Loaded += MainWindow_Loaded;
+        Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
     }
 
@@ -113,6 +130,193 @@ public partial class MainWindow : Window
             ThemeManager.IsDark ? "切换到浅色模式" : "切换到深色模式");
     }
 
+    private void SettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new AppSettingsDialog(_appSettings)
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            _appSettingsService.Save(dialog.CurrentSettings);
+            _appSettings = dialog.CurrentSettings;
+            StatusText.Text = "软件设置已保存。";
+        }
+        catch (Exception exception)
+        {
+            var logPath = AppDiagnostics.LogException("保存软件设置", exception);
+            MessageBox.Show(
+                this,
+                $"{AppDiagnostics.GetUserMessage(exception)}\n\n诊断日志：\n{logPath}",
+                "设置保存失败",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            return;
+        }
+
+        switch (dialog.RequestedAction)
+        {
+            case AppSettingsAction.ImportLlm:
+                ImportLlmPackageButton_Click(this, new RoutedEventArgs());
+                break;
+            case AppSettingsAction.ImportConfiguration:
+                ImportConfigurationButton_Click(this, new RoutedEventArgs());
+                break;
+            case AppSettingsAction.ExportConfiguration:
+                ExportConfigurationButton_Click(this, new RoutedEventArgs());
+                break;
+            case AppSettingsAction.OpenLibrary:
+                OpenLibraryButton_Click(this, new RoutedEventArgs());
+                break;
+        }
+    }
+
+    private void MainWindow_Closing(object? sender, CancelEventArgs e)
+    {
+        if (_isExiting)
+        {
+            return;
+        }
+
+        var action = _appSettings.CloseAction;
+        if (_appSettings.AskOnClose)
+        {
+            var dialog = new CloseBehaviorDialog(_appSettings.AskOnClose)
+            {
+                Owner = this
+            };
+            if (dialog.ShowDialog() != true || dialog.SelectedAction is not { } selectedAction)
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            action = selectedAction;
+            var updatedSettings = new AppSettings
+            {
+                CloseAction = selectedAction,
+                AskOnClose = dialog.AskOnClose
+            };
+            _appSettings = updatedSettings;
+            try
+            {
+                _appSettingsService.Save(updatedSettings);
+            }
+            catch (Exception exception)
+            {
+                AppDiagnostics.LogException("保存关闭窗口设置", exception);
+                MessageBox.Show(
+                    this,
+                    "关闭窗口设置未能保存，但本次操作仍会继续。\n\n" +
+                    AppDiagnostics.GetUserMessage(exception),
+                    "设置保存失败",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        }
+
+        if (action == AppCloseAction.Exit)
+        {
+            _isExiting = true;
+            DisposeTrayIcon();
+        }
+        else
+        {
+            e.Cancel = true;
+            MinimizeToTray();
+        }
+    }
+
+    private void MinimizeToTray()
+    {
+        EnsureTrayIcon();
+        ShowInTaskbar = false;
+        Hide();
+    }
+
+    private void EnsureTrayIcon()
+    {
+        if (_trayIcon is not null)
+        {
+            _trayIcon.Visible = true;
+            return;
+        }
+
+        var openItem = new System.Windows.Forms.ToolStripMenuItem("打开主窗口");
+        openItem.Click += (_, _) => RestoreFromTray();
+        var exitItem = new System.Windows.Forms.ToolStripMenuItem("完全退出");
+        exitItem.Click += (_, _) => ExitApplication();
+
+        _trayMenu = new System.Windows.Forms.ContextMenuStrip();
+        _trayMenu.Items.Add(openItem);
+        _trayMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
+        _trayMenu.Items.Add(exitItem);
+
+        try
+        {
+            var executablePath = Environment.ProcessPath;
+            _trayIconImage = !string.IsNullOrWhiteSpace(executablePath)
+                ? System.Drawing.Icon.ExtractAssociatedIcon(executablePath)
+                : null;
+        }
+        catch
+        {
+            _trayIconImage = null;
+        }
+
+        _trayIconImage ??= (System.Drawing.Icon)System.Drawing.SystemIcons.Application.Clone();
+        _trayIcon = new System.Windows.Forms.NotifyIcon
+        {
+            Text = "Local GitHub Library",
+            Icon = _trayIconImage,
+            ContextMenuStrip = _trayMenu,
+            Visible = true
+        };
+        _trayIcon.DoubleClick += (_, _) => RestoreFromTray();
+    }
+
+    private void RestoreFromTray()
+    {
+        ShowInTaskbar = true;
+        Show();
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
+
+        Activate();
+        Topmost = true;
+        Topmost = false;
+        Focus();
+    }
+
+    private void ExitApplication()
+    {
+        _isExiting = true;
+        DisposeTrayIcon();
+        Close();
+    }
+
+    private void DisposeTrayIcon()
+    {
+        if (_trayIcon is not null)
+        {
+            _trayIcon.Visible = false;
+            _trayIcon.Dispose();
+            _trayIcon = null;
+        }
+
+        _trayMenu?.Dispose();
+        _trayMenu = null;
+        _trayIconImage?.Dispose();
+        _trayIconImage = null;
+    }
+
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
         _searchCancellation?.Cancel();
@@ -128,6 +332,7 @@ public partial class MainWindow : Window
         _gitHub.Dispose();
         _globalLeaderboard.Dispose();
         _localLlm.Dispose();
+        DisposeTrayIcon();
     }
 
     private async void SearchButton_Click(object sender, RoutedEventArgs e)
@@ -717,8 +922,7 @@ public partial class MainWindow : Window
 
     private void SetConfigurationButtonsEnabled(bool enabled)
     {
-        ImportConfigurationButton.IsEnabled = enabled;
-        ExportConfigurationButton.IsEnabled = enabled;
+        SettingsButton.IsEnabled = enabled;
     }
 
     private static string GetAppVersion() =>
@@ -731,8 +935,10 @@ public partial class MainWindow : Window
                 ? $"{bytes / 1024d / 1024d:F2} MB"
                 : $"{bytes / 1024d:F1} KB";
 
-    private static void RestartApplication()
+    private void RestartApplication()
     {
+        _isExiting = true;
+        DisposeTrayIcon();
         var executablePath = Environment.ProcessPath;
         if (!string.IsNullOrWhiteSpace(executablePath))
         {

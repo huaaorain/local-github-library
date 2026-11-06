@@ -33,7 +33,7 @@ active prompt is stored separately at:
 GitHubReports/LLM/prompt.txt
 ```
 
-Use **导入 LLM** in the application to import a model package or a TXT prompt.
+Open the header gear and choose **导入 LLM** to import a model package or a TXT prompt.
 The prompt supports `{{FullName}}`, `{{Description}}`, `{{Topics}}` and
 `{{ReadmeSummary}}` placeholders. `{{FullName}}` is required.
 
@@ -83,7 +83,7 @@ The builder:
 
 ## Import
 
-Use **导入 LLM** in the application header and select the `.ghllm` file.
+Open the header gear, choose **导入 LLM**, and select the `.ghllm` file.
 
 The application verifies:
 

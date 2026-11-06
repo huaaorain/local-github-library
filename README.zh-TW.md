@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.4-ff7a45?style=flat-square" alt="版本 0.2.4">
+  <img src="https://img.shields.io/badge/version-0.2.5-ff7a45?style=flat-square" alt="版本 0.2.5">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="本機優先">
@@ -95,8 +95,8 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
       <td>將報告、查詢記錄、收藏及備註、Star 快照和榜單快取打包為 `.ghconfig`，匯入前自動備份。</td>
     </tr>
     <tr>
-      <td><strong>介&#8239;面&#8239;主&#8239;題</strong></td>
-      <td>預設跟隨 Windows 應用程式主題，可在頂部切換淺色或深色模式；表格、輸入框、焦點和捲軸會同步切換。</td>
+      <td><strong>設&#8239;定&#8239;與&#8239;托&#8239;盤</strong></td>
+      <td>頂部齒輪集中管理 LLM、設定匯入匯出和文件庫；可設定關閉視窗時最小化到托盤或完全結束，並選擇每次關閉是否詢問。淺色與深色主題可隨時切換。</td>
     </tr>
   </tbody>
 </table>
@@ -127,7 +127,7 @@ _截圖使用非敏感示範資料。頂部主題按鈕可在淺色與深色之�
 
 | 發佈包 | 大小 | 適用情境 |
 | --- | ---: | --- |
-| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.4/LocalGithubLibrary-0.2.4-win-x64.zip) | 約 77 MB | 搜尋、排行、收藏、備註與 README 摘要 |
+| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.5/LocalGithubLibrary-0.2.5-win-x64.zip) | 約 81 MB | 搜尋、排行、收藏、備註、軟體設定與托盤管理 |
 | [LLM 模型（選用）](docs/models/README.md) | 約 1.04 GB | 獨立下載，升級程式時無需重複下載 |
 
 ### 2. 解壓縮並執行
@@ -173,7 +173,7 @@ $env:GITHUB_TOKEN = "your_token"
 {{ReadmeSummary}}
 ```
 
-模型下載入口見 [LLM 模型庫](docs/models/README.md)，完整打包與驗證規則見 [docs/LLM_PACKAGE.md](docs/LLM_PACKAGE.md)。
+模型下載入口見 [LLM 模型庫](docs/models/README.md)，完整打包與驗證規則見 [docs/LLM_PACKAGE.md](docs/LLM_PACKAGE.md)。匯入模型和提示詞時，請開啟頂部齒輪中的「匯入 LLM」。
 
 </details>
 
@@ -188,6 +188,7 @@ GitHubReports/
     搜索记录.txt
     star-snapshots.jsonl
     favorites.json
+    app-settings.json
     global-daily-ranks.zip
     error.log
   Backups/               # 匯入設定前自動產生
@@ -346,6 +347,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 📝 更新記錄
 
+- [0.2.5：軟體設定、系統托盤與可設定關閉行為](docs/releases/v0.2.5.zh-TW.md)
 - [0.2.4：收藏備註、目錄管理圖示與獨立模型發佈](docs/releases/v0.2.4.zh-TW.md)
 - [0.2.3：應用程式級設計系統、深淺色主題與互動狀態重做](docs/releases/v0.2.3.zh-TW.md)
 - [0.2.2：跨領域搜尋相關性、數值排序與結果穩定性修正](docs/releases/v0.2.2.md)

@@ -17,6 +17,7 @@ public sealed class ConfigurationPackageService
     private static readonly string[] IncludedDataFiles =
     [
         "favorites.json",
+        "app-settings.json",
         "搜索记录.txt",
         "star-snapshots.jsonl",
         "global-daily-ranks.zip"

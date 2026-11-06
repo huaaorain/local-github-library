@@ -17,7 +17,7 @@
 ## 安装
 
 1. 下载 `.ghllm` 文件。
-2. 打开 Local GitHub Library，点击顶部的“导入 LLM”。
+2. 打开 Local GitHub Library，点击顶部的齿轮，再选择“导入 LLM”。
 3. 选择下载的模型包并等待校验完成。
 4. 仓库详情中的“AI 总结与翻译”会使用该模型；未安装模型时，其他功能不受影响。
 
@@ -32,4 +32,4 @@
 
 ## Model downloads
 
-The local LLM is optional and versioned separately from the application. Download the `.ghllm` package above once, then import it with **导入 LLM**. Application upgrades do not require downloading the model again.
+The local LLM is optional and versioned separately from the application. Download the `.ghllm` package above once, then use **导入 LLM** from the header gear. Application upgrades do not require downloading the model again.

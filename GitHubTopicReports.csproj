@@ -5,13 +5,16 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>GitHubTopicReports</AssemblyName>
     <Product>Local Github Library</Product>
     <Description>A local-first Windows library for discovering, comparing and organizing GitHub repositories.</Description>
-    <Version>0.2.4</Version>
+    <Version>0.2.5</Version>
     <RepositoryUrl>https://github.com/huaaorain/local-github-library</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
+    <Using Remove="System.Drawing" />
+    <Using Remove="System.Windows.Forms" />
     <PackageReference Include="LLamaSharp" Version="0.30.0" />
     <PackageReference Include="LLamaSharp.Backend.Cpu"
                       Version="0.30.0"

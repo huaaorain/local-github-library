@@ -48,36 +48,28 @@
                 </StackPanel>
                 <StackPanel Grid.Column="1"
                             HorizontalAlignment="Right">
-                    <Border Style="{StaticResource ToolbarGroupStyle}">
-                        <StackPanel Orientation="Horizontal">
-                            <Button x:Name="ImportLlmPackageButton"
-                                    Content="导入 LLM"
-                                    Style="{StaticResource ToolbarButtonStyle}"
-                                    Click="ImportLlmPackageButton_Click" />
-                            <Button x:Name="ImportConfigurationButton"
-                                    Margin="4,0,0,0"
-                                    Content="导入配置"
-                                    Style="{StaticResource ToolbarButtonStyle}"
-                                    Click="ImportConfigurationButton_Click" />
-                            <Button x:Name="ExportConfigurationButton"
-                                    Margin="4,0,0,0"
-                                    Content="导出配置"
-                                    Style="{StaticResource ToolbarButtonStyle}"
-                                    Click="ExportConfigurationButton_Click" />
-                            <Button x:Name="OpenLibraryButton"
-                                    Margin="4,0,0,0"
-                                    Content="打开文档库"
-                                    Style="{StaticResource ToolbarButtonStyle}"
-                                    Click="OpenLibraryButton_Click" />
-                            <Button x:Name="ThemeToggleButton"
-                                    Margin="4,0,0,0"
-                                    Content="深色模式"
-                                    AutomationProperties.Name="切换深色或浅色主题"
-                                    ToolTip="切换深色或浅色主题"
-                                    Style="{StaticResource ToolbarButtonStyle}"
-                                    Click="ThemeToggleButton_Click" />
-                        </StackPanel>
-                    </Border>
+                    <StackPanel HorizontalAlignment="Right"
+                                Orientation="Horizontal">
+                        <Button x:Name="ThemeToggleButton"
+                                Content="深色模式"
+                                AutomationProperties.Name="切换深色或浅色主题"
+                                ToolTip="切换深色或浅色主题"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Click="ThemeToggleButton_Click" />
+                        <Button x:Name="SettingsButton"
+                                Width="34"
+                                Margin="8,0,0,0"
+                                Padding="0"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="软件设置"
+                                ToolTip="软件设置"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Click="SettingsButton_Click">
+                            <TextBlock Text="⚙"
+                                       FontSize="17"
+                                       VerticalAlignment="Center" />
+                        </Button>
+                    </StackPanel>
                     <StackPanel Margin="0,5,2,0"
                                 HorizontalAlignment="Right"
                                 Orientation="Horizontal">

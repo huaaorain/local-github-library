@@ -2,6 +2,22 @@
 
 All notable changes to Local Github Library will be documented in this file.
 
+## [0.2.5] - 2026-11-06
+
+### Added
+
+- Add a central settings dialog for LLM, configuration import/export, and
+  opening the local document library.
+- Add configurable close behavior with tray-minimize, full exit, and an
+  optional confirmation prompt on every window close.
+- Add a “每次关闭窗口时都询问我” option directly to the close confirmation
+  dialog and persist the default action selected there.
+
+### Changed
+
+- Simplify the header to the theme switch and a gear button.
+- Remove the outer rounded container around the header action buttons.
+
 ## [0.2.4] - 2026-11-05
 
 ### Added

@@ -1,0 +1,145 @@
+<Window x:Class="GitHubTopicReports.AppSettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="软件设置"
+        Width="600"
+        Height="590"
+        MinWidth="540"
+        MinHeight="540"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip"
+        FontFamily="Segoe UI Variable Text"
+        FontSize="14"
+        Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+        Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}">
+    <Grid Margin="24,20,24,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="软件设置"
+                       FontFamily="Segoe UI Variable Display"
+                       FontSize="24"
+                       FontWeight="SemiBold" />
+            <TextBlock Margin="0,4,0,0"
+                       Text="集中管理常用工具和窗口关闭行为。"
+                       Style="{StaticResource QuietTextStyle}" />
+        </StackPanel>
+
+        <Border Grid.Row="1"
+                Margin="0,18,0,12"
+                Padding="16,14"
+                Style="{StaticResource PanelCardStyle}">
+            <StackPanel>
+                <TextBlock Text="快捷操作"
+                           Style="{StaticResource SectionTitleStyle}" />
+                <Grid Margin="0,12,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="ImportLlmActionButton"
+                            Margin="0,0,6,6"
+                            MinHeight="42"
+                            Padding="14,8"
+                            HorizontalContentAlignment="Left"
+                            Content="导入 LLM"
+                            Tag="ImportLlm"
+                            Click="ActionButton_Click" />
+                    <Button x:Name="ImportConfigurationActionButton"
+                            Grid.Column="1"
+                            Margin="6,0,0,6"
+                            MinHeight="42"
+                            Padding="14,8"
+                            HorizontalContentAlignment="Left"
+                            Content="导入配置"
+                            Tag="ImportConfiguration"
+                            Click="ActionButton_Click" />
+                    <Button x:Name="ExportConfigurationActionButton"
+                            Grid.Row="1"
+                            Margin="0,6,6,0"
+                            MinHeight="42"
+                            Padding="14,8"
+                            HorizontalContentAlignment="Left"
+                            Content="导出配置"
+                            Tag="ExportConfiguration"
+                            Click="ActionButton_Click" />
+                    <Button x:Name="OpenLibraryActionButton"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="6,6,0,0"
+                            MinHeight="42"
+                            Padding="14,8"
+                            HorizontalContentAlignment="Left"
+                            Content="打开文档库"
+                            Tag="OpenLibrary"
+                            Click="ActionButton_Click" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2"
+                Padding="16,14"
+                Style="{StaticResource PanelCardStyle}">
+            <StackPanel>
+                <TextBlock Text="关闭窗口时"
+                           Style="{StaticResource SectionTitleStyle}" />
+                <TextBlock Margin="0,5,0,0"
+                           Text="取消勾选“每次关闭窗口时询问我”后，将直接执行这里的选项。"
+                           TextWrapping="Wrap"
+                           Style="{StaticResource QuietTextStyle}" />
+                <RadioButton x:Name="MinimizeToTrayRadio"
+                             GroupName="CloseAction"
+                             Margin="0,14,0,0"
+                             Content="最小化到右下角系统托盘" />
+                <RadioButton x:Name="ExitRadio"
+                             GroupName="CloseAction"
+                             Margin="0,8,0,0"
+                             Content="完全退出程序" />
+                <CheckBox x:Name="AskOnCloseCheckBox"
+                          Margin="0,14,0,0"
+                          Content="每次关闭窗口时询问我" />
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="3"
+                Margin="0,12,0,0"
+                Padding="14,12"
+                Background="{DynamicResource SurfaceSubtleBrush}"
+                BorderBrush="{DynamicResource AppBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+            <TextBlock Text="设置会保存在本地，并随 .ghconfig 配置包一起导出。"
+                       TextWrapping="Wrap"
+                       Style="{StaticResource QuietTextStyle}" />
+        </Border>
+
+        <Grid Grid.Row="4" Margin="0,16,0,0">
+            <StackPanel HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+                <Button Width="88"
+                        Padding="10,7"
+                        Content="取消"
+                        IsCancel="True" />
+                <Button x:Name="SaveSettingsButton"
+                        Width="96"
+                        Margin="8,0,0,0"
+                        Padding="10,7"
+                        Content="保存"
+                        IsDefault="True"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Click="SaveSettingsButton_Click" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

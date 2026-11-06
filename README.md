@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.4-ff7a45?style=flat-square" alt="Version 0.2.4">
+  <img src="https://img.shields.io/badge/version-0.2.5-ff7a45?style=flat-square" alt="Version 0.2.5">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -95,8 +95,8 @@ GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问�
       <td>将报告、查询记录、收藏及备注、Star 快照和榜单缓存打包为 `.ghconfig`，导入前自动备份。</td>
     </tr>
     <tr>
-      <td><strong>界&#8239;面&#8239;主&#8239;题</strong></td>
-      <td>默认跟随 Windows 应用主题，可在顶部切换浅色或深色模式；表格、输入框、焦点和滚动条会同步切换。</td>
+      <td><strong>设&#8239;置&#8239;与&#8239;托&#8239;盘</strong></td>
+      <td>顶部齿轮集中管理 LLM、配置导入导出和文档库；可设置关闭窗口时最小化到托盘或完全退出，并选择每次关闭是否询问。浅色与深色主题可随时切换。</td>
     </tr>
   </tbody>
 </table>
@@ -127,7 +127,7 @@ _截图使用非敏感演示数据。顶部主题按钮可在浅色与深色之�
 
 | 发布包 | 大小 | 适用场景 |
 | --- | ---: | --- |
-| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.4/LocalGithubLibrary-0.2.4-win-x64.zip) | 约 77 MB | 搜索、排行、收藏、备注与 README 摘要 |
+| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.5/LocalGithubLibrary-0.2.5-win-x64.zip) | 约 81 MB | 搜索、排行、收藏、备注、软件设置与托盘管理 |
 | [LLM 模型（可选）](docs/models/README.md) | 约 1.04 GB | 独立下载，升级程序时无需重复下载 |
 
 ### 2. 解压并运行
@@ -173,7 +173,7 @@ $env:GITHUB_TOKEN = "your_token"
 {{ReadmeSummary}}
 ```
 
-模型下载入口见 [LLM 模型库](docs/models/README.md)，完整打包与校验规则见 [docs/LLM_PACKAGE.md](docs/LLM_PACKAGE.md)。
+模型下载入口见 [LLM 模型库](docs/models/README.md)，完整打包与校验规则见 [docs/LLM_PACKAGE.md](docs/LLM_PACKAGE.md)。导入模型和提示词时，请打开顶部齿轮中的“导入 LLM”。
 
 </details>
 
@@ -188,6 +188,7 @@ GitHubReports/
     搜索记录.txt
     star-snapshots.jsonl
     favorites.json
+    app-settings.json
     global-daily-ranks.zip
     error.log
   Backups/               # 导入配置前自动生成
@@ -346,6 +347,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 📝 更新记录
 
+- [0.2.5：软件设置、系统托盘与可配置关闭行为](docs/releases/v0.2.5.zh-CN.md)
 - [0.2.4：收藏备注、目录管理图标与独立模型发布](docs/releases/v0.2.4.zh-CN.md)
 - [0.2.3：应用级设计系统、深浅色主题与交互状态重做](docs/releases/v0.2.3.zh-CN.md)
 - [0.2.2：跨领域搜索相关性、数值排序与结果稳定性修复](docs/releases/v0.2.2.md)
