@@ -14,6 +14,7 @@ namespace GitHubTopicReports.Services;
 public sealed class GitHubSearchService : IDisposable
 {
     private readonly HttpClient _httpClient;
+    private readonly SearchVocabulary _searchVocabulary;
     private readonly ConcurrentDictionary<string, string> _summaryCache =
         new(StringComparer.OrdinalIgnoreCase);
 
@@ -47,10 +48,18 @@ public sealed class GitHubSearchService : IDisposable
             _httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", token);
         }
+
+        _searchVocabulary = new SearchVocabulary(
+            Path.Combine(
+                AppContext.BaseDirectory,
+                "GitHubReports",
+                "Data",
+                "search-vocabulary.txt"));
     }
 
     public bool HasToken =>
         _httpClient.DefaultRequestHeaders.Authorization is not null;
+    public SearchQueryCorrection? LastQueryCorrection { get; private set; }
 
     public async Task<string> GetProjectSummaryAsync(
         string fullName,
@@ -117,6 +126,7 @@ public sealed class GitHubSearchService : IDisposable
         CancellationToken cancellationToken)
     {
         maxResults = Math.Clamp(maxResults, 1, 1000);
+        LastQueryCorrection = null;
         if (string.IsNullOrWhiteSpace(keyword))
         {
             return await ExecuteSearchAsync(
@@ -127,6 +137,53 @@ public sealed class GitHubSearchService : IDisposable
         }
 
         var normalizedKeyword = keyword.Trim();
+        var exactResults = await SearchMatchingAsync(
+            normalizedKeyword,
+            maxResults,
+            cancellationToken);
+        if (exactResults.Count >= Math.Min(maxResults, 3))
+        {
+            return exactResults;
+        }
+
+        var correction = SearchQueryCorrector.Correct(
+            normalizedKeyword,
+            _searchVocabulary.Terms);
+        if (correction is null)
+        {
+            return exactResults;
+        }
+
+        var correctedResults = await SearchMatchingAsync(
+            correction.CorrectedQuery,
+            maxResults,
+            cancellationToken);
+        if (correctedResults.Count == 0)
+        {
+            return exactResults;
+        }
+
+        LastQueryCorrection = correction;
+        var exactIds = exactResults
+            .Select(repository => repository.Id)
+            .ToHashSet();
+        var merged = exactResults
+            .Concat(correctedResults.Where(repository => !exactIds.Contains(repository.Id)))
+            .Take(maxResults)
+            .ToList();
+        for (var index = 0; index < merged.Count; index++)
+        {
+            merged[index].Rank = index + 1;
+        }
+
+        return merged;
+    }
+
+    private async Task<List<RepositoryRecord>> SearchMatchingAsync(
+        string normalizedKeyword,
+        int maxResults,
+        CancellationToken cancellationToken)
+    {
         var topicCandidateLimit = Math.Clamp(maxResults * 2, 100, 1000);
         var metadataCandidateLimit = Math.Clamp(maxResults * 6, 200, 800);
         var topicResults = await SearchTopicAsync(
@@ -167,6 +224,9 @@ public sealed class GitHubSearchService : IDisposable
             }
         }
 
+        _searchVocabulary.Learn(candidates.Values.Select(candidate => candidate.Repository));
+        _searchVocabulary.SaveIfNeeded();
+
         var scoredCandidates = candidates.Values
             .Select(candidate => new ScoredSearchCandidate(
                 candidate,
@@ -181,7 +241,7 @@ public sealed class GitHubSearchService : IDisposable
             selected[index].Rank = index + 1;
         }
 
-        return selected;
+        return selected.ToList();
     }
 
     private async Task<List<RepositoryRecord>> SearchMetadataAsync(

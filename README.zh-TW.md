@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.5-ff7a45?style=flat-square" alt="版本 0.2.5">
+  <img src="https://img.shields.io/badge/version-0.2.6-ff7a45?style=flat-square" alt="版本 0.2.6">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="本機優先">
@@ -72,7 +72,7 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
   <tbody>
     <tr>
       <td><strong>主&#8239;題&#8239;搜&#8239;尋</strong></td>
-      <td>優先透過 GitHub Topics 找出領域，再用名稱與描述補充候選並過濾無關匹配；點擊「倉庫」依匹配度排序，點擊「Star」嚴格依數值排序，並可產生 TXT 報告。</td>
+      <td>優先透過 GitHub Topics 找出領域，再用名稱與描述補充候選並過濾無關匹配；精確結果不足時可修正 1–2 個字元的英文拼寫錯誤。點擊「倉庫」依匹配度排序，點擊「Star」嚴格依數值排序，並可產生 TXT 報告。</td>
     </tr>
     <tr>
       <td><strong>Star&#8239;趨&#8239;勢</strong></td>
@@ -127,7 +127,7 @@ _截圖使用非敏感示範資料。頂部主題按鈕可在淺色與深色之�
 
 | 發佈包 | 大小 | 適用情境 |
 | --- | ---: | --- |
-| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.5/LocalGithubLibrary-0.2.5-win-x64.zip) | 約 81 MB | 搜尋、排行、收藏、備註、軟體設定與托盤管理 |
+| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.6/LocalGithubLibrary-0.2.6-win-x64.zip) | 約 84 MB | 拼寫容錯搜尋、排行、收藏、備註、軟體設定與托盤管理 |
 | [LLM 模型（選用）](docs/models/README.md) | 約 1.04 GB | 獨立下載，升級程式時無需重複下載 |
 
 ### 2. 解壓縮並執行
@@ -360,6 +360,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 📝 更新記錄
 
+- [0.2.6：拼寫容錯搜尋與多解析度應用程式圖示](docs/releases/v0.2.6.zh-TW.md)
 - [0.2.5：軟體設定、系統托盤與可設定關閉行為](docs/releases/v0.2.5.zh-TW.md)
 - [0.2.4：收藏備註、目錄管理圖示與獨立模型發佈](docs/releases/v0.2.4.zh-TW.md)
 - [0.2.3：應用程式級設計系統、深淺色主題與互動狀態重做](docs/releases/v0.2.3.zh-TW.md)

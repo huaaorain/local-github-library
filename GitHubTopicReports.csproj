@@ -9,12 +9,15 @@
     <AssemblyName>GitHubTopicReports</AssemblyName>
     <Product>Local Github Library</Product>
     <Description>A local-first Windows library for discovering, comparing and organizing GitHub repositories.</Description>
-    <Version>0.2.5</Version>
+    <Version>0.2.6</Version>
+    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <RepositoryUrl>https://github.com/huaaorain/local-github-library</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
     <Using Remove="System.Drawing" />
     <Using Remove="System.Windows.Forms" />
+    <None Remove="Resources\app.ico" />
+    <Resource Include="Resources\app.ico" />
     <PackageReference Include="LLamaSharp" Version="0.30.0" />
     <PackageReference Include="LLamaSharp.Backend.Cpu"
                       Version="0.30.0"

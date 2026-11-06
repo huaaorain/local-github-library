@@ -141,7 +141,7 @@
   ],
   "artifacts": [
     {
-      "path": "release-build/LocalGithubLibrary-0.2.5-win-x64.zip",
+      "path": "release-build/LocalGithubLibrary-0.2.6-win-x64.zip",
       "role": "standard",
       "description": "推荐的 Windows x64 标准发布包，包含主程序、提示词与 CPU 原生运行库。",
       "localized_descriptions": {
@@ -150,7 +150,7 @@
         "en": "Recommended Windows x64 package with the application, prompt, and CPU runtime."
       },
       "required": true,
-      "download_name": "LocalGithubLibrary-0.2.5-win-x64.zip"
+      "download_name": "LocalGithubLibrary-0.2.6-win-x64.zip"
     },
     {
       "path": "release-build/GitHubTopicReports.exe",

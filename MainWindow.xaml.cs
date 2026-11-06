@@ -392,6 +392,7 @@ public partial class MainWindow : Window
                 keyword,
                 requestedCount,
                 cancellationToken)).ToList();
+            var queryCorrection = _gitHub.LastQueryCorrection;
 
             if (_allRepositories.Count == 0)
             {
@@ -425,14 +426,19 @@ public partial class MainWindow : Window
             CurrentGrid.ItemsSource = currentTop;
             ResetSearchResultSort(CurrentGrid);
             GrowthGrid.ItemsSource = growth.Repositories;
-            CurrentKeywordText.Text = keyword;
+            CurrentKeywordText.Text = queryCorrection is null
+                ? keyword
+                : $"{keyword} → {queryCorrection.CorrectedQuery}";
             ResultSummaryText.Text =
                 $"领域匹配结果 · 匹配度优先 · 显示 {currentTop.Count:N0} 条 · " +
-                $"本地周增长 {growth.Repositories.Count:N0} 条";
+                $"本地周增长 {growth.Repositories.Count:N0} 条" +
+                (queryCorrection is null ? "" : " · 已启用拼写纠错");
             LastGeneratedText.Text = $"生成于 {saved.GeneratedAt.ToLocalTime():yyyy-MM-dd HH:mm:ss}";
-            StatusText.Text = _gitHub.HasToken
-                ? "查询和报告保存完成。"
-                : "查询和报告保存完成。当前使用匿名 GitHub API；配置 Token 可提高额度。";
+            StatusText.Text =
+                (queryCorrection is null
+                    ? "查询和报告保存完成。"
+                    : $"未找到足够的“{keyword}”精确结果，已按“{queryCorrection.CorrectedQuery}”查询并保存报告。") +
+                (_gitHub.HasToken ? "" : " 当前使用匿名 GitHub API；配置 Token 可提高额度。");
             ReportPathText.Text = saved.FilePath;
             ReportPathText.ToolTip = saved.FilePath;
 
@@ -1066,14 +1072,18 @@ public partial class MainWindow : Window
                 keyword,
                 resultCount,
                 cancellationToken)).ToList();
+            var queryCorrection = _gitHub.LastQueryCorrection;
             StandaloneSearchResultsGrid.ItemsSource = _standaloneSearchResults;
             ResetSearchResultSort(StandaloneSearchResultsGrid);
             CombinedContentTabs.SelectedIndex = 0;
-            StandaloneSearchTitleText.Text = keyword;
+            StandaloneSearchTitleText.Text = queryCorrection is null
+                ? keyword
+                : $"{keyword} → {queryCorrection.CorrectedQuery}";
             StandaloneSearchSummaryText.Text =
                 $"GitHub 领域相关结果 · 匹配度优先 · " +
                 $"{_standaloneSearchResults.Count:N0} 条 · " +
-                "选择底部目录后可保存整份结果";
+                "选择底部目录后可保存整份结果" +
+                (queryCorrection is null ? "" : " · 已启用拼写纠错");
             _selectedStandaloneRepository = null;
             OpenStandaloneRepositoryButton.IsEnabled = false;
             StandaloneDetailNameText.Text = "选择一个仓库查看详情";
@@ -1091,7 +1101,10 @@ public partial class MainWindow : Window
 
             StatusText.Text = _standaloneSearchResults.Count == 0
                 ? "GitHub 没有返回搜索结果。"
-                : $"搜索完成，共 {_standaloneSearchResults.Count:N0} 条。";
+                : queryCorrection is null
+                    ? $"搜索完成，共 {_standaloneSearchResults.Count:N0} 条。"
+                    : $"未找到足够的“{keyword}”精确结果，已按“{queryCorrection.CorrectedQuery}”搜索，" +
+                      $"共 {_standaloneSearchResults.Count:N0} 条。";
             UpdateStandaloneSearchActionState();
         }
         catch (OperationCanceledException)

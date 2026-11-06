@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.5-ff7a45?style=flat-square" alt="Version 0.2.5">
+  <img src="https://img.shields.io/badge/version-0.2.6-ff7a45?style=flat-square" alt="Version 0.2.6">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -72,7 +72,7 @@ GitHub is good at finding one repository, but it is not designed to answer quest
   <tbody>
     <tr>
       <td><strong>Topic&#8239;search</strong></td>
-      <td>Find the domain through GitHub Topics first, supplement with repository names and descriptions, and filter unrelated matches. Click Repository to sort by match relevance or Star to sort strictly by numeric Stars, then generate a readable TXT report.</td>
+      <td>Find the domain through GitHub Topics first, supplement with repository names and descriptions, and filter unrelated matches. When exact results are sparse, correct one or two mistyped English characters. Click Repository to sort by match relevance or Star to sort strictly by numeric Stars, then generate a readable TXT report.</td>
     </tr>
     <tr>
       <td><strong>Star&#8239;trends</strong></td>
@@ -127,7 +127,7 @@ _Screenshots use non-sensitive demo data. The header theme button switches modes
 
 | Package | Size | Best for |
 | --- | ---: | --- |
-| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.5/LocalGithubLibrary-0.2.5-win-x64.zip) | About 81 MB | Search, rankings, favorites, notes, app settings, and tray controls |
+| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.6/LocalGithubLibrary-0.2.6-win-x64.zip) | About 84 MB | Typo-tolerant search, rankings, favorites, notes, app settings, and tray controls |
 | [LLM model (optional)](docs/models/README.md) | About 1.04 GB | Downloaded separately; application upgrades reuse it |
 
 ### 2. Extract and run
@@ -360,6 +360,7 @@ Issues and pull requests are welcome. Before submitting:
 
 ## 📝 Release history
 
+- [0.2.6: typo-tolerant search and multi-resolution app icon](docs/releases/v0.2.6.en.md)
 - [0.2.5: app settings, system tray, and configurable close behavior](docs/releases/v0.2.5.en.md)
 - [0.2.4: favorite notes, folder management actions, and reusable model releases](docs/releases/v0.2.4.en.md)
 - [0.2.3: application-wide design system, light/dark themes, and interaction states](docs/releases/v0.2.3.en.md)

@@ -2,6 +2,15 @@
 
 All notable changes to Local Github Library will be documented in this file.
 
+## [0.2.6] - 2026-11-06
+
+### Added
+
+- Add typo-tolerant search with a local technical vocabulary, Damerau-Levenshtein
+  correction, and one bounded fallback query when exact results are insufficient.
+- Add a multi-resolution application icon for the executable, windows, taskbar,
+  and notification tray.
+
 ## [0.2.5] - 2026-11-06
 
 ### Added
