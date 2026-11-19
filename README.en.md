@@ -207,10 +207,11 @@ GitHubReports/
 ## 📦 All releases
 
 <!-- release-catalog:start -->
-Latest: [Local GitHub Library 0.2.6](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.6)
+Latest: [Local GitHub Library 0.2.7](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.7)
 
 | Version | Published | Release notes |
 | --- | --- | --- |
+| `v0.2.7` | 2026-11-19 | [Open](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.7) |
 | `v0.2.6` | 2026-11-06 | [Open](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.6) |
 | `v0.2.5` | 2026-11-06 | [Open](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.5) |
 | `v0.2.4` | 2026-11-05 | [Open](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.4) |
@@ -222,6 +223,18 @@ Latest: [Local GitHub Library 0.2.6](https://github.com/huaaorain/local-github-l
 
 <details>
 <summary><strong>All version downloads</strong></summary>
+
+### Local GitHub Library 0.2.7
+
+Release notes: [Open](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.7)
+
+- [FILE_MANIFEST.md](https://github.com/huaaorain/local-github-library/releases/download/v0.2.7/FILE_MANIFEST.md) — 695 B
+- [GitHubTopicReports.exe](https://github.com/huaaorain/local-github-library/releases/download/v0.2.7/GitHubTopicReports.exe) — 81.3 MB
+- [LocalGithubLibrary-0.2.7-win-x64.zip](https://github.com/huaaorain/local-github-library/releases/download/v0.2.7/LocalGithubLibrary-0.2.7-win-x64.zip) — 83.6 MB
+- [release-manifest.json](https://github.com/huaaorain/local-github-library/releases/download/v0.2.7/release-manifest.json) — 1.8 KB
+- [SHA256SUMS.txt](https://github.com/huaaorain/local-github-library/releases/download/v0.2.7/SHA256SUMS.txt) — 192 B
+- [Source code (zip)](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.2.7.zip)
+- [Source code (tar.gz)](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.2.7.tar.gz)
 
 ### Local GitHub Library 0.2.6
 
