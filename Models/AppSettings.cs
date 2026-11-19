@@ -10,4 +10,5 @@ public sealed class AppSettings
 {
     public AppCloseAction CloseAction { get; set; } = AppCloseAction.MinimizeToTray;
     public bool AskOnClose { get; set; } = true;
+    public bool StartWithWindows { get; set; }
 }

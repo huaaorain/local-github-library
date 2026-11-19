@@ -20,12 +20,14 @@ public partial class AppSettingsDialog : Window
         CurrentSettings = new AppSettings
         {
             CloseAction = settings.CloseAction,
-            AskOnClose = settings.AskOnClose
+            AskOnClose = settings.AskOnClose,
+            StartWithWindows = settings.StartWithWindows
         };
         MinimizeToTrayRadio.IsChecked =
             CurrentSettings.CloseAction == AppCloseAction.MinimizeToTray;
         ExitRadio.IsChecked = CurrentSettings.CloseAction == AppCloseAction.Exit;
         AskOnCloseCheckBox.IsChecked = CurrentSettings.AskOnClose;
+        StartWithWindowsCheckBox.IsChecked = CurrentSettings.StartWithWindows;
     }
 
     public AppSettings CurrentSettings { get; private set; }
@@ -50,7 +52,8 @@ public partial class AppSettingsDialog : Window
             CloseAction = ExitRadio.IsChecked == true
                 ? AppCloseAction.Exit
                 : AppCloseAction.MinimizeToTray,
-            AskOnClose = AskOnCloseCheckBox.IsChecked == true
+            AskOnClose = AskOnCloseCheckBox.IsChecked == true,
+            StartWithWindows = StartWithWindowsCheckBox.IsChecked == true
         };
         RequestedAction = action;
         DialogResult = true;

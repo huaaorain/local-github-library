@@ -19,6 +19,7 @@
         Background="{DynamicResource AppBackgroundBrush}"
         Foreground="{DynamicResource TextPrimaryBrush}"
         SizeChanged="MainWindow_SizeChanged">
+    <AdornerDecorator>
     <Grid Background="{DynamicResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -355,7 +356,8 @@
                                         Grid.Row="1"
                                         BorderThickness="1"
                                         SelectionChanged="CombinedContentTabs_SelectionChanged">
-                                <TabItem Header="搜索结果">
+                                <TabItem x:Name="CombinedSearchResultsTab"
+                                         Header="搜索结果">
                             <DataGrid x:Name="StandaloneSearchResultsGrid"
                                       AutoGenerateColumns="False"
                                       BorderThickness="1"
@@ -397,7 +399,8 @@
                                 </DataGrid.Columns>
                             </DataGrid>
                                 </TabItem>
-                                <TabItem Header="目录内容">
+                                <TabItem x:Name="CombinedDirectoryTab"
+                                         Header="目录内容">
                                     <DataGrid x:Name="CombinedFavoritesGrid"
                                               AutoGenerateColumns="False"
                                               BorderThickness="1"
@@ -408,14 +411,68 @@
                                               HeadersVisibility="Column"
                                               GridLinesVisibility="Horizontal"
                                               SelectionMode="Single"
+                                              CanUserSortColumns="False"
+                                              PreviewMouseLeftButtonDown="CombinedFavoritesGrid_PreviewMouseLeftButtonDown"
+                                              PreviewMouseMove="CombinedFavoritesGrid_PreviewMouseMove"
+                                              PreviewMouseLeftButtonUp="CombinedFavoritesGrid_PreviewMouseLeftButtonUp"
                                               SelectionChanged="CombinedFavoritesGrid_SelectionChanged"
                                               MouseDoubleClick="CombinedFavoritesGrid_MouseDoubleClick">
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Header="仓库"
-                                                                Binding="{Binding FullName}"
-                                                                ElementStyle="{StaticResource GridTextEllipsisStyle}"
-                                                                MinWidth="140"
-                                                                Width="*" />
+                                            <DataGridTemplateColumn Header="仓库"
+                                                                    SortMemberPath="FullName"
+                                                                    MinWidth="140"
+                                                                    Width="*">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Button Width="24"
+                                                                    Height="24"
+                                                                    Padding="0"
+                                                                    VerticalAlignment="Center"
+                                                                    AutomationProperties.Name="查看收藏备注"
+                                                                    ToolTip="{Binding Note}"
+                                                                    Click="CombinedFavoriteNoteButton_Click">
+                                                                <Button.Style>
+                                                                    <Style TargetType="Button"
+                                                                           BasedOn="{StaticResource BorderlessIconButtonStyle}">
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding HasNote}"
+                                                                                         Value="False">
+                                                                                <Setter Property="Visibility"
+                                                                                        Value="Collapsed" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Button.Style>
+                                                                <Grid Width="14"
+                                                                      Height="14">
+                                                                    <Border Width="12"
+                                                                            Height="10"
+                                                                            HorizontalAlignment="Center"
+                                                                            VerticalAlignment="Center"
+                                                                            BorderBrush="{DynamicResource PrimaryBrush}"
+                                                                            BorderThickness="1.1"
+                                                                            CornerRadius="2" />
+                                                                    <Path Data="M 4,5 H 10 M 4,7.5 H 10 M 4,10 H 8"
+                                                                          Stroke="{DynamicResource PrimaryBrush}"
+                                                                          StrokeThickness="1"
+                                                                          StrokeStartLineCap="Round"
+                                                                          StrokeEndLineCap="Round" />
+                                                                </Grid>
+                                                            </Button>
+                                                            <TextBlock Grid.Column="1"
+                                                                       Margin="4,0,0,0"
+                                                                       Text="{Binding FullName}"
+                                                                       Tag="FavoriteRepositoryName"
+                                                                       Style="{StaticResource GridTextEllipsisStyle}" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
                                             <DataGridTextColumn Header="Star"
                                                                 Binding="{Binding StarsDisplay}"
                                                                 SortMemberPath="Stars"
@@ -1426,4 +1483,5 @@
             </Grid>
         </Border>
     </Grid>
+    </AdornerDecorator>
 </Window>

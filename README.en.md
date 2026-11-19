@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.6-ff7a45?style=flat-square" alt="Version 0.2.6">
+  <img src="https://img.shields.io/badge/version-0.2.7-ff7a45?style=flat-square" alt="Version 0.2.7">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -84,7 +84,7 @@ GitHub is good at finding one repository, but it is not designed to answer quest
     </tr>
     <tr>
       <td><strong>Favorites</strong></td>
-      <td>Create, rename, or delete custom folders; search and batch-favorite repositories while skipping duplicates. Add, edit, or delete a local note for each project and export all notes to a timestamped TXT file.</td>
+      <td>Create, rename, or delete custom folders; search and batch-favorite repositories while skipping duplicates. Long-press a repository name for 300 ms and drag it to reorder rows with a smooth easing animation; add notes, mark noted projects with an icon, and export all notes to a timestamped TXT file.</td>
     </tr>
     <tr>
       <td><strong>Insights</strong></td>
@@ -96,7 +96,7 @@ GitHub is good at finding one repository, but it is not designed to answer quest
     </tr>
     <tr>
       <td><strong>Settings&#8239;and&#8239;tray</strong></td>
-      <td>Use the header gear to manage LLM packages, configuration import/export, and the local document library. Choose whether closing minimizes to the tray or exits, with an optional confirmation on every close. Light and dark themes remain available directly from the header.</td>
+      <td>Use the header gear to manage LLM packages, configuration import/export, the local document library, and optional Windows startup. Choose whether closing minimizes to the tray or exits, with an optional confirmation on every close. Light and dark themes remain available directly from the header.</td>
     </tr>
   </tbody>
 </table>
@@ -127,7 +127,7 @@ _Screenshots use non-sensitive demo data. The header theme button switches modes
 
 | Package | Size | Best for |
 | --- | ---: | --- |
-| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.6/LocalGithubLibrary-0.2.6-win-x64.zip) | About 84 MB | Typo-tolerant search, rankings, favorites, notes, app settings, and tray controls |
+| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.7/LocalGithubLibrary-0.2.7-win-x64.zip) | About 87 MB | Typo-tolerant search, favorite drag ordering, Windows startup, and tray controls |
 | [LLM model (optional)](docs/models/README.md) | About 1.04 GB | Downloaded separately; application upgrades reuse it |
 
 ### 2. Extract and run
@@ -373,6 +373,7 @@ Issues and pull requests are welcome. Before submitting:
 
 ## 📝 Release history
 
+- [0.2.7: favorite drag ordering, note markers, Windows startup, and default directory view](docs/releases/v0.2.7.en.md)
 - [0.2.6: typo-tolerant search and multi-resolution app icon](docs/releases/v0.2.6.en.md)
 - [0.2.5: app settings, system tray, and configurable close behavior](docs/releases/v0.2.5.en.md)
 - [0.2.4: favorite notes, folder management actions, and reusable model releases](docs/releases/v0.2.4.en.md)

@@ -4,9 +4,9 @@
         Title="软件设置"
         Icon="Resources/app.ico"
         Width="600"
-        Height="590"
+        Height="620"
         MinWidth="540"
-        MinHeight="540"
+        MinHeight="570"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResizeWithGrip"
@@ -110,6 +110,9 @@
                 <CheckBox x:Name="AskOnCloseCheckBox"
                           Margin="0,14,0,0"
                           Content="每次关闭窗口时询问我" />
+                <CheckBox x:Name="StartWithWindowsCheckBox"
+                          Margin="0,8,0,0"
+                          Content="开机时自动启动 Local GitHub Library" />
             </StackPanel>
         </Border>
 

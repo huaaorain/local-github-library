@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.6-ff7a45?style=flat-square" alt="版本 0.2.6">
+  <img src="https://img.shields.io/badge/version-0.2.7-ff7a45?style=flat-square" alt="版本 0.2.7">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="本機優先">
@@ -84,7 +84,7 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
     </tr>
     <tr>
       <td><strong>本&#8239;機&#8239;收&#8239;藏</strong></td>
-      <td>建立、重新命名或刪除自訂目錄，搜尋、批次收藏並跳過重複倉庫；可為每個專案新增、修改或刪除本機備註，並匯出帶時間戳的 TXT 備註檔案。</td>
+      <td>建立、重新命名或刪除自訂目錄，搜尋、批次收藏並跳過重複倉庫；可長按倉庫名稱 300 ms 後拖動，清單以緩動動畫平滑調整順序，為專案新增備註，並在目錄清單中以圖示標出有備註的專案，也可匯出帶時間戳的 TXT 備註檔案。</td>
     </tr>
     <tr>
       <td><strong>專&#8239;案&#8239;理&#8239;解</strong></td>
@@ -96,7 +96,7 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
     </tr>
     <tr>
       <td><strong>設&#8239;定&#8239;與&#8239;托&#8239;盤</strong></td>
-      <td>頂部齒輪集中管理 LLM、設定匯入匯出和文件庫；可設定關閉視窗時最小化到托盤或完全結束，並選擇每次關閉是否詢問。淺色與深色主題可隨時切換。</td>
+      <td>頂部齒輪集中管理 LLM、設定匯入匯出、文件庫和開機自啟；可設定關閉視窗時最小化到托盤或完全結束，並選擇每次關閉是否詢問。淺色與深色主題可隨時切換。</td>
     </tr>
   </tbody>
 </table>
@@ -127,7 +127,7 @@ _截圖使用非敏感示範資料。頂部主題按鈕可在淺色與深色之�
 
 | 發佈包 | 大小 | 適用情境 |
 | --- | ---: | --- |
-| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.6/LocalGithubLibrary-0.2.6-win-x64.zip) | 約 84 MB | 拼寫容錯搜尋、排行、收藏、備註、軟體設定與托盤管理 |
+| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.7/LocalGithubLibrary-0.2.7-win-x64.zip) | 約 87 MB | 拼寫容錯搜尋、收藏拖動排序、開機自啟與托盤管理 |
 | [LLM 模型（選用）](docs/models/README.md) | 約 1.04 GB | 獨立下載，升級程式時無需重複下載 |
 
 ### 2. 解壓縮並執行
@@ -373,6 +373,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 📝 更新記錄
 
+- [0.2.7：收藏拖動排序、備註標示、開機自啟與目錄預設頁](docs/releases/v0.2.7.zh-TW.md)
 - [0.2.6：拼寫容錯搜尋與多解析度應用程式圖示](docs/releases/v0.2.6.zh-TW.md)
 - [0.2.5：軟體設定、系統托盤與可設定關閉行為](docs/releases/v0.2.5.zh-TW.md)
 - [0.2.4：收藏備註、目錄管理圖示與獨立模型發佈](docs/releases/v0.2.4.zh-TW.md)

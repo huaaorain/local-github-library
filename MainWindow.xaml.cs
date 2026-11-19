@@ -4,8 +4,13 @@ using System.IO;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using GitHubTopicReports.Models;
 using GitHubTopicReports.Services;
@@ -14,8 +19,16 @@ namespace GitHubTopicReports;
 
 public partial class MainWindow : Window
 {
+    private static readonly TimeSpan FavoriteDragArmDelay =
+        TimeSpan.FromMilliseconds(300);
+    private static readonly TimeSpan FavoriteOrderAnimationDuration =
+        TimeSpan.FromMilliseconds(180);
     private readonly GitHubSearchService _gitHub = new();
     private readonly ReportLibraryService _library = new();
+    private readonly DispatcherTimer _favoriteDragTimer = new()
+    {
+        Interval = FavoriteDragArmDelay
+    };
     private readonly FavoritesService _favorites;
     private readonly GlobalLeaderboardService _globalLeaderboard;
     private readonly ConfigurationPackageService _configurationPackages;
@@ -53,6 +66,14 @@ public partial class MainWindow : Window
     private string _standaloneDetailUrl = "";
     private bool _workspaceReady;
     private bool _standaloneSearchBusy;
+    private bool _favoriteDragArmed;
+    private bool _favoriteDragOrderChanged;
+    private FavoriteRepository? _favoriteDragRepository;
+    private List<FavoriteRepository>? _favoriteDragOriginalItems;
+    private Dictionary<long, int>? _favoriteDragOriginalSortOrders;
+    private FavoriteDragGhostAdorner? _favoriteDragGhost;
+    private AdornerLayer? _favoriteDragAdornerLayer;
+    private int _favoriteOrderAnimationVersion;
     private string _currentKeyword = "";
 
     public MainWindow()
@@ -87,6 +108,10 @@ public partial class MainWindow : Window
         StandaloneSearchCountComboBox.ItemsSource = new[] { "10", "20", "50", "100" };
         StandaloneSearchCountComboBox.Text = "20";
         VersionText.Text = $"版本 {typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "0.2.0"}";
+        CombinedContentTabs.Items.Remove(CombinedDirectoryTab);
+        CombinedContentTabs.Items.Insert(0, CombinedDirectoryTab);
+        CombinedContentTabs.SelectedItem = CombinedDirectoryTab;
+        _favoriteDragTimer.Tick += FavoriteDragTimer_Tick;
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
@@ -141,14 +166,27 @@ public partial class MainWindow : Window
             return;
         }
 
+        var previousSettings = _appSettings;
         try
         {
+            new StartupRegistrationService().SetEnabled(
+                dialog.CurrentSettings.StartWithWindows);
             _appSettingsService.Save(dialog.CurrentSettings);
             _appSettings = dialog.CurrentSettings;
             StatusText.Text = "软件设置已保存。";
         }
         catch (Exception exception)
         {
+            try
+            {
+                new StartupRegistrationService().SetEnabled(
+                    previousSettings.StartWithWindows);
+            }
+            catch (Exception rollbackException)
+            {
+                AppDiagnostics.LogException("恢复开机自启设置", rollbackException);
+            }
+
             var logPath = AppDiagnostics.LogException("保存软件设置", exception);
             MessageBox.Show(
                 this,
@@ -200,7 +238,8 @@ public partial class MainWindow : Window
             var updatedSettings = new AppSettings
             {
                 CloseAction = selectedAction,
-                AskOnClose = dialog.AskOnClose
+                AskOnClose = dialog.AskOnClose,
+                StartWithWindows = _appSettings.StartWithWindows
             };
             _appSettings = updatedSettings;
             try
@@ -332,6 +371,7 @@ public partial class MainWindow : Window
         _gitHub.Dispose();
         _globalLeaderboard.Dispose();
         _localLlm.Dispose();
+        ResetFavoriteDrag();
         DisposeTrayIcon();
     }
 
@@ -1075,7 +1115,7 @@ public partial class MainWindow : Window
             var queryCorrection = _gitHub.LastQueryCorrection;
             StandaloneSearchResultsGrid.ItemsSource = _standaloneSearchResults;
             ResetSearchResultSort(StandaloneSearchResultsGrid);
-            CombinedContentTabs.SelectedIndex = 0;
+            CombinedContentTabs.SelectedItem = CombinedSearchResultsTab;
             StandaloneSearchTitleText.Text = queryCorrection is null
                 ? keyword
                 : $"{keyword} → {queryCorrection.CorrectedQuery}";
@@ -1163,7 +1203,8 @@ public partial class MainWindow : Window
                 ?? _favoriteFolders.FirstOrDefault(folder => folder.Id == previousDestinationFolderId)
                 ?? selectedFolder;
             CombinedFavoritesGrid.ItemsSource = selectedFolder?.Repositories
-                .OrderByDescending(repository => repository.SavedAt)
+                .OrderBy(repository => repository.SortOrder)
+                .ThenByDescending(repository => repository.SavedAt)
                 .ToList() ?? [];
             UpdateStandaloneSearchActionState();
             UpdateFavoriteActionState();
@@ -1185,10 +1226,11 @@ public partial class MainWindow : Window
     {
         _selectedSearchFolder = SearchDirectoryList.SelectedItem as FavoriteFolder;
         CombinedFavoritesGrid.ItemsSource = _selectedSearchFolder?.Repositories
-            .OrderByDescending(repository => repository.SavedAt)
+            .OrderBy(repository => repository.SortOrder)
+            .ThenByDescending(repository => repository.SavedAt)
             .ToList() ?? [];
         _selectedCombinedFavoriteRepository = null;
-        if (CombinedContentTabs.SelectedIndex == 1)
+        if (ReferenceEquals(CombinedContentTabs.SelectedItem, CombinedDirectoryTab))
         {
             ClearStandaloneDetails("在目录内容中选择一个仓库查看详情。");
         }
@@ -1335,7 +1377,7 @@ public partial class MainWindow : Window
         _selectedStandaloneRepository = StandaloneSearchResultsGrid.SelectedItem as RepositoryRecord;
         if (_selectedStandaloneRepository is null)
         {
-            if (CombinedContentTabs.SelectedIndex == 0)
+            if (ReferenceEquals(CombinedContentTabs.SelectedItem, CombinedSearchResultsTab))
             {
                 ClearStandaloneDetails("在搜索结果中选择一个仓库查看详情。");
             }
@@ -1343,7 +1385,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (CombinedContentTabs.SelectedIndex == 0)
+        if (ReferenceEquals(CombinedContentTabs.SelectedItem, CombinedSearchResultsTab))
         {
             ShowSearchRepositoryDetails(_selectedStandaloneRepository);
         }
@@ -1485,13 +1527,363 @@ public partial class MainWindow : Window
         }
     }
 
+    private void CombinedFavoritesGrid_PreviewMouseLeftButtonDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        ResetFavoriteDrag();
+        if (e.ChangedButton != MouseButton.Left ||
+            e.OriginalSource is not DependencyObject originalSource ||
+            FindVisualAncestor<DataGridColumnHeader>(originalSource) is not null)
+        {
+            return;
+        }
+
+        var hitSource =
+            CombinedFavoritesGrid.InputHitTest(e.GetPosition(CombinedFavoritesGrid))
+                as DependencyObject
+            ?? originalSource;
+        var nameText = FindVisualAncestor<TextBlock>(hitSource);
+        var row = FindVisualAncestor<DataGridRow>(hitSource);
+        if (nameText?.Tag as string != "FavoriteRepositoryName" ||
+            row?.Item is not FavoriteRepository repository)
+        {
+            return;
+        }
+
+        CombinedFavoritesGrid.SelectedItem = repository;
+        _favoriteDragRepository = repository;
+        _favoriteDragOriginalItems = CombinedFavoritesGrid.Items
+            .Cast<FavoriteRepository>()
+            .ToList();
+        _favoriteDragOriginalSortOrders = _favoriteDragOriginalItems.ToDictionary(
+            item => item.Id,
+            item => item.SortOrder);
+        _favoriteDragOrderChanged = false;
+        _favoriteDragTimer.Start();
+    }
+
+    private async void CombinedFavoritesGrid_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (_favoriteDragRepository is null)
+        {
+            return;
+        }
+
+        if (e.LeftButton != MouseButtonState.Pressed)
+        {
+            if (_favoriteDragArmed)
+            {
+                await FinishFavoriteDragAsync();
+            }
+            else
+            {
+                ResetFavoriteDrag();
+            }
+            return;
+        }
+
+        var currentPoint = e.GetPosition(CombinedFavoritesGrid);
+        if (!_favoriteDragArmed)
+        {
+            return;
+        }
+
+        ShowFavoriteDragGhost(currentPoint);
+        ReorderFavoriteAtPoint(currentPoint);
+    }
+
+    private async void CombinedFavoritesGrid_PreviewMouseLeftButtonUp(
+        object sender,
+        MouseButtonEventArgs e) =>
+        await FinishFavoriteDragAsync();
+
+    private void FavoriteDragTimer_Tick(object? sender, EventArgs e)
+    {
+        if (_favoriteDragRepository is null ||
+            Mouse.LeftButton != MouseButtonState.Pressed)
+        {
+            ResetFavoriteDrag();
+            return;
+        }
+
+        _favoriteDragArmed = true;
+        CombinedFavoritesGrid.CaptureMouse();
+        CombinedFavoritesGrid.Cursor = Cursors.SizeAll;
+        ShowFavoriteDragGhost(Mouse.GetPosition(CombinedFavoritesGrid));
+    }
+
+    private void ReorderFavoriteAtPoint(Point pointerPosition)
+    {
+        if (_favoriteDragRepository is null ||
+            _selectedSearchFolder is null ||
+            CombinedFavoritesGrid.InputHitTest(pointerPosition) is not DependencyObject hitTest)
+        {
+            return;
+        }
+
+        var targetRow = FindVisualAncestor<DataGridRow>(hitTest);
+        if (targetRow?.Item is not FavoriteRepository targetRepository)
+        {
+            return;
+        }
+
+        ReorderFavoriteRelativeTo(targetRow, pointerPosition.Y);
+    }
+
+    private void ReorderFavoriteRelativeTo(
+        DataGridRow targetRow,
+        double pointerY)
+    {
+        if (_favoriteDragRepository is null ||
+            _selectedSearchFolder is null ||
+            targetRow.Item is not FavoriteRepository targetRepository)
+        {
+            return;
+        }
+
+        var items = CombinedFavoritesGrid.Items
+            .Cast<FavoriteRepository>()
+            .ToList();
+        var sourceIndex = items.FindIndex(
+            repository => repository.Id == _favoriteDragRepository.Id);
+        var targetIndex = items.FindIndex(
+            repository => repository.Id == targetRepository.Id);
+        if (sourceIndex < 0 || targetIndex < 0)
+        {
+            return;
+        }
+
+        var dropBelow =
+            pointerY -
+            targetRow.TranslatePoint(new Point(0, 0), CombinedFavoritesGrid).Y >
+            targetRow.ActualHeight / 2;
+        var insertIndex = targetIndex + (dropBelow ? 1 : 0);
+
+        if (sourceIndex < insertIndex)
+        {
+            insertIndex--;
+        }
+
+        if (insertIndex == sourceIndex)
+        {
+            return;
+        }
+
+        var rowPositions = CaptureFavoriteRowPositions();
+        var movedRepository = items[sourceIndex];
+        items.RemoveAt(sourceIndex);
+        items.Insert(insertIndex, movedRepository);
+        for (var index = 0; index < items.Count; index++)
+        {
+            items[index].SortOrder = index;
+        }
+
+        ApplyFavoriteOrder(_selectedSearchFolder, items);
+        AnimateFavoriteRows(rowPositions);
+        CombinedFavoritesGrid.SelectedItem = movedRepository;
+        CombinedFavoritesGrid.ScrollIntoView(movedRepository);
+        _favoriteDragOrderChanged = true;
+    }
+
+    private async Task FinishFavoriteDragAsync()
+    {
+        var folder = _selectedSearchFolder;
+        var movedRepository = _favoriteDragRepository;
+        var originalItems = _favoriteDragOriginalItems;
+        var originalSortOrders = _favoriteDragOriginalSortOrders;
+        var orderChanged = _favoriteDragOrderChanged;
+        var items = CombinedFavoritesGrid.Items
+            .Cast<FavoriteRepository>()
+            .ToList();
+        ResetFavoriteDrag();
+        if (!orderChanged ||
+            folder is null ||
+            movedRepository is null ||
+            originalItems is null ||
+            originalSortOrders is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _favorites.ReorderFavoritesAsync(
+                folder.Id,
+                items.Select(repository => repository.Id).ToList());
+            StatusText.Text = $"已调整“{movedRepository.FullName}”的收藏顺序。";
+        }
+        catch (Exception exception)
+        {
+            var rowPositions = CaptureFavoriteRowPositions();
+            foreach (var repository in originalItems)
+            {
+                repository.SortOrder = originalSortOrders[repository.Id];
+            }
+            ApplyFavoriteOrder(folder, originalItems);
+            AnimateFavoriteRows(rowPositions);
+            ShowFavoriteError(exception);
+        }
+    }
+
+    private void ApplyFavoriteOrder(
+        FavoriteFolder folder,
+        IReadOnlyList<FavoriteRepository> orderedRepositories)
+    {
+        folder.Repositories.Clear();
+        folder.Repositories.AddRange(orderedRepositories);
+        CombinedFavoritesGrid.ItemsSource = orderedRepositories.ToList();
+    }
+
+    private Dictionary<long, double> CaptureFavoriteRowPositions()
+    {
+        var positions = new Dictionary<long, double>();
+        foreach (var repository in CombinedFavoritesGrid.Items.Cast<FavoriteRepository>())
+        {
+            if (CombinedFavoritesGrid.ItemContainerGenerator.ContainerFromItem(repository)
+                is not DataGridRow row)
+            {
+                continue;
+            }
+
+            positions[repository.Id] = row.TranslatePoint(
+                new Point(0, 0),
+                CombinedFavoritesGrid).Y;
+        }
+
+        return positions;
+    }
+
+    private void AnimateFavoriteRows(IReadOnlyDictionary<long, double> previousPositions)
+    {
+        var animationVersion = ++_favoriteOrderAnimationVersion;
+        Dispatcher.BeginInvoke(
+            DispatcherPriority.Render,
+            new Action(() =>
+            {
+                CombinedFavoritesGrid.UpdateLayout();
+                foreach (var repository in CombinedFavoritesGrid.Items.Cast<FavoriteRepository>())
+                {
+                    if (!previousPositions.TryGetValue(repository.Id, out var previousY) ||
+                        CombinedFavoritesGrid.ItemContainerGenerator.ContainerFromItem(repository)
+                        is not DataGridRow row)
+                    {
+                        continue;
+                    }
+
+                    var currentY = row.TranslatePoint(
+                        new Point(0, 0),
+                        CombinedFavoritesGrid).Y;
+                    var offset = previousY - currentY;
+                    if (Math.Abs(offset) < 0.5)
+                    {
+                        continue;
+                    }
+
+                    var transform = new TranslateTransform(0, offset);
+                    row.RenderTransform = transform;
+                    var animation = new DoubleAnimation(
+                        offset,
+                        0,
+                        FavoriteOrderAnimationDuration)
+                    {
+                        EasingFunction = new CubicEase
+                        {
+                            EasingMode = EasingMode.EaseOut
+                        },
+                        FillBehavior = FillBehavior.HoldEnd
+                    };
+                    animation.Completed += (_, _) =>
+                    {
+                        if (animationVersion != _favoriteOrderAnimationVersion)
+                        {
+                            return;
+                        }
+
+                        transform.Y = 0;
+                        row.ClearValue(RenderTransformProperty);
+                    };
+                    transform.BeginAnimation(TranslateTransform.YProperty, animation);
+                }
+            }));
+    }
+
+    private void ShowFavoriteDragGhost(Point position)
+    {
+        if (_favoriteDragRepository is null)
+        {
+            return;
+        }
+
+        if (_favoriteDragGhost is null)
+        {
+            _favoriteDragAdornerLayer = AdornerLayer.GetAdornerLayer(CombinedFavoritesGrid);
+            if (_favoriteDragAdornerLayer is null)
+            {
+                return;
+            }
+
+            _favoriteDragGhost = new FavoriteDragGhostAdorner(
+                CombinedFavoritesGrid,
+                _favoriteDragRepository.FullName);
+            _favoriteDragAdornerLayer.Add(_favoriteDragGhost);
+        }
+
+        _favoriteDragGhost.UpdatePosition(position);
+    }
+
+    private void ResetFavoriteDrag()
+    {
+        _favoriteDragTimer.Stop();
+        if (CombinedFavoritesGrid.IsMouseCaptured)
+        {
+            CombinedFavoritesGrid.ReleaseMouseCapture();
+        }
+        _favoriteDragArmed = false;
+        _favoriteDragOrderChanged = false;
+        _favoriteDragRepository = null;
+        _favoriteDragOriginalItems = null;
+        _favoriteDragOriginalSortOrders = null;
+        CombinedFavoritesGrid.Cursor = Cursors.Arrow;
+        if (_favoriteDragGhost is not null &&
+            _favoriteDragAdornerLayer is not null)
+        {
+            _favoriteDragAdornerLayer.Remove(_favoriteDragGhost);
+        }
+        _favoriteDragGhost = null;
+        _favoriteDragAdornerLayer = null;
+    }
+
+    private static T? FindVisualAncestor<T>(DependencyObject? current)
+        where T : DependencyObject
+    {
+        while (current is not null && current is not T)
+        {
+            current = VisualTreeHelper.GetParent(current);
+        }
+
+        return current as T;
+    }
+
+    private async void CombinedFavoriteNoteButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: FavoriteRepository repository } ||
+            _selectedSearchFolder is not { } folder)
+        {
+            return;
+        }
+
+        CombinedFavoritesGrid.SelectedItem = repository;
+        await EditFavoriteNoteAsync(folder, repository);
+    }
+
     private void CombinedFavoritesGrid_SelectionChanged(
         object sender,
         SelectionChangedEventArgs e)
     {
         _selectedCombinedFavoriteRepository =
             CombinedFavoritesGrid.SelectedItem as FavoriteRepository;
-        if (CombinedContentTabs.SelectedIndex == 1)
+        if (ReferenceEquals(CombinedContentTabs.SelectedItem, CombinedDirectoryTab))
         {
             if (_selectedCombinedFavoriteRepository is not null)
             {
@@ -1513,7 +1905,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (CombinedContentTabs.SelectedIndex == 1)
+        if (ReferenceEquals(CombinedContentTabs.SelectedItem, CombinedDirectoryTab))
         {
             if (_selectedCombinedFavoriteRepository is not null)
             {
@@ -1593,6 +1985,13 @@ public partial class MainWindow : Window
             return;
         }
 
+        await EditFavoriteNoteAsync(folder, repository);
+    }
+
+    private async Task EditFavoriteNoteAsync(
+        FavoriteFolder folder,
+        FavoriteRepository repository)
+    {
         var dialog = new FavoriteNoteDialog(repository.FullName, repository.Note)
         {
             Owner = this
@@ -1610,6 +2009,7 @@ public partial class MainWindow : Window
             StandaloneDetailNoteText.Text = repository.HasNote
                 ? repository.Note
                 : "尚未添加备注。";
+            CombinedFavoritesGrid.Items.Refresh();
             StatusText.Text = repository.HasNote
                 ? $"已保存“{repository.FullName}”的收藏备注。"
                 : $"已删除“{repository.FullName}”的收藏备注。";
@@ -1699,7 +2099,9 @@ public partial class MainWindow : Window
 
     private void UpdateStandaloneSearchActionState()
     {
-        var searchViewActive = CombinedContentTabs.SelectedIndex == 0;
+        var searchViewActive = ReferenceEquals(
+            CombinedContentTabs.SelectedItem,
+            CombinedSearchResultsTab);
         var folder = _selectedSearchFolder;
         var selectedRepositories = StandaloneSearchResultsGrid.SelectedItems
             .OfType<RepositoryRecord>()
@@ -1790,7 +2192,8 @@ public partial class MainWindow : Window
     {
         _selectedFavoriteFolder = FavoriteFolderList.SelectedItem as FavoriteFolder;
         var repositories = _selectedFavoriteFolder?.Repositories
-            .OrderByDescending(repository => repository.SavedAt)
+            .OrderBy(repository => repository.SortOrder)
+            .ThenByDescending(repository => repository.SavedAt)
             .ToList() ?? [];
 
         FavoritesGrid.ItemsSource = repositories;

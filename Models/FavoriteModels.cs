@@ -44,6 +44,7 @@ public sealed class FavoriteRepository
     public string License { get; init; } = "";
     public string SourceKeyword { get; init; } = "";
     public DateTimeOffset SavedAt { get; init; } = DateTimeOffset.Now;
+    public int SortOrder { get; set; } = int.MaxValue;
     public string Note { get; set; } = "";
 
     public string StarsDisplay => Stars.ToString("N0");

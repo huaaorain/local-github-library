@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Threading;
+using System.IO;
 using GitHubTopicReports.Services;
 
 namespace GitHubTopicReports;
@@ -11,6 +12,21 @@ public partial class App : Application
         DispatcherUnhandledException += App_DispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+    }
+
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+        try
+        {
+            var libraryRoot = Path.Combine(AppContext.BaseDirectory, "GitHubReports");
+            var settings = new AppSettingsService(libraryRoot).Load();
+            new StartupRegistrationService().SetEnabled(settings.StartWithWindows);
+        }
+        catch (Exception exception)
+        {
+            AppDiagnostics.LogException("同步开机自启设置", exception);
+        }
     }
 
     private void App_DispatcherUnhandledException(

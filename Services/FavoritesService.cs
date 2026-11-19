@@ -31,6 +31,16 @@ public sealed class FavoritesService
         CancellationToken cancellationToken = default)
     {
         var document = await LoadDocumentInternalAsync(cancellationToken);
+        foreach (var folder in document.Folders)
+        {
+            var orderedRepositories = folder.Repositories
+                .OrderBy(repository => repository.SortOrder)
+                .ThenByDescending(repository => repository.SavedAt)
+                .ToList();
+            folder.Repositories.Clear();
+            folder.Repositories.AddRange(orderedRepositories);
+        }
+
         return document.Folders
             .OrderBy(folder => folder.CreatedAt)
             .ToList();
@@ -144,7 +154,8 @@ public sealed class FavoritesService
                 PushedAt = repository.PushedAt,
                 License = repository.License,
                 SourceKeyword = sourceKeyword,
-                SavedAt = DateTimeOffset.Now
+                SavedAt = DateTimeOffset.Now,
+                SortOrder = NextTopSortOrder(folder)
             });
 
             await SaveDocumentInternalAsync(document, cancellationToken);
@@ -216,6 +227,38 @@ public sealed class FavoritesService
         }
     }
 
+    public async Task ReorderFavoritesAsync(
+        string folderId,
+        IReadOnlyList<long> repositoryIds,
+        CancellationToken cancellationToken = default)
+    {
+        await _writeLock.WaitAsync(cancellationToken);
+        try
+        {
+            var document = await LoadDocumentInternalAsync(cancellationToken);
+            var folder = document.Folders.FirstOrDefault(item => item.Id == folderId)
+                ?? throw new InvalidOperationException("所选收藏目录不存在。");
+            if (repositoryIds.Count != folder.Repositories.Count ||
+                repositoryIds.Distinct().Count() != repositoryIds.Count ||
+                repositoryIds.Any(id => folder.Repositories.All(repository => repository.Id != id)))
+            {
+                throw new InvalidOperationException("收藏顺序数据与当前目录不一致，已取消保存。");
+            }
+
+            var repositoriesById = folder.Repositories.ToDictionary(repository => repository.Id);
+            for (var index = 0; index < repositoryIds.Count; index++)
+            {
+                repositoriesById[repositoryIds[index]].SortOrder = index;
+            }
+
+            await SaveDocumentInternalAsync(document, cancellationToken);
+        }
+        finally
+        {
+            _writeLock.Release();
+        }
+    }
+
     public async Task<string> BuildNotesTextAsync(
         CancellationToken cancellationToken = default)
     {
@@ -274,6 +317,7 @@ public sealed class FavoritesService
                 ?? throw new InvalidOperationException("请选择一个收藏目录。");
             var added = 0;
             var duplicates = 0;
+            var sortOrder = NextTopSortOrder(folder);
 
             foreach (var repository in repositories)
             {
@@ -300,7 +344,8 @@ public sealed class FavoritesService
                     PushedAt = repository.PushedAt,
                     License = repository.License,
                     SourceKeyword = sourceKeyword,
-                    SavedAt = DateTimeOffset.Now
+                    SavedAt = DateTimeOffset.Now,
+                    SortOrder = sortOrder++
                 });
                 added++;
             }
@@ -404,6 +449,11 @@ public sealed class FavoritesService
 
         return name;
     }
+
+    private static int NextTopSortOrder(FavoriteFolder folder) =>
+        folder.Repositories.Count == 0
+            ? 0
+            : folder.Repositories.Min(repository => repository.SortOrder) - 1;
 }
 
 public sealed class DuplicateFavoriteFolderException : Exception

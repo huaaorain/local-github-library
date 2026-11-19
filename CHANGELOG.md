@@ -2,6 +2,25 @@
 
 All notable changes to Local Github Library will be documented in this file.
 
+## [0.2.7] - 2026-11-19
+
+### Added
+
+- Add an optional Windows startup registration controlled from app settings,
+  disabled by default.
+- Show a clickable note indicator before favorited repository names with notes.
+- Support long-press drag reordering of repositories within a favorite folder,
+  persisted in the local favorites data.
+- Show a translucent repository card that follows the pointer while a favorite
+  is being dragged.
+- Reduce the favorite drag arming delay to 300 milliseconds.
+- Animate affected favorite rows when reordering so the list slides smoothly.
+
+### Changed
+
+- Show the directory contents tab before search results and select it by default
+  when entering My Favorites.
+
 ## [0.2.6] - 2026-11-06
 
 ### Added
