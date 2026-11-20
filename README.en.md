@@ -145,7 +145,7 @@ Extract the complete archive into a normal directory where you have write access
 
 <a id="github-login"></a>
 
-### 3. Sign in to GitHub and search private repositories
+### 3. \* Sign in to GitHub and search private repositories
 
 Anonymous GitHub API access can still search public repositories. To raise request limits or search private repositories, open the header gear `⚙`, go to **GitHub Account → Login**, paste a Personal Access Token, and select **Verify and sign in**.
 
@@ -168,7 +168,7 @@ If a Fine-grained Token cannot cover a required organization, a [Classic Token](
 
 The token is used only for GitHub API requests and is encrypted with Windows DPAPI for the current Windows user. Never place it in reports, issues, or screenshots.
 
-## 🧠 Local LLM
+## 🧠 \* Local LLM
 
 `v0.2.0` adds an optional `.ghllm` extension package. After installation, repository details can stream Chinese translations and summaries. Without the package, search, rankings, favorites, and README summaries remain available.
 
