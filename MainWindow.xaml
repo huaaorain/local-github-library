@@ -43,9 +43,9 @@
                                Margin="0,4,0,0"
                                MaxWidth="520"
                                HorizontalAlignment="Left"
-                               Text="查询主题、保存完整报告，并把值得继续关注的仓库整理到自己的收藏目录。"
+                               Text="登录 GitHub 后可搜索公开与私有仓库，保存完整报告，并整理到本地收藏目录。"
                                TextTrimming="CharacterEllipsis"
-                               ToolTip="查询主题、保存完整报告，并把值得继续关注的仓库整理到自己的收藏目录。"
+                               ToolTip="登录 GitHub 后可搜索公开与私有仓库，保存完整报告，并整理到本地收藏目录。"
                                Style="{StaticResource QuietTextStyle}" />
                 </StackPanel>
                 <StackPanel Grid.Column="1"
@@ -1472,7 +1472,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="StatusText"
                            VerticalAlignment="Center"
-                           Text="就绪。未配置 GITHUB_TOKEN 时将使用匿名 GitHub API。" />
+                           Text="就绪。登录 GitHub 后可搜索账号有权访问的私有仓库。" />
                 <TextBlock x:Name="ReportPathText"
                            Grid.Column="1"
                            MaxWidth="560"

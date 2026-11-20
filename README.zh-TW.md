@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.7-ff7a45?style=flat-square" alt="版本 0.2.7">
+  <img src="https://img.shields.io/badge/version-0.3.0-ff7a45?style=flat-square" alt="版本 0.3.0">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="本機優先">
@@ -32,6 +32,8 @@
   ·
   <a href="#user-content-quick-start">快速開始</a>
   ·
+  <a href="#user-content-github-login">GitHub 登入</a>
+  ·
   <a href="#user-content-releases">所有版本</a>
   ·
   <a href="https://github.com/huaaorain/local-github-library/issues">回報問題</a>
@@ -52,7 +54,7 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
 - 全站最近一天、一週或一年，哪些專案正在快速上升？
 - 如何把搜尋結果、收藏和 Star 快照長期保存在自己的電腦上？
 
-**Local GitHub Library** 把這些任務放進一個不需要資料庫、不需要雲端帳戶的 Windows 桌面工具。業務資料使用 TXT、JSON、JSONL 和 ZIP 等一般檔案，便於查看、備份和移轉。
+**Local GitHub Library** 把這些任務放進一個不需要資料庫、不需要強制雲端帳戶的 Windows 桌面工具。GitHub 登入是選用功能；業務資料繼續使用 TXT、JSON、JSONL 和 ZIP 等一般檔案，便於查看、備份和移轉。
 
 <a id="features"></a>
 
@@ -73,6 +75,10 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
     <tr>
       <td><strong>主&#8239;題&#8239;搜&#8239;尋</strong></td>
       <td>優先透過 GitHub Topics 找出領域，再用名稱與描述補充候選並過濾無關匹配；精確結果不足時可修正 1–2 個字元的英文拼寫錯誤。點擊「倉庫」依匹配度排序，點擊「Star」嚴格依數值排序，並可產生 TXT 報告。</td>
+    </tr>
+    <tr>
+      <td><strong>GitHub&#8239;登入</strong></td>
+      <td>使用 Fine-grained Personal Access Token 驗證 GitHub 帳號；登入後可搜尋有權限存取的私有倉庫，並顯示帳號狀態和登出入口。Token 使用 Windows DPAPI 加密，不會進入報告或設定匯出包。</td>
     </tr>
     <tr>
       <td><strong>Star&#8239;趨&#8239;勢</strong></td>
@@ -127,7 +133,7 @@ _截圖使用非敏感示範資料。頂部主題按鈕可在淺色與深色之�
 
 | 發佈包 | 大小 | 適用情境 |
 | --- | ---: | --- |
-| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.7/LocalGithubLibrary-0.2.7-win-x64.zip) | 約 87 MB | 拼寫容錯搜尋、收藏拖動排序、開機自啟與托盤管理 |
+| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.3.0/LocalGithubLibrary-0.3.0-win-x64.zip) | 約 84 MB | GitHub 登入、私有倉庫搜尋、收藏整理與本機報告 |
 | [LLM 模型（選用）](docs/models/README.md) | 約 1.04 GB | 獨立下載，升級程式時無需重複下載 |
 
 ### 2. 解壓縮並執行
@@ -137,16 +143,30 @@ _截圖使用非敏感示範資料。頂部主題按鈕可在淺色與深色之�
 > [!IMPORTANT]
 > 請保留 EXE 同層的 `runtimes` 目錄。不要只移動或複製 EXE 檔案。
 
-### 3. 視需要設定 GitHub Token
+<a id="github-login"></a>
 
-匿名 GitHub API 可用，但額度較低。需要更穩定的搜尋和榜單更新時，在 EXE 旁建立 `github-token.txt`，檔案內只填寫唯讀 Token。
+### 3. 登入 GitHub 並搜尋私有倉庫
 
-```powershell
-# 也可以使用環境變數
-$env:GITHUB_TOKEN = "your_token"
-```
+匿名 GitHub API 仍可搜尋公開倉庫。需要提高請求額度或搜尋私有倉庫時，開啟右上角齒輪 `⚙`，進入 **GitHub 帳號 → 登入**，貼上 Personal Access Token 後點擊「驗證並登入」。
 
-請勿提交或分享 Token。
+<details>
+<summary><strong>建立 Fine-grained Personal Access Token</strong></summary>
+
+1. 開啟 [GitHub Fine-grained Token 建立頁面](https://github.com/settings/personal-access-tokens/new)。
+2. 在 `Token name` 填入例如 `Local GitHub Library`，並選擇 `Expiration` 有效期。
+3. `Resource owner` 選擇個人帳號或需要存取的組織。
+4. `Repository access` 選擇 `Only select repositories` 並選擇需要查詢的私有倉庫；確需存取全部倉庫時才選擇 `All repositories`。
+5. 在 `Repository permissions` 中把 `Metadata` 設為 `Read-only`，把 `Contents` 設為 `Read-only`。
+6. 點擊建立，複製以 `github_pat_...` 開頭的完整 Token。Token 通常只顯示一次。
+7. 回到軟體設定，把 Token 貼到密碼框並完成驗證。
+
+`Metadata` 用於讀取倉庫基本資訊，`Contents` 用於讀取 README 和專案詳解。組織可能要求管理員核准 Fine-grained Token。GitHub 官方說明見 [管理 Personal Access Token](https://docs.github.com/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)。
+
+如果 Fine-grained Token 無法涵蓋所需組織，可使用 [Classic Token](https://github.com/settings/tokens/new) 並勾選 `repo`；該權限範圍較大，請只在確有需要時使用。
+
+</details>
+
+Token 只透過 GitHub API 使用，並使用 Windows DPAPI 依目前 Windows 使用者加密保存。請勿把 Token 寫入報告、Issue 或截圖。
 
 ## 🧠 本機 LLM
 
@@ -189,6 +209,7 @@ GitHubReports/
     star-snapshots.jsonl
     favorites.json
     app-settings.json
+    github-auth.bin       # DPAPI 加密的 GitHub 登入憑證
     global-daily-ranks.zip
     error.log
   Backups/               # 匯入設定前自動產生
@@ -197,8 +218,8 @@ GitHubReports/
     prompt.txt
 ```
 
-- GitHub Token 只從環境變數或 `github-token.txt` 讀取。
-- `.ghconfig` 不匯出 Token 和錯誤記錄。
+- GitHub Token 透過軟體設定登入，並加密保存在 `github-auth.bin`；進階使用者仍可使用 `GITHUB_TOKEN` 或 `github-token.txt`。
+- `.ghconfig` 不匯出 Token、GitHub 登入憑證和錯誤記錄。
 - 匯入前自動備份，並驗證格式、大小與路徑安全。
 - 報告、收藏和 Star 快照不會上傳到第三方分析或推理服務。
 
@@ -350,6 +371,7 @@ GitHubReports/
 ## ⚠️ 已知限制
 
 - GitHub Search API 最多回傳 1000 筆結果，匿名請求額度較低。
+- 登入後的私有倉庫補充匹配涵蓋最近更新的最多 1,000 個可存取倉庫。
 - 全站增量榜依賴 [OpenGithubs 公開日榜](https://github.com/OpenGithubs/github-daily-rank) 的涵蓋範圍。
 - 目前只提供 Windows x64 版本。
 - 未簽署的 EXE 可能觸發 Windows SmartScreen 警告。
@@ -386,6 +408,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 📝 更新記錄
 
+- [0.3.0：GitHub 登入、私有倉庫搜尋與安全憑證保存](docs/releases/v0.3.0.zh-TW.md)
 - [0.2.7：收藏拖動排序、備註標示、開機自啟與目錄預設頁](docs/releases/v0.2.7.zh-TW.md)
 - [0.2.6：拼寫容錯搜尋與多解析度應用程式圖示](docs/releases/v0.2.6.zh-TW.md)
 - [0.2.5：軟體設定、系統托盤與可設定關閉行為](docs/releases/v0.2.5.zh-TW.md)

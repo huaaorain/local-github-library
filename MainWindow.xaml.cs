@@ -23,7 +23,7 @@ public partial class MainWindow : Window
         TimeSpan.FromMilliseconds(300);
     private static readonly TimeSpan FavoriteOrderAnimationDuration =
         TimeSpan.FromMilliseconds(180);
-    private readonly GitHubSearchService _gitHub = new();
+    private readonly GitHubSearchService _gitHub;
     private readonly ReportLibraryService _library = new();
     private readonly DispatcherTimer _favoriteDragTimer = new()
     {
@@ -79,6 +79,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         _favorites = new FavoritesService(_library.LibraryRoot);
+        _gitHub = new GitHubSearchService(_library.LibraryRoot);
         _globalLeaderboard = new GlobalLeaderboardService(_library.LibraryRoot);
         _configurationPackages = new ConfigurationPackageService(_library.LibraryRoot);
         _llmPackageService = new LlmPackageService(_library.LibraryRoot);
@@ -123,6 +124,9 @@ public partial class MainWindow : Window
         await RefreshHistoryAsync();
         await RefreshSearchDirectoriesAsync();
         await RefreshLlmStatusAsync();
+        StatusText.Text = _gitHub.HasToken
+            ? "就绪。GitHub 登录凭据已加载。"
+            : "就绪。登录 GitHub 后可搜索账号有权访问的私有仓库。";
         StandaloneSearchKeywordTextBox.Focus();
     }
 
@@ -157,7 +161,7 @@ public partial class MainWindow : Window
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new AppSettingsDialog(_appSettings)
+        var dialog = new AppSettingsDialog(_appSettings, _gitHub)
         {
             Owner = this
         };
@@ -195,6 +199,13 @@ public partial class MainWindow : Window
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
             return;
+        }
+
+        if (dialog.AccountChanged)
+        {
+            StatusText.Text = _gitHub.HasToken
+                ? "GitHub 账号已登录，可搜索有权限访问的私有仓库。"
+                : "GitHub 账号已退出，仅显示公开仓库。";
         }
 
         switch (dialog.RequestedAction)

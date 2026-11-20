@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": {
     "name": "Local GitHub Library",
-    "description": "Local-first Windows desktop workbench for GitHub repository discovery, Star trends, rankings, favorites, and local reports.",
+    "description": "Local-first Windows desktop workbench for public and authenticated private GitHub repository discovery, Star trends, rankings, favorites, and local reports.",
     "repository": "huaaorain/local-github-library",
     "homepage": "https://github.com/huaaorain/local-github-library",
     "topics": [
@@ -141,16 +141,16 @@
   ],
   "artifacts": [
     {
-      "path": "release-build/LocalGithubLibrary-0.2.7-win-x64.zip",
+      "path": "release-build/LocalGithubLibrary-0.3.0-win-x64.zip",
       "role": "standard",
-      "description": "推荐的 Windows x64 标准发布包，包含主程序、提示词与 CPU 原生运行库。",
+      "description": "推荐的 Windows x64 标准发布包，包含主程序与 CPU 原生运行库。",
       "localized_descriptions": {
-        "zh-CN": "推荐的 Windows x64 标准发布包，包含主程序、提示词与 CPU 原生运行库。",
-        "zh-TW": "推薦的 Windows x64 標準發佈包，包含主程式、提示詞與 CPU 原生執行階段。",
-        "en": "Recommended Windows x64 package with the application, prompt, and CPU runtime."
+        "zh-CN": "推荐的 Windows x64 标准发布包，包含主程序与 CPU 原生运行库。",
+        "zh-TW": "推薦的 Windows x64 標準發佈包，包含主程式與 CPU 原生執行階段。",
+        "en": "Recommended Windows x64 package with the application and CPU runtime."
       },
       "required": true,
-      "download_name": "LocalGithubLibrary-0.2.7-win-x64.zip"
+      "download_name": "LocalGithubLibrary-0.3.0-win-x64.zip"
     },
     {
       "path": "release-build/GitHubTopicReports.exe",

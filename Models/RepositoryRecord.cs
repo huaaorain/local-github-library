@@ -51,6 +51,12 @@ public sealed class GitHubRepositoryDto
 
     [JsonPropertyName("license")]
     public GitHubLicenseDto? License { get; set; }
+
+    [JsonPropertyName("archived")]
+    public bool Archived { get; set; }
+
+    [JsonPropertyName("private")]
+    public bool Private { get; set; }
 }
 
 public sealed class GitHubLicenseDto
@@ -75,6 +81,7 @@ public sealed class RepositoryRecord
     public DateTimeOffset? CreatedAt { get; init; }
     public DateTimeOffset? PushedAt { get; init; }
     public string License { get; init; } = "";
+    public bool IsPrivate { get; init; }
     public int? WeeklyGrowth { get; set; }
 
     public string StarsDisplay => Stars.ToString("N0");
@@ -100,6 +107,7 @@ public sealed class RepositoryRecord
         CreatedAt = CreatedAt,
         PushedAt = PushedAt,
         License = License,
+        IsPrivate = IsPrivate,
         WeeklyGrowth = WeeklyGrowth
     };
 }

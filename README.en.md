@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.7-ff7a45?style=flat-square" alt="Version 0.2.7">
+  <img src="https://img.shields.io/badge/version-0.3.0-ff7a45?style=flat-square" alt="Version 0.3.0">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -32,6 +32,8 @@
   ·
   <a href="#user-content-quick-start">Quick start</a>
   ·
+  <a href="#user-content-github-login">GitHub sign-in</a>
+  ·
   <a href="#user-content-releases">All releases</a>
   ·
   <a href="https://github.com/huaaorain/local-github-library/issues">Report an issue</a>
@@ -52,7 +54,7 @@ GitHub is good at finding one repository, but it is not designed to answer quest
 - Which projects across GitHub are rising fastest today, this week, or this year?
 - How can search results, favorites, and Star snapshots stay on your own computer?
 
-**Local GitHub Library** brings those tasks into a database-free Windows desktop tool that requires no cloud account. Business data is stored in readable TXT, JSON, JSONL, and ZIP files that are easy to inspect, back up, and move.
+**Local GitHub Library** brings those tasks into a database-free Windows desktop tool without requiring a cloud account. GitHub sign-in is optional, and business data remains in readable TXT, JSON, JSONL, and ZIP files that are easy to inspect, back up, and move.
 
 <a id="features"></a>
 
@@ -73,6 +75,10 @@ GitHub is good at finding one repository, but it is not designed to answer quest
     <tr>
       <td><strong>Topic&#8239;search</strong></td>
       <td>Find the domain through GitHub Topics first, supplement with repository names and descriptions, and filter unrelated matches. When exact results are sparse, correct one or two mistyped English characters. Click Repository to sort by match relevance or Star to sort strictly by numeric Stars, then generate a readable TXT report.</td>
+    </tr>
+    <tr>
+      <td><strong>GitHub&#8239;sign-in</strong></td>
+      <td>Verify a GitHub account with a Fine-grained Personal Access Token, search private repositories the account can access, and view account and sign-out status. The token is encrypted with Windows DPAPI and excluded from reports and configuration exports.</td>
     </tr>
     <tr>
       <td><strong>Star&#8239;trends</strong></td>
@@ -127,7 +133,7 @@ _Screenshots use non-sensitive demo data. The header theme button switches modes
 
 | Package | Size | Best for |
 | --- | ---: | --- |
-| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.2.7/LocalGithubLibrary-0.2.7-win-x64.zip) | About 87 MB | Typo-tolerant search, favorite drag ordering, Windows startup, and tray controls |
+| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.3.0/LocalGithubLibrary-0.3.0-win-x64.zip) | About 84 MB | GitHub sign-in, private repository search, favorites, and local reports |
 | [LLM model (optional)](docs/models/README.md) | About 1.04 GB | Downloaded separately; application upgrades reuse it |
 
 ### 2. Extract and run
@@ -137,16 +143,30 @@ Extract the complete archive into a normal directory where you have write access
 > [!IMPORTANT]
 > Keep the `runtimes` directory beside the executable. Do not move or copy only the EXE.
 
-### 3. Optionally configure a GitHub token
+<a id="github-login"></a>
 
-Anonymous GitHub API access works, but the request limit is low. For more reliable search and rankings, create `github-token.txt` beside the executable and place only a read-only token inside it.
+### 3. Sign in to GitHub and search private repositories
 
-```powershell
-# The environment variable is also supported
-$env:GITHUB_TOKEN = "your_token"
-```
+Anonymous GitHub API access can still search public repositories. To raise request limits or search private repositories, open the header gear `⚙`, go to **GitHub Account → Login**, paste a Personal Access Token, and select **Verify and sign in**.
 
-Do not commit or share the token.
+<details>
+<summary><strong>Create a Fine-grained Personal Access Token</strong></summary>
+
+1. Open the [GitHub Fine-grained token creation page](https://github.com/settings/personal-access-tokens/new).
+2. Enter a `Token name` such as `Local GitHub Library` and choose an `Expiration`.
+3. Choose the personal account or organization that owns the repositories under `Resource owner`.
+4. Under `Repository access`, choose `Only select repositories` and select the private repositories to search; choose `All repositories` only when that broader access is required.
+5. Under `Repository permissions`, set `Metadata` to `Read-only` and `Contents` to `Read-only`.
+6. Generate the token and copy the complete value beginning with `github_pat_...`. GitHub normally displays it only once.
+7. Return to app settings, paste the token into the password field, and verify it.
+
+`Metadata` provides repository information, while `Contents` allows README and project-detail retrieval. Organizations may require administrator approval for Fine-grained Tokens. See GitHub's official [Personal Access Token documentation](https://docs.github.com/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).
+
+If a Fine-grained Token cannot cover a required organization, a [Classic Token](https://github.com/settings/tokens/new) with the `repo` scope can be used as a broader fallback. Use it only when necessary.
+
+</details>
+
+The token is used only for GitHub API requests and is encrypted with Windows DPAPI for the current Windows user. Never place it in reports, issues, or screenshots.
 
 ## 🧠 Local LLM
 
@@ -189,6 +209,7 @@ GitHubReports/
     star-snapshots.jsonl
     favorites.json
     app-settings.json
+    github-auth.bin       # DPAPI-encrypted GitHub login credential
     global-daily-ranks.zip
     error.log
   Backups/               # Created before configuration imports
@@ -197,8 +218,8 @@ GitHubReports/
     prompt.txt
 ```
 
-- GitHub tokens are read only from the environment or `github-token.txt`.
-- `.ghconfig` excludes tokens and error logs.
+- GitHub tokens are saved through app settings in `github-auth.bin`; advanced users can still use `GITHUB_TOKEN` or `github-token.txt`.
+- `.ghconfig` excludes tokens, GitHub login credentials, and error logs.
 - Imports create a backup and validate format, size, and path safety.
 - Reports, favorites, and Star snapshots are not uploaded to third-party analytics or inference services.
 
@@ -350,6 +371,7 @@ Release notes: [Open](https://github.com/huaaorain/local-github-library/releases
 ## ⚠️ Known limitations
 
 - GitHub Search API returns at most 1000 results, and anonymous requests have a low quota.
+- Signed-in private-repository supplementation matches up to the 1,000 most recently updated accessible repositories.
 - The all-site growth ranking depends on the coverage of the public [OpenGithubs daily ranking](https://github.com/OpenGithubs/github-daily-rank).
 - Only Windows x64 builds are currently provided.
 - The unsigned EXE may trigger a Windows SmartScreen warning.
@@ -386,6 +408,7 @@ Issues and pull requests are welcome. Before submitting:
 
 ## 📝 Release history
 
+- [0.3.0: GitHub sign-in, private repository search, and secure credential storage](docs/releases/v0.3.0.en.md)
 - [0.2.7: favorite drag ordering, note markers, Windows startup, and default directory view](docs/releases/v0.2.7.en.md)
 - [0.2.6: typo-tolerant search and multi-resolution app icon](docs/releases/v0.2.6.en.md)
 - [0.2.5: app settings, system tray, and configurable close behavior](docs/releases/v0.2.5.en.md)

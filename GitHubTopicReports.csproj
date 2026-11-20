@@ -8,8 +8,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>GitHubTopicReports</AssemblyName>
     <Product>Local Github Library</Product>
-    <Description>A local-first Windows library for discovering, comparing and organizing GitHub repositories.</Description>
-    <Version>0.2.7</Version>
+    <Description>A local-first Windows library for discovering public and authenticated private GitHub repositories.</Description>
+    <Version>0.3.0</Version>
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <RepositoryUrl>https://github.com/huaaorain/local-github-library</RepositoryUrl>
   </PropertyGroup>

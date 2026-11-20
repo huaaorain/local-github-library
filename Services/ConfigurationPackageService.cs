@@ -66,7 +66,7 @@ public sealed class ConfigurationPackageService
                 formatVersion = FormatVersion,
                 appVersion,
                 exportedAt = DateTimeOffset.Now,
-                excludes = new[] { "github-token.txt", "error.log", "Backups" }
+                excludes = new[] { "github-auth.bin", "github-token.txt", "error.log", "Backups" }
             }, new JsonSerializerOptions { WriteIndented = true });
             AddBytes(archive, "manifest.json", manifest, ref fileCount, ref totalBytes);
 

@@ -4,9 +4,9 @@
         Title="软件设置"
         Icon="Resources/app.ico"
         Width="600"
-        Height="620"
+        Height="740"
         MinWidth="540"
-        MinHeight="570"
+        MinHeight="690"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResizeWithGrip"
@@ -14,8 +14,11 @@
         FontSize="14"
         Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
         Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto">
     <Grid Margin="24,20,24,18">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -90,6 +93,102 @@
         </Border>
 
         <Border Grid.Row="2"
+                Margin="0,0,0,12"
+                Padding="16,14"
+                Style="{StaticResource PanelCardStyle}">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="GitHub 账号"
+                                   Style="{StaticResource SectionTitleStyle}" />
+                        <TextBlock x:Name="GitHubAccountStatusText"
+                                   Margin="0,7,0,0"
+                                   FontWeight="SemiBold"
+                                   Text="正在检查登录状态..." />
+                        <TextBlock x:Name="GitHubAccountHintText"
+                                   Margin="0,3,0,0"
+                                   MaxWidth="410"
+                                   Text="登录后可搜索账号有权限访问的私有仓库。"
+                                   TextWrapping="Wrap"
+                                   Style="{StaticResource QuietTextStyle}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1"
+                                Margin="16,0,0,0"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                        <Button x:Name="GitHubLoginButton"
+                                Padding="14,8"
+                                Content="登录"
+                                Click="GitHubLoginButton_Click" />
+                        <Button x:Name="GitHubLogoutButton"
+                                Padding="14,8"
+                                Content="退出登录"
+                                Visibility="Collapsed"
+                                Click="GitHubLogoutButton_Click" />
+                    </StackPanel>
+                </Grid>
+
+                <Border x:Name="GitHubLoginPanel"
+                        Margin="0,12,0,0"
+                        Padding="12"
+                        Background="{DynamicResource SurfaceSubtleBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Text="Personal Access Token"
+                                   FontWeight="SemiBold" />
+                        <PasswordBox x:Name="GitHubTokenPasswordBox"
+                                     MinHeight="36"
+                                     Margin="0,8,0,0"
+                                     Padding="9,6"
+                                     VerticalContentAlignment="Center" />
+                        <TextBlock Margin="0,6,0,0"
+                                   TextWrapping="Wrap"
+                                   Style="{StaticResource QuietTextStyle}">
+                            <Run Text="建议创建 Fine-grained token，并为需要查询的私有仓库授予 " />
+                            <Run Text="Metadata" FontWeight="SemiBold" />
+                            <Run Text=" 与 " />
+                            <Run Text="Contents" FontWeight="SemiBold" />
+                            <Run Text=" 的只读权限。" />
+                            <Hyperlink NavigateUri="https://github.com/settings/tokens?type=beta"
+                                       RequestNavigate="CreateGitHubTokenLink_RequestNavigate">
+                                打开 Token 设置
+                            </Hyperlink>
+                        </TextBlock>
+                        <TextBlock Margin="0,6,0,0"
+                                   Text="Token 仅加密保存在本机当前 Windows 用户下，不会写入报告或配置导出文件。"
+                                   TextWrapping="Wrap"
+                                   Style="{StaticResource QuietTextStyle}" />
+                        <TextBlock x:Name="GitHubLoginErrorText"
+                                   Margin="0,6,0,0"
+                                   Foreground="{DynamicResource DangerBrush}"
+                                   TextWrapping="Wrap"
+                                   Visibility="Collapsed" />
+                        <StackPanel Margin="0,10,0,0"
+                                    HorizontalAlignment="Right"
+                                    Orientation="Horizontal">
+                            <Button Padding="12,7"
+                                    Content="取消"
+                                    Click="CancelGitHubLoginButton_Click" />
+                            <Button x:Name="ConfirmGitHubLoginButton"
+                                    Margin="8,0,0,0"
+                                    Padding="14,7"
+                                    Content="验证并登录"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Click="ConfirmGitHubLoginButton_Click" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="3"
                 Padding="16,14"
                 Style="{StaticResource PanelCardStyle}">
             <StackPanel>
@@ -116,7 +215,7 @@
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="3"
+        <Border Grid.Row="4"
                 Margin="0,12,0,0"
                 Padding="14,12"
                 Background="{DynamicResource SurfaceSubtleBrush}"
@@ -128,7 +227,7 @@
                        Style="{StaticResource QuietTextStyle}" />
         </Border>
 
-        <Grid Grid.Row="4" Margin="0,16,0,0">
+        <Grid Grid.Row="5" Margin="0,16,0,0">
             <StackPanel HorizontalAlignment="Right"
                         Orientation="Horizontal">
                 <Button Width="88"
@@ -146,4 +245,5 @@
             </StackPanel>
         </Grid>
     </Grid>
+    </ScrollViewer>
 </Window>

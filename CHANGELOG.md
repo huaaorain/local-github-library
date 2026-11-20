@@ -2,6 +2,27 @@
 
 All notable changes to Local Github Library will be documented in this file.
 
+## [0.3.0] - 2026-11-20
+
+### Added
+
+- Add GitHub account sign-in with a Personal Access Token and authenticated
+  repository search, including private repositories the signed-in account can access.
+- Encrypt the saved token with Windows DPAPI for the current Windows user and
+  exclude it from `.ghconfig` exports.
+- Show the signed-in GitHub account in app settings and provide sign-out.
+- Merge the authenticated accessible-repository inventory into keyword search to
+  cover private repositories omitted from GitHub's repository search index.
+- Add a complete Fine-grained Personal Access Token creation guide and official
+  links to all localized READMEs.
+
+### Changed
+
+- Reuse authenticated GitHub requests for search, private README summaries, and
+  other repository lookups.
+- Preserve compatibility with `GITHUB_TOKEN` and `github-token.txt` as advanced
+  configuration fallbacks.
+
 ## [0.2.7] - 2026-11-19
 
 ### Added

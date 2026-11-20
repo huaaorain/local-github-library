@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Collections.Concurrent;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using GitHubTopicReports.Models;
 
@@ -14,11 +15,21 @@ namespace GitHubTopicReports.Services;
 public sealed class GitHubSearchService : IDisposable
 {
     private readonly HttpClient _httpClient;
+    private readonly GitHubCredentialStore _credentialStore;
     private readonly SearchVocabulary _searchVocabulary;
     private readonly ConcurrentDictionary<string, string> _summaryCache =
         new(StringComparer.OrdinalIgnoreCase);
+    private readonly SemaphoreSlim _accessibleRepositoriesLock = new(1, 1);
+    private List<RepositoryRecord>? _accessibleRepositories;
+    private DateTimeOffset _accessibleRepositoriesLoadedAt;
+    private GitHubTokenSource _tokenSource;
 
     public GitHubSearchService()
+        : this(Path.Combine(AppContext.BaseDirectory, "GitHubReports"))
+    {
+    }
+
+    public GitHubSearchService(string libraryRoot)
     {
         var handler = new SocketsHttpHandler
         {
@@ -42,6 +53,7 @@ public sealed class GitHubSearchService : IDisposable
             new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         _httpClient.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
 
+        _credentialStore = new GitHubCredentialStore(libraryRoot);
         var token = LoadToken();
         if (!string.IsNullOrWhiteSpace(token))
         {
@@ -60,6 +72,116 @@ public sealed class GitHubSearchService : IDisposable
     public bool HasToken =>
         _httpClient.DefaultRequestHeaders.Authorization is not null;
     public SearchQueryCorrection? LastQueryCorrection { get; private set; }
+    public string? CurrentLogin { get; private set; }
+
+    public async Task<string> SignInAsync(
+        string token,
+        CancellationToken cancellationToken = default)
+    {
+        token = token.Trim();
+        if (token.Length < 20)
+        {
+            throw new InvalidOperationException("请输入有效的 GitHub Personal Access Token。");
+        }
+
+        var previousAuthorization = _httpClient.DefaultRequestHeaders.Authorization;
+        _httpClient.DefaultRequestHeaders.Authorization = null;
+        string login;
+        try
+        {
+            login = await ReadCurrentLoginAsync(token, cancellationToken);
+        }
+        catch
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = previousAuthorization;
+            throw;
+        }
+
+        try
+        {
+            _credentialStore.SaveToken(token);
+            _httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+        }
+        catch
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = previousAuthorization;
+            throw;
+        }
+
+        _tokenSource = GitHubTokenSource.SecureStore;
+        _accessibleRepositories = null;
+        CurrentLogin = login;
+        return login;
+    }
+
+    public async Task<string?> GetCurrentLoginAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (!HasToken)
+        {
+            CurrentLogin = null;
+            return null;
+        }
+
+        CurrentLogin = await ReadCurrentLoginAsync(null, cancellationToken);
+        return CurrentLogin;
+    }
+
+    public string SignOut()
+    {
+        var environmentToken = _tokenSource == GitHubTokenSource.Environment;
+        _credentialStore.DeleteToken();
+        if (_tokenSource == GitHubTokenSource.LegacyFile)
+        {
+            var tokenPath = Path.Combine(AppContext.BaseDirectory, "github-token.txt");
+            if (File.Exists(tokenPath))
+            {
+                File.Delete(tokenPath);
+            }
+        }
+
+        _httpClient.DefaultRequestHeaders.Authorization = null;
+        _tokenSource = GitHubTokenSource.None;
+        _accessibleRepositories = null;
+        CurrentLogin = null;
+        return environmentToken
+            ? "已退出当前会话；GITHUB_TOKEN 环境变量仍已配置，重启后会再次生效。"
+            : "已退出 GitHub 登录。";
+    }
+
+    private async Task<string> ReadCurrentLoginAsync(
+        string? replacementToken,
+        CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            "https://api.github.com/user");
+        if (replacementToken is not null)
+        {
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", replacementToken);
+        }
+
+        using var response = await _httpClient.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new GitHubApiException(
+                BuildErrorMessage(response.StatusCode, body),
+                response.StatusCode);
+        }
+
+        using var payload = await JsonDocument.ParseAsync(
+            await response.Content.ReadAsStreamAsync(cancellationToken),
+            cancellationToken: cancellationToken);
+        return payload.RootElement.TryGetProperty("login", out var loginElement)
+            ? loginElement.GetString() ?? "GitHub 用户"
+            : "GitHub 用户";
+    }
 
     public async Task<string> GetProjectSummaryAsync(
         string fullName,
@@ -224,7 +346,31 @@ public sealed class GitHubSearchService : IDisposable
             }
         }
 
-        _searchVocabulary.Learn(candidates.Values.Select(candidate => candidate.Repository));
+        if (HasToken)
+        {
+            var accessibleResults = await GetAccessibleRepositoriesAsync(
+                cancellationToken);
+            foreach (var repository in accessibleResults)
+            {
+                if (candidates.TryGetValue(repository.Id, out var candidate))
+                {
+                    candidate.MatchedMetadata = true;
+                }
+                else
+                {
+                    candidates[repository.Id] = new SearchCandidate
+                    {
+                        Repository = repository,
+                        MatchedMetadata = true
+                    };
+                }
+            }
+        }
+
+        _searchVocabulary.Learn(
+            candidates.Values
+                .Select(candidate => candidate.Repository)
+                .Where(repository => !repository.IsPrivate));
         _searchVocabulary.SaveIfNeeded();
 
         var scoredCandidates = candidates.Values
@@ -341,6 +487,79 @@ public sealed class GitHubSearchService : IDisposable
         return collected.Take(required).ToList();
     }
 
+    private async Task<List<RepositoryRecord>> GetAccessibleRepositoriesAsync(
+        CancellationToken cancellationToken)
+    {
+        if (_accessibleRepositories is not null &&
+            DateTimeOffset.UtcNow - _accessibleRepositoriesLoadedAt < TimeSpan.FromMinutes(5))
+        {
+            return _accessibleRepositories;
+        }
+
+        await _accessibleRepositoriesLock.WaitAsync(cancellationToken);
+        try
+        {
+            if (_accessibleRepositories is not null &&
+                DateTimeOffset.UtcNow - _accessibleRepositoriesLoadedAt < TimeSpan.FromMinutes(5))
+            {
+                return _accessibleRepositories;
+            }
+
+            var repositories = new List<RepositoryRecord>();
+            // shortcut: only the 1,000 most recently updated accessible repositories
+            // are included; paginate further if users regularly exceed that size.
+            for (var page = 1; page <= 10; page++)
+            {
+                var url =
+                    "https://api.github.com/user/repos" +
+                    "?visibility=all" +
+                    "&affiliation=owner,collaborator,organization_member" +
+                    "&sort=updated&direction=desc" +
+                    $"&per_page=100&page={page}";
+                using var response = await _httpClient.GetAsync(
+                    url,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    break;
+                }
+
+                var items = await response.Content.ReadFromJsonAsync<List<GitHubRepositoryDto>>(
+                    cancellationToken: cancellationToken);
+                if (items is null || items.Count == 0)
+                {
+                    break;
+                }
+
+                repositories.AddRange(
+                    items.Where(item => !item.Archived).Select(MapRepository));
+                if (items.Count < 100)
+                {
+                    break;
+                }
+            }
+
+            _accessibleRepositories = repositories;
+            _accessibleRepositoriesLoadedAt = DateTimeOffset.UtcNow;
+            return repositories;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            _accessibleRepositories = [];
+            _accessibleRepositoriesLoadedAt = DateTimeOffset.UtcNow;
+            return [];
+        }
+        finally
+        {
+            _accessibleRepositoriesLock.Release();
+        }
+    }
+
     private static async Task<List<RepositoryRecord>> ReadSearchResponseAsync(
         HttpResponseMessage response,
         CancellationToken cancellationToken)
@@ -356,10 +575,14 @@ public sealed class GitHubSearchService : IDisposable
         var payload = await response.Content.ReadFromJsonAsync<RepositorySearchResponse>(
             cancellationToken: cancellationToken);
 
-        return payload?.Items.Select((item, index) => new RepositoryRecord
+        return payload?.Items.Select(MapRepository).ToList() ?? [];
+    }
+
+    private static RepositoryRecord MapRepository(GitHubRepositoryDto item)
+    {
+        return new RepositoryRecord
         {
             Id = item.Id,
-            Rank = index + 1,
             FullName = item.FullName,
             HtmlUrl = item.HtmlUrl,
             Description = item.Description?.Trim() ?? "",
@@ -373,8 +596,9 @@ public sealed class GitHubSearchService : IDisposable
             PushedAt = item.PushedAt,
             License = item.License?.SpdxId is { Length: > 0 } license
                 ? license
-                : "未知"
-        }).ToList() ?? [];
+                : "未知",
+            IsPrivate = item.Private
+        };
     }
 
     private static string BuildErrorMessage(HttpStatusCode statusCode, string responseBody)
@@ -382,9 +606,9 @@ public sealed class GitHubSearchService : IDisposable
         return statusCode switch
         {
             HttpStatusCode.Unauthorized =>
-                "GitHub Token 无效。请检查 GITHUB_TOKEN 或程序目录下的 github-token.txt。",
+                "GitHub 登录已失效，请在软件设置中重新登录。",
             HttpStatusCode.Forbidden or (HttpStatusCode)429 =>
-                "GitHub API 请求频率已用完。请稍后重试，或配置 GITHUB_TOKEN 提高限额。",
+                "GitHub 登录账号没有访问权限，或 API 请求频率已用完。请稍后重试。",
             _ =>
                 $"GitHub API 请求失败：{(int)statusCode} {statusCode}。{TrimResponse(responseBody)}"
         };
@@ -396,19 +620,46 @@ public sealed class GitHubSearchService : IDisposable
         return compact.Length <= 240 ? compact : compact[..240] + "...";
     }
 
-    private static string? LoadToken()
+    private string? LoadToken()
     {
+        var storedToken = _credentialStore.LoadToken();
+        if (!string.IsNullOrWhiteSpace(storedToken))
+        {
+            _tokenSource = GitHubTokenSource.SecureStore;
+            return storedToken.Trim();
+        }
+
         var environmentToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         if (!string.IsNullOrWhiteSpace(environmentToken))
         {
+            _tokenSource = GitHubTokenSource.Environment;
             return environmentToken.Trim();
         }
 
         var tokenPath = Path.Combine(AppContext.BaseDirectory, "github-token.txt");
-        return File.Exists(tokenPath) ? File.ReadAllText(tokenPath).Trim() : null;
+        if (!File.Exists(tokenPath))
+        {
+            _tokenSource = GitHubTokenSource.None;
+            return null;
+        }
+
+        _tokenSource = GitHubTokenSource.LegacyFile;
+        return File.ReadAllText(tokenPath).Trim();
     }
 
-    public void Dispose() => _httpClient.Dispose();
+    public void Dispose()
+    {
+        _httpClient.Dispose();
+        _accessibleRepositoriesLock.Dispose();
+    }
+}
+
+internal enum GitHubTokenSource
+{
+    None,
+    SecureStore,
+    Environment,
+    LegacyFile
 }
 
 public sealed class GitHubApiException : Exception
