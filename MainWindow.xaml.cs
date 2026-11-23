@@ -29,6 +29,10 @@ public partial class MainWindow : Window
     {
         Interval = FavoriteDragArmDelay
     };
+    private readonly DispatcherTimer _favoriteFolderDragTimer = new()
+    {
+        Interval = FavoriteDragArmDelay
+    };
     private readonly FavoritesService _favorites;
     private readonly GlobalLeaderboardService _globalLeaderboard;
     private readonly ConfigurationPackageService _configurationPackages;
@@ -74,6 +78,15 @@ public partial class MainWindow : Window
     private FavoriteDragGhostAdorner? _favoriteDragGhost;
     private AdornerLayer? _favoriteDragAdornerLayer;
     private int _favoriteOrderAnimationVersion;
+    private bool _favoriteFolderDragArmed;
+    private bool _favoriteFolderDragOrderChanged;
+    private ListBox? _favoriteFolderDragList;
+    private FavoriteFolder? _favoriteFolderDragFolder;
+    private List<FavoriteFolder>? _favoriteFolderDragOriginalItems;
+    private Dictionary<string, int>? _favoriteFolderDragOriginalSortOrders;
+    private FavoriteDragGhostAdorner? _favoriteFolderDragGhost;
+    private AdornerLayer? _favoriteFolderDragAdornerLayer;
+    private int _favoriteFolderOrderAnimationVersion;
     private string _currentKeyword = "";
 
     public MainWindow()
@@ -98,6 +111,7 @@ public partial class MainWindow : Window
         ThemeManager.ApplySystemTheme();
         InitializeComponent();
         UpdateThemeToggleButton();
+        ApplySavedLayout();
         ResultCountComboBox.ItemsSource = new[] { "10", "20", "50", "100" };
         ResultCountComboBox.Text = "10";
         GlobalPeriodComboBox.ItemsSource = GlobalLeaderboardPeriodOption.All;
@@ -113,6 +127,7 @@ public partial class MainWindow : Window
         CombinedContentTabs.Items.Insert(0, CombinedDirectoryTab);
         CombinedContentTabs.SelectedItem = CombinedDirectoryTab;
         _favoriteDragTimer.Tick += FavoriteDragTimer_Tick;
+        _favoriteFolderDragTimer.Tick += FavoriteFolderDragTimer_Tick;
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
@@ -120,6 +135,9 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        WindowState = _appSettings.WindowMaximized
+            ? System.Windows.WindowState.Maximized
+            : System.Windows.WindowState.Normal;
         CombineFavoriteWorkspace();
         await RefreshHistoryAsync();
         await RefreshSearchDirectoriesAsync();
@@ -227,6 +245,7 @@ public partial class MainWindow : Window
 
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
+        SaveLayoutSettings();
         if (_isExiting)
         {
             return;
@@ -246,12 +265,9 @@ public partial class MainWindow : Window
             }
 
             action = selectedAction;
-            var updatedSettings = new AppSettings
-            {
-                CloseAction = selectedAction,
-                AskOnClose = dialog.AskOnClose,
-                StartWithWindows = _appSettings.StartWithWindows
-            };
+            var updatedSettings = _appSettings.Copy();
+            updatedSettings.CloseAction = selectedAction;
+            updatedSettings.AskOnClose = dialog.AskOnClose;
             _appSettings = updatedSettings;
             try
             {
@@ -383,6 +399,7 @@ public partial class MainWindow : Window
         _globalLeaderboard.Dispose();
         _localLlm.Dispose();
         ResetFavoriteDrag();
+        ResetFavoriteFolderDrag();
         DisposeTrayIcon();
     }
 
@@ -1039,7 +1056,91 @@ public partial class MainWindow : Window
             GlobalCenterColumn,
             GlobalRightColumn,
             280);
+        SaveLayoutSettings();
         StatusText.Text = "已恢复默认面板布局。";
+    }
+
+    private void PanelSplitter_DragCompleted(
+        object sender,
+        DragCompletedEventArgs e) =>
+        SaveLayoutSettings();
+
+    private void ApplySavedLayout()
+    {
+        Width = Math.Max(
+            MinWidth,
+            Math.Min(_appSettings.WindowWidth, SystemParameters.WorkArea.Width));
+        Height = Math.Max(
+            MinHeight,
+            Math.Min(_appSettings.WindowHeight, SystemParameters.WorkArea.Height));
+        ApplyPanelWidths(
+            CombinedLeftColumn,
+            CombinedCenterColumn,
+            CombinedRightColumn,
+            _appSettings.CombinedLeftPanelWidth,
+            _appSettings.CombinedRightPanelWidth);
+        ApplyPanelWidths(
+            FindLeftColumn,
+            FindCenterColumn,
+            FindRightColumn,
+            _appSettings.FindLeftPanelWidth,
+            _appSettings.FindRightPanelWidth);
+        ApplyPanelWidths(
+            GlobalLeftColumn,
+            GlobalCenterColumn,
+            GlobalRightColumn,
+            _appSettings.GlobalLeftPanelWidth,
+            _appSettings.GlobalRightPanelWidth);
+    }
+
+    private void SaveLayoutSettings()
+    {
+        var bounds = WindowState == System.Windows.WindowState.Normal
+            ? new Rect(Left, Top, Width, Height)
+            : RestoreBounds;
+        if (bounds.Width >= MinWidth && bounds.Height >= MinHeight)
+        {
+            _appSettings.WindowWidth = bounds.Width;
+            _appSettings.WindowHeight = bounds.Height;
+        }
+
+        if (WindowState != System.Windows.WindowState.Minimized)
+        {
+            _appSettings.WindowMaximized =
+                WindowState == System.Windows.WindowState.Maximized;
+        }
+        _appSettings.CombinedLeftPanelWidth = GetPanelWidth(CombinedLeftColumn);
+        _appSettings.CombinedRightPanelWidth = GetPanelWidth(CombinedRightColumn);
+        _appSettings.FindLeftPanelWidth = GetPanelWidth(FindLeftColumn);
+        _appSettings.FindRightPanelWidth = GetPanelWidth(FindRightColumn);
+        _appSettings.GlobalLeftPanelWidth = GetPanelWidth(GlobalLeftColumn);
+        _appSettings.GlobalRightPanelWidth = GetPanelWidth(GlobalRightColumn);
+
+        try
+        {
+            _appSettingsService.Save(_appSettings);
+        }
+        catch (Exception exception)
+        {
+            AppDiagnostics.LogException("保存窗口布局", exception);
+        }
+    }
+
+    private static double GetPanelWidth(ColumnDefinition column) =>
+        column.Width.IsAbsolute
+            ? column.Width.Value
+            : column.ActualWidth;
+
+    private static void ApplyPanelWidths(
+        ColumnDefinition left,
+        ColumnDefinition center,
+        ColumnDefinition right,
+        double leftWidth,
+        double rightWidth)
+    {
+        left.Width = new GridLength(Math.Max(left.MinWidth, leftWidth));
+        center.Width = new GridLength(1, GridUnitType.Star);
+        right.Width = new GridLength(Math.Max(right.MinWidth, rightWidth));
     }
 
     private static void SetDefaultPanelWidths(
@@ -1538,11 +1639,388 @@ public partial class MainWindow : Window
         }
     }
 
+    private void FavoriteFolderList_PreviewMouseLeftButtonDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        ResetFavoriteFolderDrag();
+        if (sender is not ListBox list ||
+            e.ChangedButton != MouseButton.Left ||
+            e.OriginalSource is not DependencyObject originalSource)
+        {
+            return;
+        }
+
+        var hitSource =
+            list.InputHitTest(e.GetPosition(list))
+                as DependencyObject
+            ?? originalSource;
+        if (FindVisualAncestor<Button>(hitSource) is not null ||
+            FindVisualAncestor<ScrollBar>(hitSource) is not null)
+        {
+            return;
+        }
+
+        var item = FindVisualAncestor<ListBoxItem>(hitSource);
+        if (item?.DataContext is not FavoriteFolder folder)
+        {
+            return;
+        }
+
+        list.SelectedItem = folder;
+        _favoriteFolderDragList = list;
+        _favoriteFolderDragFolder = folder;
+        _favoriteFolderDragOriginalItems = list.Items
+            .Cast<FavoriteFolder>()
+            .ToList();
+        _favoriteFolderDragOriginalSortOrders = _favoriteFolderDragOriginalItems
+            .ToDictionary(item => item.Id, item => item.SortOrder);
+        _favoriteFolderDragOrderChanged = false;
+        _favoriteFolderDragTimer.Start();
+    }
+
+    private async void FavoriteFolderList_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (_favoriteFolderDragFolder is null ||
+            _favoriteFolderDragList is null)
+        {
+            return;
+        }
+
+        if (e.LeftButton != MouseButtonState.Pressed)
+        {
+            if (_favoriteFolderDragArmed)
+            {
+                await FinishFavoriteFolderDragAsync();
+            }
+            else
+            {
+                ResetFavoriteFolderDrag();
+            }
+            return;
+        }
+
+        if (!_favoriteFolderDragArmed)
+        {
+            return;
+        }
+
+        var currentPoint = e.GetPosition(_favoriteFolderDragList);
+        ShowFavoriteFolderDragGhost(currentPoint);
+        ReorderFavoriteFolderAtPoint(currentPoint);
+    }
+
+    private async void FavoriteFolderList_PreviewMouseLeftButtonUp(
+        object sender,
+        MouseButtonEventArgs e) =>
+        await FinishFavoriteFolderDragAsync();
+
+    private void FavoriteFolderDragTimer_Tick(object? sender, EventArgs e)
+    {
+        if (_favoriteFolderDragFolder is null ||
+            _favoriteFolderDragList is null ||
+            Mouse.LeftButton != MouseButtonState.Pressed)
+        {
+            ResetFavoriteFolderDrag();
+            return;
+        }
+
+        _favoriteFolderDragArmed = true;
+        _favoriteFolderDragList.CaptureMouse();
+        _favoriteFolderDragList.Cursor = Cursors.SizeAll;
+        ShowFavoriteFolderDragGhost(Mouse.GetPosition(_favoriteFolderDragList));
+    }
+
+    private void ReorderFavoriteFolderAtPoint(Point pointerPosition)
+    {
+        if (_favoriteFolderDragFolder is null ||
+            _favoriteFolderDragList is null ||
+            _favoriteFolderDragList.InputHitTest(pointerPosition) is not DependencyObject hitTest)
+        {
+            return;
+        }
+
+        var targetItem = FindVisualAncestor<ListBoxItem>(hitTest);
+        if (targetItem?.DataContext is FavoriteFolder)
+        {
+            ReorderFavoriteFolderRelativeTo(targetItem, pointerPosition.Y);
+        }
+    }
+
+    private void ReorderFavoriteFolderRelativeTo(
+        ListBoxItem targetItem,
+        double pointerY)
+    {
+        if (_favoriteFolderDragFolder is null ||
+            _favoriteFolderDragList is null ||
+            targetItem.DataContext is not FavoriteFolder targetFolder)
+        {
+            return;
+        }
+
+        var items = _favoriteFolderDragList.Items.Cast<FavoriteFolder>().ToList();
+        var sourceIndex = items.FindIndex(folder => folder.Id == _favoriteFolderDragFolder.Id);
+        var targetIndex = items.FindIndex(folder => folder.Id == targetFolder.Id);
+        if (sourceIndex < 0 || targetIndex < 0)
+        {
+            return;
+        }
+
+        var dropBelow =
+            pointerY -
+            targetItem.TranslatePoint(new Point(0, 0), _favoriteFolderDragList).Y >
+            targetItem.ActualHeight / 2;
+        var insertIndex = targetIndex + (dropBelow ? 1 : 0);
+        if (sourceIndex < insertIndex)
+        {
+            insertIndex--;
+        }
+
+        if (insertIndex == sourceIndex)
+        {
+            return;
+        }
+
+        var itemPositions = CaptureFavoriteFolderItemPositions(_favoriteFolderDragList);
+        var movedFolder = items[sourceIndex];
+        items.RemoveAt(sourceIndex);
+        items.Insert(insertIndex, movedFolder);
+        for (var index = 0; index < items.Count; index++)
+        {
+            items[index].SortOrder = index;
+        }
+
+        ApplyFavoriteFolderOrder(items);
+        AnimateFavoriteFolderItems(_favoriteFolderDragList, itemPositions);
+        _favoriteFolderDragList.SelectedItem = movedFolder;
+        _favoriteFolderDragList.ScrollIntoView(movedFolder);
+        _favoriteFolderDragOrderChanged = true;
+    }
+
+    private async Task FinishFavoriteFolderDragAsync()
+    {
+        var activeList = _favoriteFolderDragList;
+        var movedFolder = _favoriteFolderDragFolder;
+        var originalItems = _favoriteFolderDragOriginalItems;
+        var originalSortOrders = _favoriteFolderDragOriginalSortOrders;
+        var orderChanged = _favoriteFolderDragOrderChanged;
+        var items = activeList?.Items.Cast<FavoriteFolder>().ToList() ?? [];
+        ResetFavoriteFolderDrag();
+        if (!orderChanged ||
+            movedFolder is null ||
+            originalItems is null ||
+            originalSortOrders is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _favorites.ReorderFoldersAsync(
+                items.Select(folder => folder.Id).ToList());
+            StatusText.Text = $"已调整收藏目录“{movedFolder.Name}”的顺序。";
+        }
+        catch (Exception exception)
+        {
+            var itemPositions = activeList is null
+                ? new Dictionary<string, double>()
+                : CaptureFavoriteFolderItemPositions(activeList);
+            foreach (var folder in originalItems)
+            {
+                folder.SortOrder = originalSortOrders[folder.Id];
+            }
+            ApplyFavoriteFolderOrder(originalItems);
+            if (activeList is not null)
+            {
+                AnimateFavoriteFolderItems(activeList, itemPositions);
+            }
+            ShowFavoriteError(exception);
+            return;
+        }
+
+        try
+        {
+            await RefreshSearchDirectoriesAsync(movedFolder.Id);
+        }
+        catch (Exception exception)
+        {
+            AppDiagnostics.LogException("刷新收藏目录顺序", exception);
+        }
+    }
+
+    private void ApplyFavoriteFolderOrder(IReadOnlyList<FavoriteFolder> orderedFolders)
+    {
+        var orderedIds = orderedFolders.Select(folder => folder.Id).ToList();
+        var favoriteSelectionId =
+            (FavoriteFolderList.SelectedItem as FavoriteFolder)?.Id;
+        var searchSelectionId =
+            (SearchDirectoryList.SelectedItem as FavoriteFolder)?.Id;
+        var destinationId =
+            (SearchFavoriteFolderComboBox.SelectedItem as FavoriteFolder)?.Id;
+
+        _favoriteFolders = ReorderFolderCollection(_favoriteFolders, orderedFolders, orderedIds);
+        _searchFolders = ReorderFolderCollection(_searchFolders, orderedFolders, orderedIds);
+        FavoriteFolderList.ItemsSource = _favoriteFolders;
+        SearchDirectoryList.ItemsSource = _searchFolders;
+        SearchFavoriteFolderComboBox.ItemsSource = _favoriteFolders;
+        FavoriteFolderList.SelectedItem =
+            _favoriteFolders.FirstOrDefault(folder => folder.Id == favoriteSelectionId)
+            ?? _favoriteFolders.FirstOrDefault();
+        SearchDirectoryList.SelectedItem =
+            _searchFolders.FirstOrDefault(folder => folder.Id == searchSelectionId)
+            ?? _searchFolders.FirstOrDefault();
+        SearchFavoriteFolderComboBox.SelectedItem =
+            _favoriteFolders.FirstOrDefault(folder => folder.Id == destinationId)
+            ?? _favoriteFolders.FirstOrDefault();
+    }
+
+    private static List<FavoriteFolder> ReorderFolderCollection(
+        IReadOnlyList<FavoriteFolder> current,
+        IReadOnlyList<FavoriteFolder> orderedFallback,
+        IReadOnlyList<string> orderedIds)
+    {
+        var byId = current.ToDictionary(folder => folder.Id);
+        return current.Count == orderedIds.Count &&
+               orderedIds.All(byId.ContainsKey)
+            ? orderedIds.Select(id => byId[id]).ToList()
+            : orderedFallback.ToList();
+    }
+
+    private static Dictionary<string, double> CaptureFavoriteFolderItemPositions(ListBox list)
+    {
+        var positions = new Dictionary<string, double>();
+        foreach (var folder in list.Items.Cast<FavoriteFolder>())
+        {
+            if (list.ItemContainerGenerator.ContainerFromItem(folder)
+                is not ListBoxItem item)
+            {
+                continue;
+            }
+
+            positions[folder.Id] = item.TranslatePoint(
+                new Point(0, 0),
+                list).Y;
+        }
+
+        return positions;
+    }
+
+    private void AnimateFavoriteFolderItems(
+        ListBox list,
+        IReadOnlyDictionary<string, double> previousPositions)
+    {
+        var animationVersion = ++_favoriteFolderOrderAnimationVersion;
+        Dispatcher.BeginInvoke(
+            DispatcherPriority.Render,
+            new Action(() =>
+            {
+                list.UpdateLayout();
+                foreach (var folder in list.Items.Cast<FavoriteFolder>())
+                {
+                    if (!previousPositions.TryGetValue(folder.Id, out var previousY) ||
+                        list.ItemContainerGenerator.ContainerFromItem(folder)
+                        is not ListBoxItem item)
+                    {
+                        continue;
+                    }
+
+                    var currentY = item.TranslatePoint(
+                        new Point(0, 0),
+                        list).Y;
+                    var offset = previousY - currentY;
+                    if (Math.Abs(offset) < 0.5)
+                    {
+                        continue;
+                    }
+
+                    var transform = new TranslateTransform(0, offset);
+                    item.RenderTransform = transform;
+                    var animation = new DoubleAnimation(
+                        offset,
+                        0,
+                        FavoriteOrderAnimationDuration)
+                    {
+                        EasingFunction = new CubicEase
+                        {
+                            EasingMode = EasingMode.EaseOut
+                        },
+                        FillBehavior = FillBehavior.HoldEnd
+                    };
+                    animation.Completed += (_, _) =>
+                    {
+                        if (animationVersion != _favoriteFolderOrderAnimationVersion)
+                        {
+                            return;
+                        }
+
+                        transform.Y = 0;
+                        item.ClearValue(RenderTransformProperty);
+                    };
+                    transform.BeginAnimation(TranslateTransform.YProperty, animation);
+                }
+            }));
+    }
+
+    private void ShowFavoriteFolderDragGhost(Point position)
+    {
+        if (_favoriteFolderDragFolder is null ||
+            _favoriteFolderDragList is null)
+        {
+            return;
+        }
+
+        if (_favoriteFolderDragGhost is null)
+        {
+            _favoriteFolderDragAdornerLayer =
+                AdornerLayer.GetAdornerLayer(_favoriteFolderDragList);
+            if (_favoriteFolderDragAdornerLayer is null)
+            {
+                return;
+            }
+
+            _favoriteFolderDragGhost = new FavoriteDragGhostAdorner(
+                _favoriteFolderDragList,
+                _favoriteFolderDragFolder.Name,
+                "拖动以调整目录顺序",
+                Math.Clamp(_favoriteFolderDragList.ActualWidth - 16, 180, 300));
+            _favoriteFolderDragAdornerLayer.Add(_favoriteFolderDragGhost);
+        }
+
+        _favoriteFolderDragGhost.UpdatePosition(position);
+    }
+
+    private void ResetFavoriteFolderDrag()
+    {
+        _favoriteFolderDragTimer.Stop();
+        if (_favoriteFolderDragList?.IsMouseCaptured == true)
+        {
+            _favoriteFolderDragList.ReleaseMouseCapture();
+        }
+        _favoriteFolderDragArmed = false;
+        _favoriteFolderDragOrderChanged = false;
+        if (_favoriteFolderDragList is not null)
+        {
+            _favoriteFolderDragList.Cursor = Cursors.Arrow;
+        }
+        _favoriteFolderDragList = null;
+        _favoriteFolderDragFolder = null;
+        _favoriteFolderDragOriginalItems = null;
+        _favoriteFolderDragOriginalSortOrders = null;
+        if (_favoriteFolderDragGhost is not null &&
+            _favoriteFolderDragAdornerLayer is not null)
+        {
+            _favoriteFolderDragAdornerLayer.Remove(_favoriteFolderDragGhost);
+        }
+        _favoriteFolderDragGhost = null;
+        _favoriteFolderDragAdornerLayer = null;
+    }
+
     private void CombinedFavoritesGrid_PreviewMouseLeftButtonDown(
         object sender,
         MouseButtonEventArgs e)
     {
         ResetFavoriteDrag();
+        ResetFavoriteFolderDrag();
         if (e.ChangedButton != MouseButton.Left ||
             e.OriginalSource is not DependencyObject originalSource ||
             FindVisualAncestor<DataGridColumnHeader>(originalSource) is not null)

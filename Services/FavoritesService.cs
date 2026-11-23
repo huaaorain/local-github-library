@@ -42,7 +42,8 @@ public sealed class FavoritesService
         }
 
         return document.Folders
-            .OrderBy(folder => folder.CreatedAt)
+            .OrderBy(folder => folder.SortOrder)
+            .ThenBy(folder => folder.CreatedAt)
             .ToList();
     }
 
@@ -59,7 +60,8 @@ public sealed class FavoritesService
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Name = normalizedName,
-                CreatedAt = DateTimeOffset.Now
+                CreatedAt = DateTimeOffset.Now,
+                SortOrder = NextBottomSortOrder(document)
             };
 
             document.Folders.Add(folder);
@@ -107,6 +109,35 @@ public sealed class FavoritesService
             }
 
             return removed;
+        }
+        finally
+        {
+            _writeLock.Release();
+        }
+    }
+
+    public async Task ReorderFoldersAsync(
+        IReadOnlyList<string> folderIds,
+        CancellationToken cancellationToken = default)
+    {
+        await _writeLock.WaitAsync(cancellationToken);
+        try
+        {
+            var document = await LoadDocumentInternalAsync(cancellationToken);
+            if (folderIds.Count != document.Folders.Count ||
+                folderIds.Distinct().Count() != folderIds.Count ||
+                folderIds.Any(id => document.Folders.All(folder => folder.Id != id)))
+            {
+                throw new InvalidOperationException("收藏目录顺序数据与当前列表不一致，已取消保存。");
+            }
+
+            var foldersById = document.Folders.ToDictionary(folder => folder.Id);
+            for (var index = 0; index < folderIds.Count; index++)
+            {
+                foldersById[folderIds[index]].SortOrder = index;
+            }
+
+            await SaveDocumentInternalAsync(document, cancellationToken);
         }
         finally
         {
@@ -269,7 +300,9 @@ public sealed class FavoritesService
         builder.AppendLine();
 
         var exportedCount = 0;
-        foreach (var folder in document.Folders.OrderBy(item => item.CreatedAt))
+        foreach (var folder in document.Folders
+                     .OrderBy(item => item.SortOrder)
+                     .ThenBy(item => item.CreatedAt))
         {
             var notedRepositories = folder.Repositories
                 .Where(item => item.HasNote)
@@ -410,6 +443,7 @@ public sealed class FavoritesService
         FavoritesDocument document,
         CancellationToken cancellationToken)
     {
+        NormalizeFolderOrder(document);
         var temporaryPath = FavoritesFilePath + ".tmp";
         await File.WriteAllTextAsync(
             temporaryPath,
@@ -454,6 +488,25 @@ public sealed class FavoritesService
         folder.Repositories.Count == 0
             ? 0
             : folder.Repositories.Min(repository => repository.SortOrder) - 1;
+
+    private static int NextBottomSortOrder(FavoritesDocument document) =>
+        document.Folders.Count == 0
+            ? 0
+            : document.Folders.Max(folder => folder.SortOrder) + 1;
+
+    private static void NormalizeFolderOrder(FavoritesDocument document)
+    {
+        var ordered = document.Folders
+            .OrderBy(folder => folder.SortOrder)
+            .ThenBy(folder => folder.CreatedAt)
+            .ToList();
+        document.Folders.Clear();
+        document.Folders.AddRange(ordered);
+        for (var index = 0; index < ordered.Count; index++)
+        {
+            ordered[index].SortOrder = index;
+        }
+    }
 }
 
 public sealed class DuplicateFavoriteFolderException : Exception

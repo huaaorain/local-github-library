@@ -167,9 +167,11 @@
                         </Grid.ColumnDefinitions>
                         <GridSplitter Grid.Column="1"
                                       AutomationProperties.Name="调整左侧收藏目录宽度"
+                                      DragCompleted="PanelSplitter_DragCompleted"
                                       Style="{StaticResource PanelSplitterStyle}" />
                         <GridSplitter Grid.Column="3"
                                       AutomationProperties.Name="调整右侧仓库详情宽度"
+                                      DragCompleted="PanelSplitter_DragCompleted"
                                       Style="{StaticResource PanelSplitterStyle}" />
 
                         <Border Grid.Column="0" Style="{StaticResource PanelCardStyle}">
@@ -213,7 +215,10 @@
                                          Margin="6,0"
                                          BorderThickness="0"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                         SelectionChanged="SearchDirectoryList_SelectionChanged">
+                                         SelectionChanged="SearchDirectoryList_SelectionChanged"
+                                         PreviewMouseLeftButtonDown="FavoriteFolderList_PreviewMouseLeftButtonDown"
+                                         PreviewMouseMove="FavoriteFolderList_PreviewMouseMove"
+                                         PreviewMouseLeftButtonUp="FavoriteFolderList_PreviewMouseLeftButtonUp">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <Grid Margin="6,8">
@@ -664,9 +669,11 @@
                         </Grid.ColumnDefinitions>
                         <GridSplitter Grid.Column="1"
                                       AutomationProperties.Name="调整左侧查询记录宽度"
+                                      DragCompleted="PanelSplitter_DragCompleted"
                                       Style="{StaticResource PanelSplitterStyle}" />
                         <GridSplitter Grid.Column="3"
                                       AutomationProperties.Name="调整右侧仓库详情宽度"
+                                      DragCompleted="PanelSplitter_DragCompleted"
                                       Style="{StaticResource PanelSplitterStyle}" />
 
                         <Border Grid.Column="0" Style="{StaticResource PanelCardStyle}">
@@ -1076,9 +1083,11 @@
                         </Grid.ColumnDefinitions>
                         <GridSplitter Grid.Column="1"
                                       AutomationProperties.Name="调整左侧总榜记录宽度"
+                                      DragCompleted="PanelSplitter_DragCompleted"
                                       Style="{StaticResource PanelSplitterStyle}" />
                         <GridSplitter Grid.Column="3"
                                       AutomationProperties.Name="调整右侧仓库详情宽度"
+                                      DragCompleted="PanelSplitter_DragCompleted"
                                       Style="{StaticResource PanelSplitterStyle}" />
 
                         <Border Grid.Column="0" Style="{StaticResource PanelCardStyle}">
@@ -1317,7 +1326,10 @@
                                      Margin="6,0"
                                      BorderThickness="0"
                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                     SelectionChanged="FavoriteFolderList_SelectionChanged">
+                                     SelectionChanged="FavoriteFolderList_SelectionChanged"
+                                     PreviewMouseLeftButtonDown="FavoriteFolderList_PreviewMouseLeftButtonDown"
+                                     PreviewMouseMove="FavoriteFolderList_PreviewMouseMove"
+                                     PreviewMouseLeftButtonUp="FavoriteFolderList_PreviewMouseLeftButtonUp">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Margin="6,8">

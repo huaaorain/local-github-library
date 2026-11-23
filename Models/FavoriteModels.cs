@@ -11,6 +11,7 @@ public sealed class FavoriteFolder
     public string Id { get; init; } = Guid.NewGuid().ToString("N");
     public string Name { get; set; } = "";
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.Now;
+    public int SortOrder { get; set; }
     public List<FavoriteRepository> Repositories { get; init; } = [];
 
     public string CountDisplay => $"{Repositories.Count:N0} 个仓库";

@@ -22,6 +22,24 @@
     "prerelease": false
   },
   "artifact_policy": "release-only",
+  "version_surfaces": [
+    {
+      "path": "README.md",
+      "pattern": "badge/version-(?P<version>\\d+\\.\\d+\\.\\d+)"
+    },
+    {
+      "path": "README.zh-TW.md",
+      "pattern": "badge/version-(?P<version>\\d+\\.\\d+\\.\\d+)"
+    },
+    {
+      "path": "README.en.md",
+      "pattern": "badge/version-(?P<version>\\d+\\.\\d+\\.\\d+)"
+    },
+    {
+      "path": "docs/assets/readme-banner.svg",
+      "pattern": ">v?(?P<version>\\d+\\.\\d+\\.\\d+)</text>"
+    }
+  ],
   "readme": {
     "path": "README.md",
     "locales": [
@@ -141,7 +159,7 @@
   ],
   "artifacts": [
     {
-      "path": "release-build/LocalGithubLibrary-0.3.0-win-x64.zip",
+      "path": "release-build/LocalGithubLibrary-0.3.1-win-x64.zip",
       "role": "standard",
       "description": "推荐的 Windows x64 标准发布包，包含主程序与 CPU 原生运行库。",
       "localized_descriptions": {
@@ -150,7 +168,7 @@
         "en": "Recommended Windows x64 package with the application and CPU runtime."
       },
       "required": true,
-      "download_name": "LocalGithubLibrary-0.3.0-win-x64.zip"
+      "download_name": "LocalGithubLibrary-0.3.1-win-x64.zip"
     },
     {
       "path": "release-build/GitHubTopicReports.exe",

@@ -8,16 +8,23 @@ namespace GitHubTopicReports;
 
 public sealed class FavoriteDragGhostAdorner : Adorner
 {
-    private const double GhostWidth = 300;
     private const double GhostHeight = 52;
 
-    private readonly string _repositoryName;
+    private readonly string _subtitle;
+    private readonly string _title;
+    private readonly double _width;
     private Point _position;
 
-    public FavoriteDragGhostAdorner(FrameworkElement adornedElement, string repositoryName)
+    public FavoriteDragGhostAdorner(
+        FrameworkElement adornedElement,
+        string title,
+        string subtitle = "拖动以调整收藏顺序",
+        double width = 300)
         : base(adornedElement)
     {
-        _repositoryName = repositoryName;
+        _title = title;
+        _subtitle = subtitle;
+        _width = width;
         IsHitTestVisible = false;
         SnapsToDevicePixels = true;
         Effect = new DropShadowEffect
@@ -33,7 +40,7 @@ public sealed class FavoriteDragGhostAdorner : Adorner
 
     public void UpdatePosition(Point pointerPosition)
     {
-        var maxLeft = Math.Max(0, AdornedElement.RenderSize.Width - GhostWidth);
+        var maxLeft = Math.Max(0, AdornedElement.RenderSize.Width - _width);
         var maxTop = Math.Max(0, AdornedElement.RenderSize.Height - GhostHeight);
         _position = new Point(
             Math.Clamp(pointerPosition.X + 14, 0, maxLeft),
@@ -43,7 +50,7 @@ public sealed class FavoriteDragGhostAdorner : Adorner
 
     protected override void OnRender(DrawingContext drawingContext)
     {
-        var bounds = new Rect(_position, new Size(GhostWidth, GhostHeight));
+        var bounds = new Rect(_position, new Size(_width, GhostHeight));
         var background = CreateBrush("SurfaceBrush", Color.FromRgb(255, 255, 255), 0.94);
         var border = CreateBrush("PrimaryBrush", Color.FromRgb(31, 95, 191), 0.7);
         var primary = CreateBrush("TextPrimaryBrush", Color.FromRgb(20, 32, 51), 1);
@@ -67,7 +74,7 @@ public sealed class FavoriteDragGhostAdorner : Adorner
 
         var pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
         var title = new FormattedText(
-            _repositoryName,
+            _title,
             CultureInfo.CurrentUICulture,
             FlowDirection.LeftToRight,
             new Typeface("Segoe UI Variable Text"),
@@ -75,7 +82,7 @@ public sealed class FavoriteDragGhostAdorner : Adorner
             primary,
             pixelsPerDip)
         {
-            MaxTextWidth = GhostWidth - 48,
+            MaxTextWidth = _width - 48,
             MaxTextHeight = 18,
             Trimming = TextTrimming.CharacterEllipsis
         };
@@ -84,7 +91,7 @@ public sealed class FavoriteDragGhostAdorner : Adorner
             new Point(_position.X + 36, _position.Y + 9));
 
         var subtitle = new FormattedText(
-            "拖动以调整收藏顺序",
+            _subtitle,
             CultureInfo.CurrentUICulture,
             FlowDirection.LeftToRight,
             new Typeface("Segoe UI Variable Text"),

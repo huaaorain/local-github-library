@@ -24,12 +24,7 @@ public partial class AppSettingsDialog : Window
     {
         InitializeComponent();
         _gitHub = gitHub;
-        CurrentSettings = new AppSettings
-        {
-            CloseAction = settings.CloseAction,
-            AskOnClose = settings.AskOnClose,
-            StartWithWindows = settings.StartWithWindows
-        };
+        CurrentSettings = settings.Copy();
         MinimizeToTrayRadio.IsChecked =
             CurrentSettings.CloseAction == AppCloseAction.MinimizeToTray;
         ExitRadio.IsChecked = CurrentSettings.CloseAction == AppCloseAction.Exit;
@@ -187,14 +182,11 @@ public partial class AppSettingsDialog : Window
 
     private void Complete(AppSettingsAction action)
     {
-        CurrentSettings = new AppSettings
-        {
-            CloseAction = ExitRadio.IsChecked == true
-                ? AppCloseAction.Exit
-                : AppCloseAction.MinimizeToTray,
-            AskOnClose = AskOnCloseCheckBox.IsChecked == true,
-            StartWithWindows = StartWithWindowsCheckBox.IsChecked == true
-        };
+        CurrentSettings.CloseAction = ExitRadio.IsChecked == true
+            ? AppCloseAction.Exit
+            : AppCloseAction.MinimizeToTray;
+        CurrentSettings.AskOnClose = AskOnCloseCheckBox.IsChecked == true;
+        CurrentSettings.StartWithWindows = StartWithWindowsCheckBox.IsChecked == true;
         RequestedAction = action;
         DialogResult = true;
     }

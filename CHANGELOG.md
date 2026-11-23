@@ -2,6 +2,21 @@
 
 All notable changes to Local Github Library will be documented in this file.
 
+## [0.3.1] - 2026-11-23
+
+### Added
+
+- Support long-press drag reordering for favorite folders in both directory lists.
+- Persist folder order through the `SortOrder` field in `favorites.json`.
+- Persist the left and right panel widths of all three workspaces between launches.
+- Persist the main window size and maximized state.
+
+### Fixed
+
+- Wire drag events to the actual left-side `SearchDirectoryList` shown in the
+  search workspace instead of only the separate favorites-page list.
+- Preserve layout values when saving app settings or close behavior.
+
 ## [0.3.0] - 2026-11-20
 
 ### Added

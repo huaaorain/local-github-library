@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.3.0-ff7a45?style=flat-square" alt="Version 0.3.0">
+  <img src="https://img.shields.io/badge/version-0.3.1-ff7a45?style=flat-square" alt="Version 0.3.1">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -90,7 +90,7 @@ GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问�
     </tr>
     <tr>
       <td><strong>本&#8239;地&#8239;收&#8239;藏</strong></td>
-      <td>创建、重命名或删除自定义目录，搜索、批量收藏并跳过重复仓库；可长按仓库名 300 ms 后拖动，列表以缓动动画平滑调整顺序，为项目添加备注，并在目录列表中用图标标出有备注的项目，也可导出带时间戳的 TXT 备注文件。</td>
+      <td>创建、重命名或删除自定义目录，搜索、批量收藏并跳过重复仓库；可长按目录名调整目录顺序，也可长按仓库名调整项目顺序，列表以缓动动画平滑重排。支持项目备注、备注图标和带时间戳的 TXT 备注导出。</td>
     </tr>
     <tr>
       <td><strong>项&#8239;目&#8239;理&#8239;解</strong></td>
@@ -102,10 +102,12 @@ GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问�
     </tr>
     <tr>
       <td><strong>设&#8239;置&#8239;与&#8239;托&#8239;盘</strong></td>
-      <td>顶部齿轮集中管理 LLM、配置导入导出、文档库和开机自启；可设置关闭窗口时最小化到托盘或完全退出，并选择每次关闭是否询问。浅色与深色主题可随时切换。</td>
+      <td>顶部齿轮集中管理 LLM、配置导入导出、文档库和开机自启；自动记住三个工作区的面板宽度、窗口尺寸和最大化状态。可设置关闭窗口时最小化到托盘或完全退出，并选择每次关闭是否询问。浅色与深色主题可随时切换。</td>
     </tr>
   </tbody>
 </table>
+
+<sub>\* 可选功能，不登录 GitHub 或不安装本地 LLM 不影响核心搜索、收藏、榜单和报告。</sub>
 
 ## 🧩 功能流程
 
@@ -133,7 +135,7 @@ _截图使用非敏感演示数据。顶部主题按钮可在浅色与深色之�
 
 | 发布包 | 大小 | 适用场景 |
 | --- | ---: | --- |
-| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.3.0/LocalGithubLibrary-0.3.0-win-x64.zip) | 约 84 MB | GitHub 登录、私有仓库搜索、收藏整理与本地报告 |
+| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.3.1/LocalGithubLibrary-0.3.1-win-x64.zip) | 约 84 MB | 目录拖动、布局记忆、GitHub 登录与本地报告 |
 | [LLM 模型（可选）](docs/models/README.md) | 约 1.04 GB | 独立下载，升级程序时无需重复下载 |
 
 ### 2. 解压并运行
@@ -421,6 +423,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 📝 更新记录
 
+- [0.3.1：收藏目录拖动排序与重启布局恢复](docs/releases/v0.3.1.zh-CN.md)
 - [0.3.0：GitHub 登录、私有仓库搜索与安全凭据存储](docs/releases/v0.3.0.zh-CN.md)
 - [0.2.7：收藏拖动排序、备注标识、开机自启与目录默认页](docs/releases/v0.2.7.zh-CN.md)
 - [0.2.6：拼写容错搜索与多分辨率应用图标](docs/releases/v0.2.6.zh-CN.md)
