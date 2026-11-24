@@ -2,6 +2,43 @@
 
 All notable changes to Local Github Library will be documented in this file.
 
+## [0.4.0] - 2026-11-24
+
+### Added
+
+- Add a complete local notes workspace alongside Search, Rankings, and Favorites.
+- Organize notes with nested folders and long-press drag ordering.
+- Save every note as a same-named Markdown file with its images in an `images`
+  directory beneath the matching folder path.
+- Support inline clipboard images, image copy, rich-text zoom, Ctrl+S, periodic
+  auto-save, and image persistence inside the note body.
+- Add bold text and six text-color choices, persisted with the note.
+- Add encrypted notes using PBKDF2-SHA256 and AES-GCM; encrypted Markdown and
+  image files remain unreadable without the note password.
+- Add note and folder context menus for opening, saving, moving, deleting, and
+  opening note files with external programs.
+- Include notes, hierarchy, images, encrypted payloads, and rich-text metadata
+  in `.ghconfig` exports.
+- Add single-instance protection, verified atomic file replacement, automatic
+  index backups, and recovery when the primary index is damaged.
+
+### Changed
+
+- Rename the visible workspaces to “查找”, “总榜”, “笔记”, and “收藏”.
+- Move note directory management into compact inline actions and context menus.
+- Replace flat note JSON storage with directory-based Markdown storage while
+  retaining automatic migration from the 0.3.x format.
+- Expose the current note directory as `GitHubReports/Notes`, with each note
+  folder containing Markdown and an `images` directory.
+
+### Fixed
+
+- Preserve note images after save/reopen and keep encrypted image references
+  resolvable only after unlocking the note.
+- Normalize mixed pasted fonts while preserving intentional bold text and color.
+- Prevent multiple application instances from writing the same local library.
+- Prevent incomplete writes from replacing valid notes or the notes index.
+
 ## [0.3.1] - 2026-11-23
 
 ### Added

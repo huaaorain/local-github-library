@@ -20,6 +20,7 @@ public sealed class AppSettings
     public double FindRightPanelWidth { get; set; } = 280;
     public double GlobalLeftPanelWidth { get; set; } = 220;
     public double GlobalRightPanelWidth { get; set; } = 280;
+    public double NotesLeftPanelWidth { get; set; } = 280;
 
     public AppSettings Copy() => new()
     {
@@ -34,6 +35,7 @@ public sealed class AppSettings
         FindLeftPanelWidth = FindLeftPanelWidth,
         FindRightPanelWidth = FindRightPanelWidth,
         GlobalLeftPanelWidth = GlobalLeftPanelWidth,
-        GlobalRightPanelWidth = GlobalRightPanelWidth
+        GlobalRightPanelWidth = GlobalRightPanelWidth,
+        NotesLeftPanelWidth = NotesLeftPanelWidth
     };
 }

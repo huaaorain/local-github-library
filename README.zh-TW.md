@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.3.1-ff7a45?style=flat-square" alt="版本 0.3.1">
+  <img src="https://img.shields.io/badge/version-0.4.0-ff7a45?style=flat-square" alt="版本 0.4.0">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="本機優先">
@@ -93,6 +93,10 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
       <td>建立、重新命名或刪除自訂目錄，搜尋、批次收藏並跳過重複倉庫；可長按目錄名稱調整目錄順序，也可長按倉庫名稱調整專案順序，清單以緩動動畫平滑重排。支援專案備註、備註圖示和帶時間戳的 TXT 備註匯出。</td>
     </tr>
     <tr>
+      <td><strong>本&#8239;機&#8239;筆&#8239;記</strong></td>
+      <td>使用目錄樹整理筆記，在 Markdown 正文中插入圖片、加粗文字和設定顏色；支援 Ctrl+S、定時自動儲存、圖片複製、縮放、右鍵操作和拖動排序。每則筆記儲存為同名 Markdown 檔案與獨立 images 目錄；加密筆記的正文和圖片都以密文保存，必須輸入密碼才能查看。</td>
+    </tr>
+    <tr>
       <td><strong>專&#8239;案&#8239;理&#8239;解</strong></td>
       <td>從 README 擷取專案概述；可選本機 LLM 產生中文摘要與翻譯，不需要雲端推理服務。</td>
     </tr>
@@ -115,7 +119,7 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
 
 _上圖是依據目前原始碼與公開功能說明繪製的流程示意，不是軟體介面截圖。_
 
-從 GitHub API 與公開日榜取得資料，在工作台中形成搜尋、趨勢、收藏和摘要，再保存為本機檔案。網路資料用於發現，本機快照與報告負責持續追蹤。
+從 GitHub API 與公開日榜取得資料，在工作台中形成搜尋、趨勢、收藏和摘要，再把研究記錄整理為依目錄層級保存的本機 Markdown 筆記。網路資料用於發現，本機筆記、快照與報告負責持續追蹤。
 
 <a id="screenshots"></a>
 
@@ -125,7 +129,9 @@ _上圖是依據目前原始碼與公開功能說明繪製的流程示意，不�
 | --- | --- |
 | ![Local GitHub Library 淺色主工作區](docs/assets/main-workflow.png) | ![Local GitHub Library 深色主工作區](docs/assets/main-workflow-dark.png) |
 
-_截圖使用非敏感示範資料。頂部主題按鈕可在淺色與深色之間即時切換，不改變查詢、收藏或報告資料。_
+![Local GitHub Library 筆記工作區](docs/assets/notes-workbench.png)
+
+_截圖使用非敏感示範資料。筆記頁展示目錄樹、富文字工具列、本機 Markdown 編輯和加密筆記入口。_
 
 <a id="quick-start"></a>
 
@@ -135,7 +141,7 @@ _截圖使用非敏感示範資料。頂部主題按鈕可在淺色與深色之�
 
 | 發佈包 | 大小 | 適用情境 |
 | --- | ---: | --- |
-| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.3.1/LocalGithubLibrary-0.3.1-win-x64.zip) | 約 84 MB | 目錄拖動、版面記憶、GitHub 登入與本機報告 |
+| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.4.0/LocalGithubLibrary-0.4.0-win-x64.zip) | 約 84 MB | 本機筆記、目錄排序、GitHub 登入與本機報告 |
 | [LLM 模型（選用）](docs/models/README.md) | 約 1.04 GB | 獨立下載，升級程式時無需重複下載 |
 
 ### 2. 解壓縮並執行
@@ -218,6 +224,16 @@ GitHubReports/
   LLM/
     Packages/            # 可選本機模型
     prompt.txt
+  Notes/                 # 目錄化本機筆記
+    專案資料/
+      需求拆解/
+        需求拆解.md
+        images/
+    加密空間/
+      私密筆記/
+        私密筆記.md.enc
+        images/
+          *.png.enc
 ```
 
 - GitHub Token 透過軟體設定登入，並加密保存在 `github-auth.bin`；進階使用者仍可使用 `GITHUB_TOKEN` 或 `github-token.txt`。
@@ -395,6 +411,7 @@ GitHubReports/
 - 可存取 `github.com` 與 `api.github.com`
 - 搜尋、README 讀取與目前榜單需要網路
 - 收藏瀏覽和已下載的榜單快取可離線使用
+- 筆記編輯、圖片管理、加密筆記和已保存筆記瀏覽可離線使用
 
 ## ⚠️ 已知限制
 
@@ -403,6 +420,8 @@ GitHubReports/
 - 全站增量榜依賴 [OpenGithubs 公開日榜](https://github.com/OpenGithubs/github-daily-rank) 的涵蓋範圍。
 - 目前只提供 Windows x64 版本。
 - 未簽署的 EXE 可能觸發 Windows SmartScreen 警告。
+- 加密筆記會加密正文和圖片內容；標題、目錄名稱和檔案數量仍可能從本機路徑看出。忘記密碼後無法恢復正文。
+- 從 0.3.x 升級時舊筆記會自動遷移；舊加密筆記需要先解鎖並保存，才能把佔位目錄改成真實筆記名稱。
 - 目前倉庫尚未宣告開源授權。
 
 ## 🔧 從原始碼建置
@@ -436,6 +455,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 📝 更新記錄
 
+- [0.4.0：目錄化本機筆記、豐富編輯、加密圖片與安全寫入](docs/releases/v0.4.0.zh-TW.md)
 - [0.3.1：收藏目錄拖動排序與重新啟動版面還原](docs/releases/v0.3.1.zh-TW.md)
 - [0.3.0：GitHub 登入、私有倉庫搜尋與安全憑證保存](docs/releases/v0.3.0.zh-TW.md)
 - [0.2.7：收藏拖動排序、備註標示、開機自啟與目錄預設頁](docs/releases/v0.2.7.zh-TW.md)

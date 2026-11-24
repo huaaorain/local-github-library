@@ -97,6 +97,26 @@ public sealed class ConfigurationPackageService
                 }
             }
 
+            var notesDirectory = Path.Combine(LibraryRoot, "Notes");
+            if (Directory.Exists(notesDirectory))
+            {
+                foreach (var notePath in Directory
+                             .EnumerateFiles(notesDirectory, "*", SearchOption.AllDirectories)
+                             .Where(path => !path.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase))
+                             .OrderBy(path => Path.GetRelativePath(notesDirectory, path), StringComparer.Ordinal))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var relativePath = Path.GetRelativePath(notesDirectory, notePath)
+                        .Replace('\\', '/');
+                    AddFile(
+                        archive,
+                        $"Notes/{relativePath}",
+                        notePath,
+                        ref fileCount,
+                        ref totalBytes);
+                }
+            }
+
             // Keep compatibility with data produced by 1.4.x.
             var legacySearchDirectory = Path.Combine(LibraryRoot, "SearchLibrary");
             if (Directory.Exists(legacySearchDirectory))
@@ -251,7 +271,7 @@ public sealed class ConfigurationPackageService
         var rollbackRoot = Path.Combine(LibraryRoot, "ImportTrash", timestamp);
         Directory.CreateDirectory(rollbackRoot);
 
-        var names = new[] { "Data", "Reports", "SearchLibrary" };
+        var names = new[] { "Data", "Reports", "SearchLibrary", "Notes" };
         var movedOldDirectories = new List<(string Name, string OriginalPath)>();
         try
         {
@@ -310,6 +330,7 @@ public sealed class ConfigurationPackageService
         return entryName == "manifest.json" ||
                entryName.StartsWith("Data/", StringComparison.Ordinal) ||
                entryName.StartsWith("Reports/", StringComparison.Ordinal) ||
+               entryName.StartsWith("Notes/", StringComparison.Ordinal) ||
                entryName.StartsWith("SearchLibrary/", StringComparison.Ordinal);
     }
 

@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.3.1-ff7a45?style=flat-square" alt="Version 0.3.1">
+  <img src="https://img.shields.io/badge/version-0.4.0-ff7a45?style=flat-square" alt="Version 0.4.0">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -93,6 +93,10 @@ GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问�
       <td>创建、重命名或删除自定义目录，搜索、批量收藏并跳过重复仓库；可长按目录名调整目录顺序，也可长按仓库名调整项目顺序，列表以缓动动画平滑重排。支持项目备注、备注图标和带时间戳的 TXT 备注导出。</td>
     </tr>
     <tr>
+      <td><strong>本&#8239;地&#8239;笔&#8239;记</strong></td>
+      <td>使用目录树组织笔记，在 Markdown 正文中插入图片、加粗文字和设置颜色；支持 Ctrl+S、定时自动保存、图片复制、缩放、右键操作和拖动排序。每条笔记保存为同名 Markdown 文件与独立 images 目录；加密笔记的正文和图片都以密文保存，必须输入密码才能查看。</td>
+    </tr>
+    <tr>
       <td><strong>项&#8239;目&#8239;理&#8239;解</strong></td>
       <td>从 README 提取项目概述；可选本地 LLM 生成中文摘要与翻译，无需云端推理服务。</td>
     </tr>
@@ -115,7 +119,7 @@ GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问�
 
 _上图是依据当前源码与公开功能说明绘制的流程示意，不是软件界面截图。_
 
-从 GitHub API 与公开日榜获取数据，在工作台中形成搜索、趋势、收藏和摘要，再保存为本地文件。网络数据用于发现，本地快照与报告负责持续跟踪。
+从 GitHub API 与公开日榜获取数据，在工作台中形成搜索、趋势、收藏和摘要，再把研究记录整理为按目录层级保存的本地 Markdown 笔记。网络数据用于发现，本地笔记、快照与报告负责持续跟踪。
 
 <a id="screenshots"></a>
 
@@ -125,7 +129,9 @@ _上图是依据当前源码与公开功能说明绘制的流程示意，不是�
 | --- | --- |
 | ![Local GitHub Library 浅色主工作区](docs/assets/main-workflow.png) | ![Local GitHub Library 深色主工作区](docs/assets/main-workflow-dark.png) |
 
-_截图使用非敏感演示数据。顶部主题按钮可在浅色与深色之间即时切换，不改变查询、收藏或报告数据。_
+![Local GitHub Library 笔记工作区](docs/assets/notes-workbench.png)
+
+_截图使用非敏感演示数据。笔记页展示目录树、富文本工具栏、本地 Markdown 编辑和加密笔记入口。_
 
 <a id="quick-start"></a>
 
@@ -135,7 +141,7 @@ _截图使用非敏感演示数据。顶部主题按钮可在浅色与深色之�
 
 | 发布包 | 大小 | 适用场景 |
 | --- | ---: | --- |
-| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.3.1/LocalGithubLibrary-0.3.1-win-x64.zip) | 约 84 MB | 目录拖动、布局记忆、GitHub 登录与本地报告 |
+| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.4.0/LocalGithubLibrary-0.4.0-win-x64.zip) | 约 84 MB | 本地笔记、目录排序、GitHub 登录与本地报告 |
 | [LLM 模型（可选）](docs/models/README.md) | 约 1.04 GB | 独立下载，升级程序时无需重复下载 |
 
 ### 2. 解压并运行
@@ -218,6 +224,16 @@ GitHubReports/
   LLM/
     Packages/            # 可选本地模型
     prompt.txt
+  Notes/                 # 目录化本地笔记
+    项目资料/
+      需求拆解/
+        需求拆解.md
+        images/
+    加密空间/
+      私密笔记/
+        私密笔记.md.enc
+        images/
+          *.png.enc
 ```
 
 - GitHub Token 通过软件设置登录，并加密保存在 `github-auth.bin`；高级用户仍可使用 `GITHUB_TOKEN` 或 `github-token.txt`。
@@ -395,6 +411,7 @@ GitHubReports/
 - 可访问 `github.com` 与 `api.github.com`
 - 搜索、README 读取与当前榜单需要联网
 - 收藏浏览和已下载的榜单缓存可离线使用
+- 笔记编辑、图片管理、加密笔记和已保存笔记浏览可离线使用
 
 ## ⚠️ 已知限制
 
@@ -403,6 +420,8 @@ GitHubReports/
 - 全站增量榜依赖 [OpenGithubs 公开日榜](https://github.com/OpenGithubs/github-daily-rank) 的覆盖范围。
 - 当前只提供 Windows x64 构建。
 - 未签名 EXE 可能触发 Windows SmartScreen 提示。
+- 加密笔记会加密正文和图片内容；标题、目录名和文件数量仍可能从本地路径看出。忘记密码后无法恢复正文。
+- 从 0.3.x 升级时旧笔记会自动迁移；旧加密笔记需要先解锁并保存，才能把占位目录改成真实笔记名称。
 - 当前仓库尚未声明开源许可证。
 
 ## 🔧 从源码构建
@@ -436,6 +455,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 📝 更新记录
 
+- [0.4.0：目录化本地笔记、丰富编辑、加密图片与安全写入](docs/releases/v0.4.0.zh-CN.md)
 - [0.3.1：收藏目录拖动排序与重启布局恢复](docs/releases/v0.3.1.zh-CN.md)
 - [0.3.0：GitHub 登录、私有仓库搜索与安全凭据存储](docs/releases/v0.3.0.zh-CN.md)
 - [0.2.7：收藏拖动排序、备注标识、开机自启与目录默认页](docs/releases/v0.2.7.zh-CN.md)

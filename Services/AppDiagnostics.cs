@@ -2,6 +2,7 @@ using System.IO;
 using System.Net.Http;
 using System.Security.Authentication;
 using System.Text;
+using System.Text.Json;
 
 namespace GitHubTopicReports.Services;
 
@@ -27,6 +28,12 @@ public static class AppDiagnostics
         if (exception is TaskCanceledException)
         {
             return "连接 GitHub 超时，请检查网络后重试。";
+        }
+
+        if ((exception is JsonException or InvalidDataException) &&
+            exception.Message.Contains("笔记", StringComparison.Ordinal))
+        {
+            return "本地笔记索引或笔记文件损坏。程序已尝试读取自动备份；请勿继续删除 Notes 目录，并查看诊断日志中的具体文件。";
         }
 
         if (exception is HttpRequestException)

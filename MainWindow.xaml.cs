@@ -1,5 +1,11 @@
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Text.Json;
+using System.Runtime.InteropServices;
 using System.ComponentModel;
+using System.Collections;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Automation;
@@ -10,6 +16,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using GitHubTopicReports.Models;
@@ -23,6 +30,9 @@ public partial class MainWindow : Window
         TimeSpan.FromMilliseconds(300);
     private static readonly TimeSpan FavoriteOrderAnimationDuration =
         TimeSpan.FromMilliseconds(180);
+    private static readonly Regex NoteImageRegex = new(
+        @"!\[[^\]]*\]\((?<url>(?:data:image/|images/|Attachments/)[^)\s]+)\)",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private readonly GitHubSearchService _gitHub;
     private readonly ReportLibraryService _library = new();
     private readonly DispatcherTimer _favoriteDragTimer = new()
@@ -33,7 +43,13 @@ public partial class MainWindow : Window
     {
         Interval = FavoriteDragArmDelay
     };
+    private readonly DispatcherTimer _noteAutoSaveTimer = new()
+    {
+        Interval = TimeSpan.FromMinutes(3)
+    };
+    private readonly SemaphoreSlim _noteSaveGate = new(1, 1);
     private readonly FavoritesService _favorites;
+    private readonly NotesService _notesService;
     private readonly GlobalLeaderboardService _globalLeaderboard;
     private readonly ConfigurationPackageService _configurationPackages;
     private readonly LlmPackageService _llmPackageService;
@@ -87,11 +103,38 @@ public partial class MainWindow : Window
     private FavoriteDragGhostAdorner? _favoriteFolderDragGhost;
     private AdornerLayer? _favoriteFolderDragAdornerLayer;
     private int _favoriteFolderOrderAnimationVersion;
+    private List<NoteDocument> _noteItems = [];
+    private List<NoteFolder> _noteFolders = [];
+    private ObservableCollection<NoteTreeItem> _noteTreeRoots = [];
+    private NoteDocument? _currentNote;
+    private NoteCryptoKey? _currentNoteKey;
+    private bool _suppressNoteSelection;
+    private NoteTreeItem? _noteContextItem;
+    private bool _noteTreeDragPending;
+    private bool _noteTreeDragging;
+    private Point _noteTreeDragStart;
+    private NoteTreeItem? _noteTreeDragItem;
+    private NoteTreeActionGutterAdorner? _noteTreeActionAdorner;
+    private AdornerLayer? _noteTreeActionAdornerLayer;
+    private FavoriteDragGhostAdorner? _noteTreeDragGhost;
+    private AdornerLayer? _noteTreeDragAdornerLayer;
+    private int _noteTreeOrderAnimationVersion;
+    private TreeViewItem? _noteTreeDropTarget;
+    private NoteDropTargetAdorner? _noteTreeDropHighlight;
+    private AdornerLayer? _noteTreeDropHighlightLayer;
+    private bool _suppressNoteEditorEvents;
+    private bool _noteDirty;
+    private int _noteEditVersion;
+    private double _noteZoom = 1.0;
+    private BitmapSource? _selectedNoteImage;
+    private bool _closeAfterNoteSave;
+    private bool _closeNoteSaveInProgress;
     private string _currentKeyword = "";
 
     public MainWindow()
     {
         _favorites = new FavoritesService(_library.LibraryRoot);
+        _notesService = new NotesService(_library.LibraryRoot);
         _gitHub = new GitHubSearchService(_library.LibraryRoot);
         _globalLeaderboard = new GlobalLeaderboardService(_library.LibraryRoot);
         _configurationPackages = new ConfigurationPackageService(_library.LibraryRoot);
@@ -128,6 +171,22 @@ public partial class MainWindow : Window
         CombinedContentTabs.SelectedItem = CombinedDirectoryTab;
         _favoriteDragTimer.Tick += FavoriteDragTimer_Tick;
         _favoriteFolderDragTimer.Tick += FavoriteFolderDragTimer_Tick;
+        _noteAutoSaveTimer.Tick += NoteAutoSaveTimer_Tick;
+        NoteTree.ContextMenu = new ContextMenu();
+        NoteTree.Loaded += (_, _) =>
+        {
+            EnsureNoteTreeActionAdorner();
+            _noteTreeActionAdorner?.Refresh();
+        };
+        NoteTree.LayoutUpdated += (_, _) =>
+            _noteTreeActionAdorner?.Refresh();
+        NoteTree.AddHandler(
+            ScrollViewer.ScrollChangedEvent,
+            new ScrollChangedEventHandler((_, _) =>
+                _noteTreeActionAdorner?.Refresh()));
+        CommandManager.AddPreviewExecutedHandler(
+            NoteBodyEditor,
+            NoteBodyTextBox_CommandExecuted);
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
@@ -142,9 +201,30 @@ public partial class MainWindow : Window
         await RefreshHistoryAsync();
         await RefreshSearchDirectoriesAsync();
         await RefreshLlmStatusAsync();
-        StatusText.Text = _gitHub.HasToken
-            ? "就绪。GitHub 登录凭据已加载。"
-            : "就绪。登录 GitHub 后可搜索账号有权访问的私有仓库。";
+        var notesLoaded = false;
+        try
+        {
+            await RefreshNotesAsync();
+            notesLoaded = true;
+        }
+        catch (Exception exception)
+        {
+            var logPath = AppDiagnostics.LogException("加载笔记仓库", exception);
+            NoteCountText.Text = "读取失败";
+            StatusText.Text = "笔记仓库无法读取，已停止写入以保护现有文件。";
+            MessageBox.Show(
+                this,
+                $"{AppDiagnostics.GetUserMessage(exception)}\n\n诊断日志：\n{logPath}",
+                "笔记仓库读取失败",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+        if (notesLoaded)
+        {
+            StatusText.Text = _gitHub.HasToken
+                ? "就绪。GitHub 登录凭据已加载。"
+                : "就绪。登录 GitHub 后可搜索账号有权访问的私有仓库。";
+        }
         StandaloneSearchKeywordTextBox.Focus();
     }
 
@@ -152,6 +232,23 @@ public partial class MainWindow : Window
     {
         ApplyResponsiveLayout(e.NewSize.Width);
     }
+
+    private async void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (!IsNoteSaveShortcut(e.Key, Keyboard.Modifiers) ||
+            !ReferenceEquals(WorkspaceTabs.SelectedItem, NotesTab))
+        {
+            return;
+        }
+
+        e.Handled = true;
+        await SaveCurrentNoteWithFeedbackAsync();
+    }
+
+    private static bool IsNoteSaveShortcut(Key key, ModifierKeys modifiers) =>
+        key == Key.S &&
+        modifiers.HasFlag(ModifierKeys.Control) &&
+        !modifiers.HasFlag(ModifierKeys.Alt);
 
     private void ApplyResponsiveLayout(double width)
     {
@@ -243,8 +340,57 @@ public partial class MainWindow : Window
         }
     }
 
-    private void MainWindow_Closing(object? sender, CancelEventArgs e)
+    private async void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
+        if (!_closeAfterNoteSave && ShouldSaveNoteBeforeClose())
+        {
+            e.Cancel = true;
+            if (_closeNoteSaveInProgress)
+            {
+                return;
+            }
+
+            var choice = MessageBox.Show(
+                this,
+                $"笔记“{_currentNote!.DisplayTitle}”有尚未保存的修改。\n\n" +
+                "选择“是”保存并继续关闭，选择“否”放弃修改并关闭，选择“取消”返回。",
+                "笔记尚未保存",
+                MessageBoxButton.YesNoCancel,
+                MessageBoxImage.Warning);
+            if (choice == MessageBoxResult.Cancel)
+            {
+                return;
+            }
+
+            if (choice == MessageBoxResult.No)
+            {
+                _noteDirty = false;
+                LockCurrentNote(showCurrentState: false);
+                _closeAfterNoteSave = true;
+                ContinueClosingAfterNoteDecision();
+                return;
+            }
+
+            _closeNoteSaveInProgress = true;
+            try
+            {
+                await SaveCurrentNoteAsync(force: true);
+                LockCurrentNote(showCurrentState: false);
+                _closeAfterNoteSave = true;
+                ContinueClosingAfterNoteDecision();
+            }
+            catch (Exception exception)
+            {
+                ShowNoteError("关闭前保存笔记失败", exception);
+            }
+            finally
+            {
+                _closeNoteSaveInProgress = false;
+            }
+            return;
+        }
+
+        _closeAfterNoteSave = false;
         SaveLayoutSettings();
         if (_isExiting)
         {
@@ -398,9 +544,2634 @@ public partial class MainWindow : Window
         _gitHub.Dispose();
         _globalLeaderboard.Dispose();
         _localLlm.Dispose();
+        _currentNoteKey?.Dispose();
+        _currentNoteKey = null;
+        _noteAutoSaveTimer.Stop();
+        CommandManager.RemovePreviewExecutedHandler(
+            NoteBodyEditor,
+            NoteBodyTextBox_CommandExecuted);
+        ResetNoteTreeDrag();
+        if (_noteTreeActionAdorner is not null &&
+            _noteTreeActionAdornerLayer is not null)
+        {
+            _noteTreeActionAdornerLayer.Remove(_noteTreeActionAdorner);
+        }
+        _noteTreeActionAdorner = null;
+        _noteTreeActionAdornerLayer = null;
         ResetFavoriteDrag();
         ResetFavoriteFolderDrag();
         DisposeTrayIcon();
+    }
+
+    private async Task RefreshNotesAsync(
+        string? preferredNoteId = null,
+        bool activateSelected = true)
+    {
+        var previousId = _currentNote?.Id;
+        _noteItems = (await _notesService.LoadAllAsync()).ToList();
+        _noteFolders = (await _notesService.LoadFoldersAsync()).ToList();
+        _noteTreeRoots = BuildNoteTree();
+        NoteCountText.Text = $"{_noteItems.Count:N0} 篇";
+
+        var selected = _noteItems.FirstOrDefault(note => note.Id == preferredNoteId)
+                       ?? _noteItems.FirstOrDefault(note => note.Id == previousId)
+                       ?? FirstNoteInTree(_noteTreeRoots);
+        _suppressNoteSelection = true;
+        try
+        {
+            NoteTree.ItemsSource = _noteTreeRoots;
+            _ = Dispatcher.BeginInvoke(
+                DispatcherPriority.Loaded,
+                new Action(() =>
+                {
+                    EnsureNoteTreeActionAdorner();
+                    _noteTreeActionAdorner?.Refresh();
+                }));
+        }
+        finally
+        {
+            _suppressNoteSelection = false;
+        }
+
+        if (selected is not null)
+        {
+            await SelectNoteTreeNodeAsync(selected.Id);
+        }
+        if (activateSelected)
+        {
+            await ActivateNoteAsync(selected, saveCurrent: false);
+        }
+    }
+
+    private async Task SelectNoteTreeNodeAsync(string noteId)
+    {
+        await Dispatcher.InvokeAsync(
+            () =>
+            {
+                NoteTree.UpdateLayout();
+                var container = FindNoteTreeItem(NoteTree, noteId);
+                if (container is null)
+                {
+                    return;
+                }
+
+                _suppressNoteSelection = true;
+                try
+                {
+                    container.IsSelected = true;
+                    container.BringIntoView();
+                }
+                finally
+                {
+                    _suppressNoteSelection = false;
+                }
+            },
+            DispatcherPriority.Loaded);
+    }
+
+    private static TreeViewItem? FindNoteTreeItem(ItemsControl parent, string noteId)
+    {
+        foreach (var item in parent.Items)
+        {
+            if (parent.ItemContainerGenerator.ContainerFromItem(item)
+                is not TreeViewItem container)
+            {
+                continue;
+            }
+
+            if (item is NoteTreeItem { IsFolder: false, Id: var id } &&
+                id == noteId)
+            {
+                return container;
+            }
+
+            container.IsExpanded = true;
+            container.UpdateLayout();
+            if (FindNoteTreeItem(container, noteId) is { } child)
+            {
+                return child;
+            }
+        }
+
+        return null;
+    }
+
+    private ObservableCollection<NoteTreeItem> BuildNoteTree()
+    {
+        var validFolderIds = _noteFolders
+            .Select(folder => folder.Id)
+            .ToHashSet(StringComparer.Ordinal);
+        var visitedFolderIds = new HashSet<string>(StringComparer.Ordinal);
+
+        ObservableCollection<NoteTreeItem> BuildChildren(string? parentId)
+        {
+            var children = new ObservableCollection<NoteTreeItem>();
+            var notes = _noteItems.Where(note =>
+                parentId is null
+                    ? note.FolderId is null || !validFolderIds.Contains(note.FolderId)
+                    : note.FolderId == parentId);
+            foreach (var noteItem in notes
+                .OrderBy(note => note.SortOrder)
+                .ThenByDescending(note => note.UpdatedAt)
+                .Select(note => new NoteTreeItem
+                {
+                    Kind = "note",
+                    Id = note.Id,
+                    Name = note.DisplayTitle,
+                    UpdatedDisplay = note.UpdatedDisplay,
+                    IsEncrypted = note.IsEncrypted,
+                    FolderId = note.FolderId,
+                    Note = note
+                }))
+            {
+                children.Add(noteItem);
+            }
+
+            foreach (var folder in _noteFolders
+                         .Where(folder => folder.ParentId == parentId)
+                         .OrderBy(folder => folder.CreatedAt))
+            {
+                if (!visitedFolderIds.Add(folder.Id))
+                {
+                    continue;
+                }
+
+                children.Add(new NoteTreeItem
+                {
+                    Kind = "folder",
+                    Id = folder.Id,
+                    Name = folder.Name,
+                    Children = BuildChildren(folder.Id)
+                });
+            }
+
+            return children;
+        }
+
+        return BuildChildren(null);
+    }
+
+    private static NoteDocument? FirstNoteInTree(IEnumerable<NoteTreeItem> items)
+    {
+        foreach (var item in items)
+        {
+            if (!item.IsFolder)
+            {
+                return item.Note;
+            }
+
+            if (FirstNoteInTree(item.Children) is { } note)
+            {
+                return note;
+            }
+        }
+
+        return null;
+    }
+
+    private string? GetSelectedNoteFolderId()
+    {
+        return NoteTree.SelectedItem switch
+        {
+            NoteTreeItem { IsFolder: true } folder => folder.Id,
+            NoteTreeItem { IsFolder: false } note => note.FolderId,
+            _ => null
+        };
+    }
+
+    private int NextTopNoteSortOrder(string? folderId) =>
+        _noteItems
+            .Where(note => note.FolderId == folderId)
+            .Select(note => note.SortOrder)
+            .DefaultIfEmpty(int.MaxValue)
+            .Min() - 1;
+
+    private List<NoteFolderOption> GetNoteFolderOptions()
+    {
+        var options = new List<NoteFolderOption>
+        {
+            new() { Id = null, DisplayName = "笔记根目录" }
+        };
+
+        void AddChildren(string? parentId, int depth)
+        {
+            foreach (var folder in _noteFolders
+                         .Where(folder => folder.ParentId == parentId)
+                         .OrderBy(folder => folder.CreatedAt))
+            {
+                options.Add(new NoteFolderOption
+                {
+                    Id = folder.Id,
+                    DisplayName = $"{new string('　', depth)}{folder.Name}"
+                });
+                AddChildren(folder.Id, depth + 1);
+            }
+        }
+
+        AddChildren(null, 0);
+        return options;
+    }
+
+    private async void CreateNoteFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        await CreateNoteFolderAsync(GetSelectedNoteFolderId());
+    }
+
+    private async Task CreateNoteFolderAsync(string? parentId)
+    {
+        var dialog = new FolderNameDialog(
+            "新建笔记目录",
+            string.IsNullOrWhiteSpace(parentId)
+                ? "输入目录名称，将创建在笔记根目录下。"
+                : "输入子目录名称，将创建在所选目录下。")
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            await _notesService.CreateFolderAsync(dialog.FolderName, parentId);
+            await RefreshNotesAsync(_currentNote?.Id, activateSelected: false);
+            StatusText.Text = $"已新建笔记目录“{dialog.FolderName}”。";
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("新建笔记目录失败", exception);
+        }
+    }
+
+    private async Task MoveNoteToFolderAsync(string noteId, string? folderId)
+    {
+        var note = _noteItems.FirstOrDefault(item => item.Id == noteId);
+        if (note is null || note.FolderId == folderId)
+        {
+            return;
+        }
+
+        try
+        {
+            await SaveCurrentNoteAsync(force: true);
+            note.FolderId = folderId;
+            note.SortOrder = NextTopNoteSortOrder(folderId);
+            await _notesService.SaveNoteOrderAsync(_noteItems);
+            if (_currentNote?.Id == note.Id)
+            {
+                _currentNote.FolderId = folderId;
+            }
+
+            await RefreshNotesAsync(note.Id, activateSelected: false);
+            StatusText.Text = "笔记已移动到新目录。";
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("移动笔记失败", exception);
+        }
+    }
+
+    private async void CreateNoteButton_Click(object sender, RoutedEventArgs e)
+    {
+        await CreateNoteInFolderAsync(GetSelectedNoteFolderId());
+    }
+
+    private async Task CreateNoteInFolderAsync(string? folderId)
+    {
+        try
+        {
+            await SaveCurrentNoteAsync(force: true);
+            var note = await _notesService.CreateAsync(
+                folderId,
+                NextTopNoteSortOrder(folderId));
+            await RefreshNotesAsync(note.Id);
+            NoteTitleTextBox.Focus();
+            NoteTitleTextBox.SelectAll();
+            StatusText.Text = "已新建笔记。";
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("新建笔记失败", exception);
+        }
+    }
+
+    private async void NoteTree_SelectedItemChanged(
+        object sender,
+        RoutedPropertyChangedEventArgs<object> e)
+    {
+        if (_suppressNoteSelection)
+        {
+            return;
+        }
+
+        if (e.NewValue is NoteTreeItem { IsFolder: false, Note: { } note })
+        {
+            await ActivateNoteAsync(note);
+        }
+        else if (e.NewValue is NoteTreeItem { IsFolder: true } folder)
+        {
+            StatusText.Text = $"已选择笔记目录“{folder.Name}”，新建的笔记会放入该目录。";
+        }
+    }
+
+    private void NoteTree_PreviewMouseRightButtonDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        _noteContextItem = null;
+        if (e.OriginalSource is not DependencyObject source)
+        {
+            return;
+        }
+
+        var container = FindVisualAncestor<TreeViewItem>(source);
+        if (container?.DataContext is not NoteTreeItem item)
+        {
+            return;
+        }
+
+        _noteContextItem = item;
+        container.IsSelected = true;
+    }
+
+    private void NoteTree_ContextMenuOpening(
+        object sender,
+        ContextMenuEventArgs e)
+    {
+        var item = _noteContextItem ?? NoteTree.SelectedItem as NoteTreeItem;
+        if (item is null)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        var menu = NoteTree.ContextMenu ?? new ContextMenu();
+        menu.Items.Clear();
+        if (item.IsFolder)
+        {
+            menu.Items.Add(CreateNoteContextMenuItem(
+                "在此目录新建笔记",
+                async () =>
+                {
+                    await CreateNoteInFolderAsync(item.Id);
+                }));
+            menu.Items.Add(CreateNoteContextMenuItem(
+                "新建子目录",
+                async () =>
+                {
+                    await CreateNoteFolderAsync(item.Id);
+                }));
+            menu.Items.Add(new Separator());
+            menu.Items.Add(CreateNoteContextMenuItem(
+                "删除此目录",
+                async () =>
+                {
+                    await DeleteFolderByIdAsync(item.Id);
+                }));
+        }
+        else if (item.Note is { } note)
+        {
+            menu.Items.Add(CreateNoteContextMenuItem(
+                "打开笔记",
+                async () =>
+                {
+                    await ActivateNoteAsync(note);
+                }));
+            var openWithMenu = new MenuItem { Header = "打开方式" };
+            openWithMenu.Items.Add(CreateNoteContextMenuItem(
+                "默认程序",
+                () =>
+                {
+                    OpenNoteFile(note.Id);
+                    return Task.CompletedTask;
+                }));
+            openWithMenu.Items.Add(CreateNoteContextMenuItem(
+                "记事本",
+                () =>
+                {
+                    OpenNoteFileWith(note.Id, "notepad.exe");
+                    return Task.CompletedTask;
+                }));
+            openWithMenu.Items.Add(CreateNoteContextMenuItem(
+                "Visual Studio Code",
+                () =>
+                {
+                    OpenNoteFileWith(note.Id, "code");
+                    return Task.CompletedTask;
+                }));
+            openWithMenu.Items.Add(new Separator());
+            openWithMenu.Items.Add(CreateNoteContextMenuItem(
+                "在资源管理器中显示",
+                () =>
+                {
+                    ShowNoteFileInExplorer(note.Id);
+                    return Task.CompletedTask;
+                }));
+            menu.Items.Add(openWithMenu);
+            if (_currentNote?.Id == note.Id)
+            {
+                menu.Items.Add(CreateNoteContextMenuItem(
+                    "保存笔记",
+                    SaveCurrentNoteWithFeedbackAsync));
+            }
+
+            var moveMenu = new MenuItem { Header = "移动到目录" };
+            foreach (var option in GetNoteFolderOptions())
+            {
+                var menuItem = new MenuItem
+                {
+                    Header = option.DisplayName,
+                    IsCheckable = true,
+                    IsChecked = option.Id == note.FolderId
+                };
+                menuItem.Click += async (_, _) =>
+                {
+                    await MoveNoteToFolderAsync(note.Id, option.Id);
+                };
+                moveMenu.Items.Add(menuItem);
+            }
+            menu.Items.Add(moveMenu);
+            menu.Items.Add(new Separator());
+            menu.Items.Add(CreateNoteContextMenuItem(
+                "删除笔记",
+                async () =>
+                {
+                    await DeleteNoteByIdAsync(note.Id, note.DisplayTitle);
+                }));
+        }
+
+        NoteTree.ContextMenu = menu;
+    }
+
+    private void OpenNoteFile(string noteId)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = _notesService.GetNotePath(noteId),
+                UseShellExecute = true
+            });
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("打开笔记文件失败", exception);
+        }
+    }
+
+    private void OpenNoteFileWith(string noteId, string executable)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = executable,
+                Arguments = $"\"{_notesService.GetNotePath(noteId)}\"",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError($"使用 {executable} 打开笔记失败", exception);
+        }
+    }
+
+    private void ShowNoteFileInExplorer(string noteId)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"/select,\"{_notesService.GetNotePath(noteId)}\"",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("在资源管理器中显示笔记失败", exception);
+        }
+    }
+
+    private static MenuItem CreateNoteContextMenuItem(
+        string header,
+        Func<Task> action)
+    {
+        var item = new MenuItem { Header = header };
+        item.Click += async (_, _) => await action();
+        return item;
+    }
+
+    private void EnsureNoteTreeActionAdorner()
+    {
+        if (_noteTreeActionAdorner is not null)
+        {
+            return;
+        }
+
+        _noteTreeActionAdornerLayer = AdornerLayer.GetAdornerLayer(NoteTree);
+        if (_noteTreeActionAdornerLayer is null)
+        {
+            return;
+        }
+
+        _noteTreeActionAdorner = new NoteTreeActionGutterAdorner(NoteTree);
+        _noteTreeActionAdornerLayer.Add(_noteTreeActionAdorner);
+    }
+
+    private bool TryGetNoteTreeActionTarget(
+        Point point,
+        out TreeViewItem container,
+        out NoteTreeItem item)
+    {
+        container = null!;
+        item = null!;
+        if (_noteTreeActionAdorner is null ||
+            Math.Abs(point.X - _noteTreeActionAdorner.ActionCenterX) > 15)
+        {
+            return false;
+        }
+
+        if (_noteTreeActionAdorner.FindContainerAt(point.Y)
+            is not { DataContext: NoteTreeItem candidate } target)
+        {
+            return false;
+        }
+
+        container = target;
+        item = candidate;
+        return true;
+    }
+
+    private async void NoteTree_PreviewMouseLeftButtonDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        _noteContextItem = null;
+        ResetNoteTreeDrag();
+        if (e.ChangedButton != MouseButton.Left ||
+            e.OriginalSource is not DependencyObject source)
+        {
+            return;
+        }
+
+        if (TryGetNoteTreeActionTarget(
+                e.GetPosition(NoteTree),
+                out var actionContainer,
+                out var actionItem))
+        {
+            e.Handled = true;
+            actionContainer.IsSelected = true;
+            if (actionItem.IsFolder)
+            {
+                await DeleteFolderByIdAsync(actionItem.Id);
+            }
+            else if (actionItem.Note is { } note)
+            {
+                await DeleteNoteByIdAsync(note.Id, note.DisplayTitle);
+            }
+            return;
+        }
+
+        if (FindVisualAncestor<Button>(source) is not null ||
+            FindVisualAncestor<ToggleButton>(source) is not null)
+        {
+            return;
+        }
+
+        var container = FindVisualAncestor<TreeViewItem>(source);
+        if (container?.DataContext is not NoteTreeItem { IsFolder: false } noteItem)
+        {
+            return;
+        }
+
+        _noteTreeDragStart = e.GetPosition(NoteTree);
+        _noteTreeDragItem = noteItem;
+        _noteTreeDragPending = true;
+    }
+
+    private void NoteTree_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_noteTreeDragPending && !_noteTreeDragging)
+        {
+            NoteTree.Cursor = TryGetNoteTreeActionTarget(
+                e.GetPosition(NoteTree),
+                out _,
+                out _)
+                ? Cursors.Hand
+                : Cursors.Arrow;
+            return;
+        }
+
+        if (e.LeftButton != MouseButtonState.Pressed)
+        {
+            ResetNoteTreeDrag();
+            return;
+        }
+
+        var position = e.GetPosition(NoteTree);
+        if (!_noteTreeDragging)
+        {
+            var delta = position - _noteTreeDragStart;
+            if (Math.Abs(delta.X) < 6 && Math.Abs(delta.Y) < 6)
+            {
+                return;
+            }
+
+            _noteTreeDragging = true;
+            NoteTree.CaptureMouse();
+            NoteTree.Cursor = Cursors.SizeAll;
+        }
+
+        ShowNoteTreeDragGhost(position);
+        UpdateNoteTreeDropHighlight(position);
+        ReorderNoteAtPoint(position);
+    }
+
+    private void NoteTree_MouseLeave(object sender, MouseEventArgs e)
+    {
+        if (!_noteTreeDragging)
+        {
+            NoteTree.Cursor = Cursors.Arrow;
+        }
+    }
+
+    private async void NoteTree_PreviewMouseLeftButtonUp(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        if (!_noteTreeDragging || _noteTreeDragItem is null)
+        {
+            ResetNoteTreeDrag();
+            return;
+        }
+
+        var source = _noteTreeDragItem;
+        var pointer = e.GetPosition(NoteTree);
+        TreeViewItem? targetContainer = null;
+        if (NoteTree.InputHitTest(pointer) is DependencyObject hit)
+        {
+            targetContainer = FindVisualAncestor<TreeViewItem>(hit);
+        }
+
+        ResetNoteTreeDrag();
+        await MoveNoteByDropAsync(source, targetContainer, pointer.Y);
+    }
+
+    private async Task MoveNoteByDropAsync(
+        NoteTreeItem sourceItem,
+        TreeViewItem? targetContainer,
+        double pointerY)
+    {
+        if (sourceItem.Note is null)
+        {
+            return;
+        }
+
+        var note = _noteItems.FirstOrDefault(item => item.Id == sourceItem.Id);
+        if (note is null)
+        {
+            return;
+        }
+
+        string? targetFolderId = null;
+        NoteTreeItem? targetNoteItem = null;
+        var dropBelow = true;
+        if (targetContainer?.DataContext is NoteTreeItem targetItem)
+        {
+            if (targetItem.IsFolder)
+            {
+                targetFolderId = targetItem.Id;
+                dropBelow = false;
+            }
+            else
+            {
+                targetFolderId = targetItem.FolderId;
+                targetNoteItem = targetItem;
+                var top = targetContainer.TranslatePoint(
+                    new Point(0, 0),
+                    NoteTree).Y;
+                dropBelow = pointerY > top + targetContainer.ActualHeight / 2;
+            }
+        }
+
+        var oldFolderId = note.FolderId;
+        note.FolderId = targetFolderId;
+        var targetNotes = _noteItems
+            .Where(item =>
+                item.Id != note.Id &&
+                item.FolderId == targetFolderId)
+            .OrderBy(item => item.SortOrder)
+            .ThenByDescending(item => item.UpdatedAt)
+            .ToList();
+        var insertIndex = targetNotes.Count;
+        if (targetNoteItem is not null)
+        {
+            var targetIndex = targetNotes.FindIndex(item =>
+                item.Id == targetNoteItem.Id);
+            if (targetIndex >= 0)
+            {
+                insertIndex = targetIndex + (dropBelow ? 1 : 0);
+            }
+        }
+        else if (targetFolderId is not null)
+        {
+            insertIndex = 0;
+        }
+
+        targetNotes.Insert(insertIndex, note);
+        for (var index = 0; index < targetNotes.Count; index++)
+        {
+            targetNotes[index].SortOrder = index;
+        }
+
+        if (oldFolderId != targetFolderId)
+        {
+            var oldFolderNotes = _noteItems
+                .Where(item =>
+                    item.Id != note.Id &&
+                    item.FolderId == oldFolderId)
+                .OrderBy(item => item.SortOrder)
+                .ThenByDescending(item => item.UpdatedAt)
+                .ToList();
+            for (var index = 0; index < oldFolderNotes.Count; index++)
+            {
+                oldFolderNotes[index].SortOrder = index;
+            }
+        }
+
+        try
+        {
+            await _notesService.SaveNoteOrderAsync(_noteItems);
+            if (_currentNote?.Id == note.Id)
+            {
+                _currentNote.FolderId = targetFolderId;
+            }
+
+            await RefreshNotesAsync(
+                _currentNote?.Id,
+                activateSelected: false);
+            StatusText.Text = targetFolderId is null
+                ? "笔记已移动到根目录并调整顺序。"
+                : "笔记位置和顺序已更新。";
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("移动笔记失败", exception);
+        }
+    }
+
+    private void ShowNoteTreeDragGhost(Point position)
+    {
+        if (_noteTreeDragItem is null)
+        {
+            return;
+        }
+
+        if (_noteTreeDragGhost is null)
+        {
+            _noteTreeDragAdornerLayer = AdornerLayer.GetAdornerLayer(NoteTree);
+            if (_noteTreeDragAdornerLayer is null)
+            {
+                return;
+            }
+
+            _noteTreeDragGhost = new FavoriteDragGhostAdorner(
+                NoteTree,
+                _noteTreeDragItem.Name,
+                "拖动到目录或笔记以调整位置",
+                Math.Clamp(NoteTree.ActualWidth - 16, 180, 300),
+                centerOnPointer: true);
+            _noteTreeDragAdornerLayer.Add(_noteTreeDragGhost);
+        }
+
+        _noteTreeDragGhost.UpdatePosition(position);
+    }
+
+    private void UpdateNoteTreeDropHighlight(Point position)
+    {
+        TreeViewItem? target = null;
+        if (NoteTree.InputHitTest(position) is DependencyObject hit)
+        {
+            target = FindVisualAncestor<TreeViewItem>(hit);
+        }
+
+        ShowNoteTreeDropHighlight(GetNoteTreeDropHighlightTarget(target));
+    }
+
+    private void ReorderNoteAtPoint(Point position)
+    {
+        if (_noteTreeDragItem is null ||
+            NoteTree.InputHitTest(position) is not DependencyObject hit)
+        {
+            return;
+        }
+
+        var targetContainer = FindVisualAncestor<TreeViewItem>(hit);
+        if (targetContainer?.DataContext is NoteTreeItem { IsFolder: false })
+        {
+            ReorderNoteRelativeTo(targetContainer, position.Y);
+        }
+    }
+
+    private void ReorderNoteRelativeTo(
+        TreeViewItem targetContainer,
+        double pointerY)
+    {
+        if (_noteTreeDragItem is null ||
+            targetContainer.DataContext is not NoteTreeItem
+            {
+                IsFolder: false,
+                Id: var targetId
+            } ||
+            targetId == _noteTreeDragItem.Id)
+        {
+            return;
+        }
+
+        var sourceParent = FindNoteTreeParent(_noteTreeDragItem.Id);
+        var targetParent = FindNoteTreeParent(targetId);
+        if (sourceParent is null ||
+            targetParent is null ||
+            !ReferenceEquals(sourceParent, targetParent))
+        {
+            return;
+        }
+
+        var sourceIndex = IndexOf(sourceParent, _noteTreeDragItem.Id);
+        var targetIndex = IndexOf(sourceParent, targetId);
+        if (sourceIndex < 0 || targetIndex < 0)
+        {
+            return;
+        }
+
+        var dropBelow =
+            pointerY -
+            targetContainer.TranslatePoint(new Point(0, 0), NoteTree).Y >
+            targetContainer.ActualHeight / 2;
+        var insertIndex = targetIndex + (dropBelow ? 1 : 0);
+        if (sourceIndex < insertIndex)
+        {
+            insertIndex--;
+        }
+
+        if (sourceIndex == insertIndex)
+        {
+            return;
+        }
+
+        var previousPositions = CaptureNoteTreeItemPositions();
+        var movedItem = sourceParent[sourceIndex];
+        sourceParent.RemoveAt(sourceIndex);
+        sourceParent.Insert(insertIndex, movedItem);
+        SyncNoteSortOrdersFromTree();
+        AnimateNoteTreeItems(previousPositions);
+
+        static int IndexOf(IList<NoteTreeItem> items, string id)
+        {
+            for (var index = 0; index < items.Count; index++)
+            {
+                if (items[index].Id == id)
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+    }
+
+    private IList<NoteTreeItem>? FindNoteTreeParent(string itemId)
+    {
+        if (NoteTree.ItemsSource is IList<NoteTreeItem> roots &&
+            roots.Any(item => item.Id == itemId))
+        {
+            return roots;
+        }
+
+        IList<NoteTreeItem>? FindInChildren(IEnumerable<NoteTreeItem> items)
+        {
+            foreach (var item in items)
+            {
+                if (item.Children.Any(child => child.Id == itemId))
+                {
+                    return item.Children;
+                }
+
+                if (FindInChildren(item.Children) is { } nested)
+                {
+                    return nested;
+                }
+            }
+
+            return null;
+        }
+
+        return NoteTree.ItemsSource is IEnumerable<NoteTreeItem> sourceItems
+            ? FindInChildren(sourceItems)
+            : null;
+    }
+
+    private void SyncNoteSortOrdersFromTree()
+    {
+        if (NoteTree.ItemsSource is not IEnumerable<NoteTreeItem> roots)
+        {
+            return;
+        }
+
+        void Apply(IEnumerable<NoteTreeItem> items)
+        {
+            var noteIndex = 0;
+            foreach (var item in items)
+            {
+                if (item.IsFolder)
+                {
+                    Apply(item.Children);
+                }
+                else if (item.Note is { } note)
+                {
+                    note.SortOrder = noteIndex++;
+                }
+            }
+        }
+
+        Apply(roots);
+    }
+
+    private Dictionary<string, double> CaptureNoteTreeItemPositions()
+    {
+        var positions = new Dictionary<string, double>(StringComparer.Ordinal);
+
+        void Capture(ItemsControl parent, IEnumerable<NoteTreeItem> items)
+        {
+            foreach (var item in items)
+            {
+                if (parent.ItemContainerGenerator.ContainerFromItem(item)
+                    is not TreeViewItem container)
+                {
+                    continue;
+                }
+
+                positions[item.Id] = container.TranslatePoint(
+                    new Point(0, 0),
+                    NoteTree).Y;
+                Capture(container, item.Children);
+            }
+        }
+
+        if (NoteTree.ItemsSource is IEnumerable<NoteTreeItem> roots)
+        {
+            Capture(NoteTree, roots);
+        }
+
+        return positions;
+    }
+
+    private void AnimateNoteTreeItems(
+        IReadOnlyDictionary<string, double> previousPositions)
+    {
+        var animationVersion = ++_noteTreeOrderAnimationVersion;
+        Dispatcher.BeginInvoke(
+            DispatcherPriority.Render,
+            new Action(() =>
+            {
+                NoteTree.UpdateLayout();
+                AnimateItems(NoteTree, NoteTree.ItemsSource);
+                return;
+
+                void AnimateItems(ItemsControl parent, IEnumerable? items)
+                {
+                    if (items is not IEnumerable<NoteTreeItem> noteItems)
+                    {
+                        return;
+                    }
+
+                    foreach (var item in noteItems)
+                    {
+                        if (parent.ItemContainerGenerator.ContainerFromItem(item)
+                            is not TreeViewItem container)
+                        {
+                            continue;
+                        }
+
+                        if (previousPositions.TryGetValue(item.Id, out var previousY))
+                        {
+                            var currentY = container.TranslatePoint(
+                                new Point(0, 0),
+                                NoteTree).Y;
+                            var offset = previousY - currentY;
+                            if (Math.Abs(offset) >= 0.5)
+                            {
+                                var transform = new TranslateTransform(0, offset);
+                                container.RenderTransform = transform;
+                                var animation = new DoubleAnimation(
+                                    offset,
+                                    0,
+                                    FavoriteOrderAnimationDuration)
+                                {
+                                    EasingFunction = new CubicEase
+                                    {
+                                        EasingMode = EasingMode.EaseOut
+                                    },
+                                    FillBehavior = FillBehavior.HoldEnd
+                                };
+                                animation.Completed += (_, _) =>
+                                {
+                                    if (animationVersion !=
+                                        _noteTreeOrderAnimationVersion)
+                                    {
+                                        return;
+                                    }
+
+                                    transform.Y = 0;
+                                    container.ClearValue(RenderTransformProperty);
+                                };
+                                transform.BeginAnimation(
+                                    TranslateTransform.YProperty,
+                                    animation);
+                            }
+                        }
+
+                        AnimateItems(container, item.Children);
+                    }
+                }
+            }));
+    }
+
+    private TreeViewItem? GetNoteTreeDropHighlightTarget(TreeViewItem? target)
+    {
+        if (target?.DataContext is not NoteTreeItem targetItem ||
+            targetItem.Id == _noteTreeDragItem?.Id)
+        {
+            return null;
+        }
+
+        if (!targetItem.IsFolder &&
+            ItemsControl.ItemsControlFromItemContainer(target) is TreeViewItem parentFolder)
+        {
+            return parentFolder;
+        }
+
+        return target;
+    }
+
+    private void ShowNoteTreeDropHighlight(TreeViewItem? highlightTarget)
+    {
+        if (highlightTarget is null)
+        {
+            ClearNoteTreeDropHighlight();
+            return;
+        }
+
+        if (ReferenceEquals(highlightTarget, _noteTreeDropTarget))
+        {
+            return;
+        }
+
+        ClearNoteTreeDropHighlight();
+        var layer = AdornerLayer.GetAdornerLayer(highlightTarget);
+        if (layer is null)
+        {
+            return;
+        }
+
+        _noteTreeDropTarget = highlightTarget;
+        _noteTreeDropHighlightLayer = layer;
+        _noteTreeDropHighlight = new NoteDropTargetAdorner(highlightTarget);
+        layer.Add(_noteTreeDropHighlight);
+    }
+
+    private void ClearNoteTreeDropHighlight()
+    {
+        if (_noteTreeDropHighlight is not null &&
+            _noteTreeDropHighlightLayer is not null)
+        {
+            _noteTreeDropHighlightLayer.Remove(_noteTreeDropHighlight);
+        }
+
+        _noteTreeDropTarget = null;
+        _noteTreeDropHighlight = null;
+        _noteTreeDropHighlightLayer = null;
+    }
+
+    private void ResetNoteTreeDrag()
+    {
+        ClearNoteTreeDropHighlight();
+        if (NoteTree.IsMouseCaptured)
+        {
+            NoteTree.ReleaseMouseCapture();
+        }
+
+        _noteTreeDragPending = false;
+        _noteTreeDragging = false;
+        _noteTreeDragItem = null;
+        NoteTree.Cursor = Cursors.Arrow;
+        if (_noteTreeDragGhost is not null &&
+            _noteTreeDragAdornerLayer is not null)
+        {
+            _noteTreeDragAdornerLayer.Remove(_noteTreeDragGhost);
+        }
+        _noteTreeDragGhost = null;
+        _noteTreeDragAdornerLayer = null;
+    }
+
+    private async Task ActivateNoteAsync(
+        NoteDocument? selected,
+        bool saveCurrent = true)
+    {
+        _noteAutoSaveTimer.Stop();
+        if (saveCurrent)
+        {
+            await SaveCurrentNoteAsync(force: true);
+        }
+
+        LockCurrentNote(showCurrentState: false);
+        if (selected is null)
+        {
+            _currentNote = null;
+            ShowEmptyNoteEditor();
+            return;
+        }
+
+        try
+        {
+            _currentNote = await _notesService.LoadAsync(selected.Id);
+            _noteDirty = false;
+            _noteEditVersion = 0;
+            if (_currentNote.IsEncrypted)
+            {
+                SetNoteText("", "");
+                ShowEncryptedNoteLocked();
+            }
+            else
+            {
+                SetNoteText(
+                    _currentNote.Title,
+                    _currentNote.Content,
+                    _currentNote.RichTextData);
+                ShowPlainNoteEditor();
+            }
+        }
+        catch (Exception exception)
+        {
+            _currentNote = null;
+            ShowEmptyNoteEditor();
+            ShowNoteError("打开笔记失败", exception);
+        }
+
+    }
+
+    private void ShowPlainNoteEditor()
+    {
+        NoteEmptyOverlay.Visibility = Visibility.Collapsed;
+        NoteLockedOverlay.Visibility = Visibility.Collapsed;
+        NoteTitleTextBox.IsEnabled = true;
+        NoteBodyEditor.IsEnabled = true;
+        EncryptNoteButton.Visibility = Visibility.Visible;
+        EncryptNoteButton.IsEnabled = true;
+        LockNoteButton.Visibility = Visibility.Collapsed;
+        DeleteNoteButton.IsEnabled = true;
+        NoteEncryptionStateText.Text = "未加密笔记";
+        NoteSaveStateText.Text = "已保存";
+    }
+
+    private void ShowEncryptedNoteLocked()
+    {
+        NoteEmptyOverlay.Visibility = Visibility.Collapsed;
+        NoteLockedOverlay.Visibility = Visibility.Visible;
+        NoteTitleTextBox.IsEnabled = false;
+        NoteBodyEditor.IsEnabled = false;
+        EncryptNoteButton.Visibility = Visibility.Collapsed;
+        LockNoteButton.Visibility = Visibility.Collapsed;
+        DeleteNoteButton.IsEnabled = true;
+        NoteEncryptionStateText.Text = "加密笔记 · 已锁定";
+        NoteSaveStateText.Text = "需要密码";
+    }
+
+    private void ShowEncryptedNoteUnlocked()
+    {
+        NoteEmptyOverlay.Visibility = Visibility.Collapsed;
+        NoteLockedOverlay.Visibility = Visibility.Collapsed;
+        NoteTitleTextBox.IsEnabled = true;
+        NoteBodyEditor.IsEnabled = true;
+        EncryptNoteButton.Visibility = Visibility.Collapsed;
+        LockNoteButton.Visibility = Visibility.Visible;
+        LockNoteButton.IsEnabled = true;
+        DeleteNoteButton.IsEnabled = true;
+        NoteEncryptionStateText.Text = "加密笔记 · 已解锁";
+        NoteSaveStateText.Text = "已保存";
+    }
+
+    private void ShowEmptyNoteEditor()
+    {
+        SetNoteText("", "");
+        NoteEmptyOverlay.Visibility = Visibility.Visible;
+        NoteLockedOverlay.Visibility = Visibility.Collapsed;
+        NoteTitleTextBox.IsEnabled = false;
+        NoteBodyEditor.IsEnabled = false;
+        EncryptNoteButton.Visibility = Visibility.Visible;
+        EncryptNoteButton.IsEnabled = false;
+        LockNoteButton.Visibility = Visibility.Collapsed;
+        DeleteNoteButton.IsEnabled = false;
+        NoteEncryptionStateText.Text = "选择或新建一篇笔记。";
+        NoteSaveStateText.Text = "";
+        NoteCharacterCountText.Text = "0 字符";
+    }
+
+    private async Task SaveCurrentNoteWithFeedbackAsync()
+    {
+        if (_currentNote is null)
+        {
+            return;
+        }
+
+        if (_currentNote.IsEncrypted && _currentNoteKey is null)
+        {
+            StatusText.Text = "这篇加密笔记已锁定，请先输入密码解锁。";
+            return;
+        }
+
+        try
+        {
+            _noteAutoSaveTimer.Stop();
+            await SaveCurrentNoteAsync(force: true);
+            StatusText.Text = "笔记已保存。";
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("保存笔记失败", exception);
+        }
+    }
+
+    private async void EncryptNoteButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentNote is null || _currentNote.IsEncrypted)
+        {
+            return;
+        }
+
+        var dialog = new NotePasswordDialog(
+            "加密笔记",
+            "设置后，必须输入该密码才能打开这篇笔记。密码无法找回。",
+            requireConfirmation: true,
+            confirmText: "加密并锁定")
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var content = new NoteContent(
+                NoteTitleTextBox.Text,
+                SerializeNoteBody(),
+                SerializeNoteBodyRichText());
+            using var key = NoteEncryptionService.CreateKey(dialog.Password);
+            await _notesService.SaveEncryptedAsync(_currentNote, content, key);
+            _noteDirty = false;
+            var noteId = _currentNote.Id;
+            LockCurrentNote(showCurrentState: false);
+            await RefreshNotesAsync(noteId);
+            StatusText.Text = "笔记已加密并锁定。";
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("加密笔记失败", exception);
+        }
+    }
+
+    private async void UnlockNoteButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentNote?.Encrypted is null)
+        {
+            return;
+        }
+
+        var dialog = new NotePasswordDialog(
+            "解锁笔记",
+            "输入这篇加密笔记的密码。",
+            requireConfirmation: false)
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        NoteCryptoKey? key = null;
+        try
+        {
+            if (_currentNote is null)
+            {
+                return;
+            }
+
+            var opened = await _notesService.OpenEncryptedAsync(
+                _currentNote.Id,
+                dialog.Password);
+            key = opened.Key;
+            var content = opened.Content;
+            _currentNoteKey?.Dispose();
+            _currentNoteKey = key;
+            key = null;
+            _currentNote.Title = content.Title;
+            _currentNote.Content = content.Content;
+            _currentNote.RichTextData = content.RichTextData;
+            _noteDirty = false;
+            SetNoteText(content.Title, content.Content, content.RichTextData);
+            ShowEncryptedNoteUnlocked();
+        }
+        catch (NotePasswordException)
+        {
+            MessageBox.Show(
+                this,
+                "密码错误，或这篇笔记的数据已经损坏。",
+                "无法解锁",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("解锁笔记失败", exception);
+        }
+        finally
+        {
+            key?.Dispose();
+        }
+    }
+
+    private async void LockNoteButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await SaveCurrentNoteAsync(force: true);
+            LockCurrentNote(showCurrentState: true);
+            StatusText.Text = "笔记已锁定。";
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("锁定笔记失败", exception);
+        }
+    }
+
+    private async void DeleteNoteButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentNote is null)
+        {
+            return;
+        }
+
+        await DeleteNoteByIdAsync(_currentNote.Id, _currentNote.DisplayTitle);
+    }
+
+    private async Task DeleteNoteByIdAsync(string noteId, string displayTitle)
+    {
+        var note = _noteItems.FirstOrDefault(item => item.Id == noteId);
+        if (note is null)
+        {
+            return;
+        }
+
+        var confirmation = MessageBox.Show(
+            this,
+            $"确定删除笔记“{displayTitle}”吗？此操作无法撤销。",
+            "删除笔记",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        if (note.IsEncrypted &&
+            !await VerifyEncryptedNotePasswordForDeletionAsync(note))
+        {
+            return;
+        }
+
+        try
+        {
+            if (_currentNote?.Id == noteId)
+            {
+                LockCurrentNote(showCurrentState: false);
+            }
+
+            await _notesService.DeleteAsync(noteId);
+            await RefreshNotesAsync(
+                _currentNote?.Id,
+                activateSelected: _currentNote is null);
+            StatusText.Text = "笔记已删除。";
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("删除笔记失败", exception);
+        }
+    }
+
+    private async Task<bool> VerifyEncryptedNotePasswordForDeletionAsync(
+        NoteDocument note)
+    {
+        if (note.Encrypted is null)
+        {
+            return true;
+        }
+
+        var dialog = new NotePasswordDialog(
+            "删除加密笔记",
+            "这是一篇加密笔记。请输入密码，验证通过后才会删除。",
+            requireConfirmation: false,
+            confirmText: "验证并删除")
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return false;
+        }
+
+        try
+        {
+            var opened = await _notesService.OpenEncryptedAsync(
+                note.Id,
+                dialog.Password);
+            opened.Key.Dispose();
+            return true;
+        }
+        catch (NotePasswordException)
+        {
+            MessageBox.Show(
+                this,
+                "密码错误，已取消删除。",
+                "无法删除加密笔记",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return false;
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("验证加密笔记失败", exception);
+            return false;
+        }
+    }
+
+    private async Task DeleteFolderByIdAsync(string folderId)
+    {
+        var folder = _noteFolders.FirstOrDefault(item => item.Id == folderId);
+        if (folder is null)
+        {
+            return;
+        }
+
+        var folderIds = GetNoteFolderSubtreeIds(folderId);
+        var affectedNotes = _noteItems
+            .Where(note =>
+                note.FolderId is not null &&
+                folderIds.Contains(note.FolderId))
+            .ToList();
+        var parentName = folder.ParentId is null
+            ? "笔记根目录"
+            : _noteFolders.FirstOrDefault(item => item.Id == folder.ParentId)?.Name
+              ?? "上级目录";
+        var detail = affectedNotes.Count == 0
+            ? "目录内没有笔记。"
+            : $"目录内 {affectedNotes.Count:N0} 篇笔记将移动到“{parentName}”，不会被删除。";
+        var confirmation = MessageBox.Show(
+            this,
+            $"确定删除目录“{folder.Name}”及其子目录吗？\n\n{detail}",
+            "删除笔记目录",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        try
+        {
+            await SaveCurrentNoteAsync(force: true);
+            var nextSortOrder = _noteItems
+                .Where(note =>
+                    note.FolderId == folder.ParentId &&
+                    !folderIds.Contains(note.FolderId ?? ""))
+                .Select(note => note.SortOrder)
+                .DefaultIfEmpty(-1)
+                .Max() + 1;
+            foreach (var note in affectedNotes)
+            {
+                note.FolderId = folder.ParentId;
+                note.SortOrder = nextSortOrder++;
+            }
+            if (_currentNote is not null &&
+                affectedNotes.Any(note => note.Id == _currentNote.Id))
+            {
+                _currentNote.FolderId = folder.ParentId;
+            }
+
+            if (affectedNotes.Count > 0)
+            {
+                await _notesService.SaveNoteOrderAsync(_noteItems);
+            }
+            await _notesService.DeleteFolderAsync(folderId);
+            await RefreshNotesAsync(_currentNote?.Id, activateSelected: false);
+            StatusText.Text =
+                $"已删除笔记目录“{folder.Name}”，其中的笔记已移动到“{parentName}”。";
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("删除笔记目录失败", exception);
+        }
+    }
+
+    private HashSet<string> GetNoteFolderSubtreeIds(string folderId)
+    {
+        var ids = new HashSet<string>(StringComparer.Ordinal) { folderId };
+        var added = true;
+        while (added)
+        {
+            added = false;
+            foreach (var folder in _noteFolders)
+            {
+                if (folder.ParentId is not null &&
+                    ids.Contains(folder.ParentId) &&
+                    ids.Add(folder.Id))
+                {
+                    added = true;
+                }
+            }
+        }
+
+        return ids;
+    }
+
+    private void NoteEditor_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_suppressNoteEditorEvents)
+        {
+            return;
+        }
+
+        if (NoteCharacterCountText is null || NoteBodyEditor is null)
+        {
+            return;
+        }
+
+        if (ReferenceEquals(sender, NoteBodyEditor))
+        {
+            _selectedNoteImage = null;
+        }
+
+        NoteCharacterCountText.Text =
+            $"{GetNoteBodyPlainText().Length:N0} 字符";
+        if (_currentNote is null ||
+            (_currentNote.IsEncrypted && _currentNoteKey is null))
+        {
+            return;
+        }
+
+        MarkCurrentNoteDirty();
+    }
+
+    private void MarkCurrentNoteDirty()
+    {
+        _noteDirty = true;
+        _noteEditVersion++;
+        NoteSaveStateText.Text = "有未保存修改 · Ctrl+S 保存 · 3 分钟内自动保存";
+        if (!_noteAutoSaveTimer.IsEnabled)
+        {
+            _noteAutoSaveTimer.Start();
+        }
+    }
+
+    private void NoteBoldButton_Click(object sender, RoutedEventArgs e)
+    {
+        var currentWeight = NoteBodyEditor.Selection.GetPropertyValue(
+            TextElement.FontWeightProperty);
+        var isBold = currentWeight is FontWeight weight &&
+                     weight == FontWeights.Bold;
+        NoteBodyEditor.Selection.ApplyPropertyValue(
+            TextElement.FontWeightProperty,
+            isBold ? FontWeights.Normal : FontWeights.Bold);
+        MarkCurrentNoteDirty();
+        UpdateNoteBoldButtonState();
+        NoteBodyEditor.Focus();
+    }
+
+    private void NoteTextColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string colorValue })
+        {
+            return;
+        }
+
+        Brush brush;
+        if (string.Equals(colorValue, "Default", StringComparison.Ordinal))
+        {
+            brush = NoteBodyEditor.Foreground;
+        }
+        else
+        {
+            brush = new SolidColorBrush(
+                (Color)ColorConverter.ConvertFromString(colorValue));
+        }
+
+        NoteBodyEditor.Selection.ApplyPropertyValue(
+            TextElement.ForegroundProperty,
+            brush);
+        MarkCurrentNoteDirty();
+        NoteBodyEditor.Focus();
+    }
+
+    private void UpdateNoteBoldButtonState()
+    {
+        if (NoteBoldButton is null)
+        {
+            return;
+        }
+
+        var currentWeight = NoteBodyEditor.Selection.GetPropertyValue(
+            TextElement.FontWeightProperty);
+        var isBold = currentWeight is FontWeight weight &&
+                     weight == FontWeights.Bold;
+        NoteBoldButton.Background = isBold
+            ? (Brush)FindResource("SelectionBrush")
+            : Brushes.Transparent;
+        NoteBoldButton.BorderBrush = isBold
+            ? (Brush)FindResource("PrimaryBrush")
+            : (Brush)FindResource("AppBorderBrush");
+    }
+
+    private async void NoteBodyTextBox_Pasting(
+        object sender,
+        DataObjectPastingEventArgs e)
+    {
+        if (!e.DataObject.GetDataPresent(DataFormats.Bitmap) &&
+            e.DataObject.GetDataPresent(DataFormats.FileDrop) == false &&
+            e.DataObject.GetDataPresent(DataFormats.UnicodeText) &&
+            e.DataObject.GetData(DataFormats.UnicodeText) is string text)
+        {
+            e.DataObject = new DataObject(DataFormats.UnicodeText, text);
+        }
+
+        if (!TryGetClipboardImage(out var image))
+        {
+            return;
+        }
+
+        e.CancelCommand();
+        await PasteImageAsync(image);
+    }
+
+    private async void NoteBodyTextBox_PreviewKeyDown(
+        object sender,
+        KeyEventArgs e)
+    {
+        if (e.Key == Key.V &&
+            Keyboard.Modifiers.HasFlag(ModifierKeys.Control) &&
+            HasClipboardImage())
+        {
+            e.Handled = true;
+            if (TryGetClipboardImage(out var image))
+            {
+                await PasteImageAsync(image);
+            }
+        }
+    }
+
+    private async void NoteBodyTextBox_CommandExecuted(
+        object sender,
+        ExecutedRoutedEventArgs e)
+    {
+        if (e.Command == EditingCommands.ToggleItalic ||
+            e.Command == EditingCommands.ToggleUnderline)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Command == EditingCommands.ToggleBold)
+        {
+            _ = Dispatcher.BeginInvoke(
+                DispatcherPriority.Background,
+                new Action(() =>
+                {
+                    MarkCurrentNoteDirty();
+                    UpdateNoteBoldButtonState();
+                }));
+            return;
+        }
+
+        if (e.Command == ApplicationCommands.Copy &&
+            _selectedNoteImage is not null &&
+            NoteBodyEditor.Selection.Text.Length <= 1)
+        {
+            CopyNoteImageToClipboard(_selectedNoteImage);
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Command != ApplicationCommands.Paste)
+        {
+            return;
+        }
+
+        if (!HasClipboardImage())
+        {
+            _ = Dispatcher.BeginInvoke(
+                DispatcherPriority.Background,
+                new Action(NormalizeNoteBodyFontFamily));
+            return;
+        }
+
+        e.Handled = true;
+        if (TryGetClipboardImage(out var image))
+        {
+            await PasteImageAsync(image);
+        }
+    }
+
+    private async Task PasteImageAsync(BitmapSource image)
+    {
+        if (_currentNote is null ||
+            (_currentNote.IsEncrypted && _currentNoteKey is null))
+        {
+            StatusText.Text = "请先新建或解锁笔记，再粘贴图片。";
+            return;
+        }
+
+        image = EnsureVisibleAlpha(image);
+        if (image.CanFreeze)
+        {
+            image.Freeze();
+        }
+
+        try
+        {
+            var pngBytes = EncodeBitmap(image);
+            string markdown;
+            if (_currentNote.IsEncrypted)
+            {
+                var relativePath = await _notesService.SaveEncryptedAttachmentAsync(
+                    _currentNote.Id,
+                    ".png",
+                    pngBytes,
+                    _currentNoteKey!);
+                markdown = $"![图片]({relativePath})";
+            }
+            else
+            {
+                var relativePath = await _notesService.SaveAttachmentAsync(
+                    _currentNote.Id,
+                    ".png",
+                    pngBytes);
+                markdown = $"![图片]({relativePath})";
+            }
+
+            InsertInlineImage(markdown, image);
+            StatusText.Text = "图片已粘贴到笔记。";
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("粘贴图片失败", exception);
+        }
+    }
+
+    private static bool HasClipboardImage()
+    {
+        try
+        {
+            return Clipboard.ContainsImage() ||
+                   Clipboard.ContainsFileDropList() &&
+                   Clipboard.GetFileDropList().Cast<string>().Any(IsImageFile);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool TryGetClipboardImage(out BitmapSource image)
+    {
+        image = null!;
+        try
+        {
+            if (Clipboard.ContainsImage() && Clipboard.GetImage() is { } bitmap)
+            {
+                image = bitmap;
+                return true;
+            }
+
+            if (Clipboard.ContainsFileDropList())
+            {
+                var imagePath = Clipboard.GetFileDropList()
+                    .Cast<string>()
+                    .FirstOrDefault(IsImageFile);
+                if (imagePath is not null)
+                {
+                    var fileImage = new BitmapImage();
+                    fileImage.BeginInit();
+                    fileImage.CacheOption = BitmapCacheOption.OnLoad;
+                    fileImage.UriSource = new Uri(imagePath, UriKind.Absolute);
+                    fileImage.EndInit();
+                    fileImage.Freeze();
+                    image = fileImage;
+                    return true;
+                }
+            }
+        }
+        catch (Exception exception) when (
+            exception is ExternalException or IOException or NotSupportedException)
+        {
+            AppDiagnostics.LogException("读取剪贴板图片", exception);
+        }
+
+        return false;
+    }
+
+    private static bool IsImageFile(string path) =>
+        Path.GetExtension(path).ToLowerInvariant() is
+            ".png" or ".jpg" or ".jpeg" or ".bmp" or ".gif";
+
+    private void InsertInlineImage(string markdownReference, BitmapSource source)
+    {
+        if (!NoteBodyEditor.Selection.IsEmpty)
+        {
+            NoteBodyEditor.Selection.Text = "";
+        }
+
+        var caret = NoteBodyEditor.CaretPosition;
+        var paragraph = caret.Paragraph;
+        if (paragraph is null)
+        {
+            paragraph = new Paragraph();
+            NoteBodyEditor.Document.Blocks.Add(paragraph);
+            caret = paragraph.ContentEnd;
+        }
+
+        Inline? insertionTarget = null;
+        var inlineList = paragraph.Inlines.ToList();
+        for (var index = 0; index < inlineList.Count; index++)
+        {
+            var inline = inlineList[index];
+            if (inline.ElementStart.CompareTo(caret) >= 0)
+            {
+                insertionTarget = inline;
+                break;
+            }
+
+            if (inline is Run run &&
+                inline.ElementStart.CompareTo(caret) < 0 &&
+                inline.ElementEnd.CompareTo(caret) > 0)
+            {
+                var offset = new TextRange(run.ContentStart, caret).Text.Length;
+                if (offset <= 0)
+                {
+                    insertionTarget = inline;
+                }
+                else if (offset >= run.Text.Length)
+                {
+                    insertionTarget = index + 1 < inlineList.Count
+                        ? inlineList[index + 1]
+                        : null;
+                }
+                else
+                {
+                    var trailingText = run.Text[offset..];
+                    run.Text = run.Text[..offset];
+                    var trailingRun = new Run(trailingText);
+                    paragraph.Inlines.InsertAfter(run, trailingRun);
+                    insertionTarget = trailingRun;
+                }
+                break;
+            }
+        }
+
+        var container = CreateInlineImageContainer(markdownReference, source);
+        if (insertionTarget is null)
+        {
+            paragraph.Inlines.Add(container);
+        }
+        else
+        {
+            paragraph.Inlines.InsertBefore(insertionTarget, container);
+        }
+        NoteBodyEditor.CaretPosition =
+            container.ElementEnd.GetInsertionPosition(LogicalDirection.Forward)
+            ?? container.ElementEnd;
+        NoteBodyEditor.Focus();
+        _noteDirty = true;
+        _noteEditVersion++;
+        NoteCharacterCountText.Text = $"{GetNoteBodyPlainText().Length:N0} 字符";
+        NoteSaveStateText.Text = "有未保存修改 · 3 分钟内自动保存";
+        if (!_noteAutoSaveTimer.IsEnabled)
+        {
+            _noteAutoSaveTimer.Start();
+        }
+    }
+
+    private InlineUIContainer CreateInlineImageContainer(
+        string markdownReference,
+        BitmapSource source)
+    {
+        var previewGrid = new Grid();
+        var imageFrame = new Border
+        {
+            Padding = new Thickness(5),
+            Background = (Brush)FindResource("SurfaceAltBrush"),
+            BorderBrush = (Brush)FindResource("AppBorderBrush"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(7),
+            Child = new Image
+            {
+                Source = source,
+                MaxWidth = 620,
+                MaxHeight = 360,
+                Stretch = Stretch.Uniform
+            }
+        };
+        previewGrid.Children.Add(imageFrame);
+        previewGrid.Children.Add(new Border
+        {
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 5, 5, 0),
+            Padding = new Thickness(6, 2, 6, 2),
+            Background = (Brush)FindResource("PrimaryBrush"),
+            CornerRadius = new CornerRadius(5),
+            Child = new TextBlock
+            {
+                Text = "复制",
+                FontSize = 10,
+                Foreground = (Brush)FindResource("OnPrimaryBrush")
+            }
+        });
+
+        var copyTarget = new Border
+        {
+            Background = Brushes.Transparent,
+            Cursor = Cursors.Hand,
+            ToolTip = "单击复制原图，右键打开复制菜单",
+            Child = previewGrid,
+            Tag = imageFrame,
+            Focusable = true
+        };
+        copyTarget.PreviewMouseLeftButtonDown += (_, e) =>
+        {
+            copyTarget.Focus();
+            SelectInlineImage(imageFrame);
+            CopyNoteImageToClipboard(source);
+            e.Handled = true;
+        };
+        var menu = new ContextMenu();
+        var copyItem = new MenuItem { Header = "复制图片" };
+        copyItem.Click += (_, _) =>
+        {
+            SelectInlineImage(imageFrame);
+            CopyNoteImageToClipboard(source);
+        };
+        menu.Items.Add(copyItem);
+        copyTarget.ContextMenu = menu;
+        return new InlineUIContainer(copyTarget)
+        {
+            BaselineAlignment = BaselineAlignment.Center,
+            Tag = markdownReference
+        };
+    }
+
+    private void SelectInlineImage(Border selectedFrame)
+    {
+        foreach (var paragraph in NoteBodyEditor.Document.Blocks.OfType<Paragraph>())
+        {
+            foreach (var container in paragraph.Inlines.OfType<InlineUIContainer>())
+            {
+                if (container.Child is Border { Tag: Border frame })
+                {
+                    frame.BorderBrush = ReferenceEquals(frame, selectedFrame)
+                        ? (Brush)FindResource("PrimaryBrush")
+                        : (Brush)FindResource("AppBorderBrush");
+                    frame.BorderThickness = ReferenceEquals(frame, selectedFrame)
+                        ? new Thickness(2)
+                        : new Thickness(1);
+                }
+            }
+        }
+    }
+
+    private string GetNoteBodyPlainText() =>
+        new TextRange(
+                NoteBodyEditor.Document.ContentStart,
+                NoteBodyEditor.Document.ContentEnd)
+            .Text;
+
+    private string SerializeNoteBody()
+    {
+        var builder = new StringBuilder();
+        var firstBlock = true;
+        foreach (var block in NoteBodyEditor.Document.Blocks)
+        {
+            if (!firstBlock)
+            {
+                builder.Append('\n');
+            }
+            firstBlock = false;
+            if (block is not Paragraph paragraph)
+            {
+                builder.Append(
+                    new TextRange(block.ContentStart, block.ContentEnd).Text);
+                continue;
+            }
+
+            foreach (var inline in paragraph.Inlines)
+            {
+                switch (inline)
+                {
+                    case Run run:
+                        builder.Append(run.Text);
+                        break;
+                    case LineBreak:
+                        builder.Append('\n');
+                        break;
+                    case InlineUIContainer { Tag: string reference }:
+                        builder.Append(reference);
+                        break;
+                    default:
+                        builder.Append(
+                            new TextRange(inline.ContentStart, inline.ContentEnd).Text);
+                        break;
+                }
+            }
+        }
+
+        return builder.ToString();
+    }
+
+    private string? SerializeNoteBodyRichText()
+    {
+        try
+        {
+            var data = new NoteRichTextData();
+            var firstBlock = true;
+            foreach (var block in NoteBodyEditor.Document.Blocks)
+            {
+                if (!firstBlock)
+                {
+                    data.Inlines.Add(new NoteRichInline { Kind = "line" });
+                }
+                firstBlock = false;
+
+                if (block is not Paragraph paragraph)
+                {
+                    data.Inlines.Add(new NoteRichInline
+                    {
+                        Kind = "text",
+                        Text = new TextRange(
+                            block.ContentStart,
+                            block.ContentEnd).Text
+                    });
+                    continue;
+                }
+
+                foreach (var inline in paragraph.Inlines)
+                {
+                    switch (inline)
+                    {
+                        case Run run:
+                            data.Inlines.Add(new NoteRichInline
+                            {
+                                Kind = "text",
+                                Text = run.Text,
+                                FontFamily = TextElement.GetFontFamily(run).Source,
+                                FontWeight = run.ReadLocalValue(
+                                    TextElement.FontWeightProperty) is FontWeight
+                                    ? TextElement.GetFontWeight(run).ToString()
+                                    : null,
+                                FontStyle = TextElement.GetFontStyle(run).ToString(),
+                                FontStretch = TextElement.GetFontStretch(run).ToString(),
+                                Foreground = (run.ReadLocalValue(
+                                        TextElement.ForegroundProperty)
+                                    as SolidColorBrush)?.Color.ToString()
+                            });
+                            break;
+                        case LineBreak:
+                            data.Inlines.Add(new NoteRichInline { Kind = "line" });
+                            break;
+                        case InlineUIContainer { Tag: string reference }:
+                            data.Inlines.Add(new NoteRichInline
+                            {
+                                Kind = "image",
+                                ImageReference = reference
+                            });
+                            break;
+                        default:
+                            data.Inlines.Add(new NoteRichInline
+                            {
+                                Kind = "text",
+                                Text = new TextRange(
+                                    inline.ContentStart,
+                                    inline.ContentEnd).Text
+                            });
+                            break;
+                    }
+                }
+            }
+
+            return JsonSerializer.Serialize(data);
+        }
+        catch (Exception exception)
+        {
+            AppDiagnostics.LogException("保存笔记富文本格式", exception);
+            return null;
+        }
+    }
+
+    private bool TryLoadNoteBodyRichText(string? richTextData)
+    {
+        if (string.IsNullOrWhiteSpace(richTextData))
+        {
+            return false;
+        }
+
+        try
+        {
+            var data = JsonSerializer.Deserialize<NoteRichTextData>(richTextData);
+            if (data?.Version != 1 || data.Inlines.Count == 0)
+            {
+                return false;
+            }
+
+            var paragraph = new Paragraph { Margin = new Thickness(0) };
+            foreach (var inline in data.Inlines)
+            {
+                if (inline.Kind == "line")
+                {
+                    paragraph.Inlines.Add(new LineBreak());
+                    continue;
+                }
+
+                if (inline.Kind == "image" &&
+                    !string.IsNullOrWhiteSpace(inline.ImageReference))
+                {
+                    var image = LoadNoteImage(
+                        ExtractNoteImageUrl(inline.ImageReference));
+                    if (image is not null)
+                    {
+                        paragraph.Inlines.Add(CreateInlineImageContainer(
+                            inline.ImageReference,
+                            image));
+                    }
+                    else
+                    {
+                        paragraph.Inlines.Add(new Run(inline.ImageReference));
+                    }
+                    continue;
+                }
+
+                var run = new Run(inline.Text);
+                ApplyStoredTextFormatting(run, inline);
+                paragraph.Inlines.Add(run);
+            }
+
+            NoteBodyEditor.Document.Blocks.Clear();
+            NoteBodyEditor.Document.Blocks.Add(paragraph);
+            NoteBodyEditor.CaretPosition = paragraph.ContentEnd;
+            return true;
+        }
+        catch (Exception exception)
+        {
+            AppDiagnostics.LogException("读取笔记富文本格式", exception);
+            return false;
+        }
+    }
+
+    private static string ExtractNoteImageUrl(string markdownReference)
+    {
+        var match = NoteImageRegex.Match(markdownReference);
+        return match.Success
+            ? match.Groups["url"].Value
+            : markdownReference;
+    }
+
+    private void ApplyStoredTextFormatting(
+        Run run,
+        NoteRichInline inline)
+    {
+        if (!string.IsNullOrWhiteSpace(inline.FontFamily))
+        {
+            run.FontFamily = new FontFamily(inline.FontFamily);
+        }
+        if (!string.IsNullOrWhiteSpace(inline.FontWeight) &&
+            new FontWeightConverter().ConvertFromInvariantString(
+                inline.FontWeight) is FontWeight weight)
+        {
+            run.FontWeight = weight;
+        }
+        if (!string.IsNullOrWhiteSpace(inline.FontStyle) &&
+            new FontStyleConverter().ConvertFromInvariantString(
+                inline.FontStyle) is FontStyle style)
+        {
+            run.FontStyle = style;
+        }
+        if (!string.IsNullOrWhiteSpace(inline.FontStretch) &&
+            new FontStretchConverter().ConvertFromInvariantString(
+                inline.FontStretch) is FontStretch stretch)
+        {
+            run.FontStretch = stretch;
+        }
+        if (!string.IsNullOrWhiteSpace(inline.Foreground) &&
+            ColorConverter.ConvertFromString(inline.Foreground) is Color color)
+        {
+            run.Foreground = new SolidColorBrush(color);
+        }
+    }
+
+    private static byte[] EncodeBitmap(BitmapSource image)
+    {
+        image = EnsureVisibleAlpha(image);
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(image));
+        using var output = new MemoryStream();
+        encoder.Save(output);
+        return output.ToArray();
+    }
+
+    private static BitmapSource EnsureVisibleAlpha(BitmapSource source)
+    {
+        var converted = source.Format == PixelFormats.Bgra32
+            ? source
+            : new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
+        var stride = converted.PixelWidth * 4;
+        var pixels = new byte[stride * converted.PixelHeight];
+        converted.CopyPixels(pixels, stride, 0);
+
+        var hasVisibleAlpha = false;
+        for (var index = 3; index < pixels.Length; index += 4)
+        {
+            if (pixels[index] != 0)
+            {
+                hasVisibleAlpha = true;
+                break;
+            }
+        }
+
+        if (hasVisibleAlpha)
+        {
+            if (converted.CanFreeze)
+            {
+                converted.Freeze();
+            }
+            return converted;
+        }
+
+        for (var index = 3; index < pixels.Length; index += 4)
+        {
+            pixels[index] = 255;
+        }
+
+        var repaired = BitmapSource.Create(
+            converted.PixelWidth,
+            converted.PixelHeight,
+            converted.DpiX,
+            converted.DpiY,
+            PixelFormats.Bgra32,
+            null,
+            pixels,
+            stride);
+        repaired.Freeze();
+        return repaired;
+    }
+
+    private void LoadNoteBodyMarkdown(string markdown)
+    {
+        var paragraph = new Paragraph { Margin = new Thickness(0) };
+        var cursor = 0;
+        foreach (Match match in NoteImageRegex.Matches(markdown))
+        {
+            if (match.Index > cursor)
+            {
+                AppendTextWithLineBreaks(
+                    paragraph,
+                    markdown[cursor..match.Index]);
+            }
+
+            var source = LoadNoteImage(match.Groups["url"].Value);
+            if (source is null)
+            {
+                AppendTextWithLineBreaks(paragraph, match.Value);
+            }
+            else
+            {
+                paragraph.Inlines.Add(CreateInlineImageContainer(match.Value, source));
+            }
+            cursor = match.Index + match.Length;
+        }
+
+        if (cursor < markdown.Length)
+        {
+            AppendTextWithLineBreaks(paragraph, markdown[cursor..]);
+        }
+
+        NoteBodyEditor.Document.Blocks.Clear();
+        NoteBodyEditor.Document.Blocks.Add(paragraph);
+        NoteBodyEditor.CaretPosition = paragraph.ContentEnd;
+    }
+
+    private static void AppendTextWithLineBreaks(Paragraph paragraph, string text)
+    {
+        var lines = text
+            .Replace("\r\n", "\n")
+            .Replace('\r', '\n')
+            .Split('\n');
+        for (var index = 0; index < lines.Length; index++)
+        {
+            if (index > 0)
+            {
+                paragraph.Inlines.Add(new LineBreak());
+            }
+
+            if (lines[index].Length > 0)
+            {
+                paragraph.Inlines.Add(new Run(lines[index]));
+            }
+        }
+    }
+
+    private void CopyNoteImageToClipboard(BitmapSource image)
+    {
+        try
+        {
+            _selectedNoteImage = image;
+            Clipboard.SetImage(image);
+            StatusText.Text = "图片已复制到剪贴板。";
+        }
+        catch (Exception exception)
+        {
+            ShowNoteError("复制图片失败", exception);
+        }
+    }
+
+    private void NoteBodyEditor_PreviewMouseWheel(
+        object sender,
+        MouseWheelEventArgs e)
+    {
+        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            return;
+        }
+
+        e.Handled = true;
+        var step = e.Delta > 0 ? 0.1 : -0.1;
+        _noteZoom = Math.Clamp(
+            Math.Round(_noteZoom + step, 2),
+            0.5,
+            2.0);
+        ApplyNoteZoom();
+    }
+
+    private void NoteBodyEditor_SelectionChanged(object sender, RoutedEventArgs e)
+    {
+        if (NoteBodyEditor.Selection.Text.Length > 1)
+        {
+            _selectedNoteImage = null;
+        }
+        UpdateNoteBoldButtonState();
+    }
+
+    private void ApplyNoteZoom()
+    {
+        NoteBodyEditor.FontSize = 14 * _noteZoom;
+        NoteBodyEditor.Document.LineHeight = 22 * _noteZoom;
+        NoteZoomText.Text = $"缩放 {_noteZoom:P0}";
+        foreach (var paragraph in NoteBodyEditor.Document.Blocks.OfType<Paragraph>())
+        {
+            foreach (var container in paragraph.Inlines.OfType<InlineUIContainer>())
+            {
+                if (container.Child is Border { Child: Grid grid } &&
+                    grid.Children.OfType<Border>().FirstOrDefault()?.Child is Image image)
+                {
+                    image.LayoutTransform = new ScaleTransform(_noteZoom, _noteZoom);
+                }
+            }
+        }
+    }
+
+    private void NormalizeNoteBodyFontFamily()
+    {
+        if (NoteBodyEditor?.Document is null)
+        {
+            return;
+        }
+
+        var selectionStart = NoteBodyEditor.Selection.Start;
+        var selectionEnd = NoteBodyEditor.Selection.End;
+        var range = new TextRange(
+            NoteBodyEditor.Document.ContentStart,
+            NoteBodyEditor.Document.ContentEnd);
+        range.ApplyPropertyValue(
+            TextElement.FontFamilyProperty,
+            NoteBodyEditor.FontFamily);
+        range.ApplyPropertyValue(
+            TextElement.FontStyleProperty,
+            FontStyles.Normal);
+        range.ApplyPropertyValue(
+            TextElement.FontStretchProperty,
+            FontStretches.Normal);
+        NoteBodyEditor.Selection.Select(selectionStart, selectionEnd);
+    }
+
+    private BitmapSource? LoadNoteImage(string value)
+    {
+        try
+        {
+            if (value.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
+            {
+                var comma = value.IndexOf(',');
+                if (comma < 0)
+                {
+                    return null;
+                }
+
+                var bytes = Convert.FromBase64String(value[(comma + 1)..]);
+                using var stream = new MemoryStream(bytes);
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.StreamSource = stream;
+                image.EndInit();
+                return EnsureVisibleAlpha(image);
+            }
+
+            if (_currentNote is null)
+            {
+                return null;
+            }
+
+            var attachmentBytes = _notesService.ReadAttachmentBytes(
+                _currentNote.Id,
+                value,
+                _currentNoteKey);
+            if (attachmentBytes is null)
+            {
+                return null;
+            }
+
+            using var attachmentStream = new MemoryStream(attachmentBytes);
+            var fileImage = new BitmapImage();
+            fileImage.BeginInit();
+            fileImage.CacheOption = BitmapCacheOption.OnLoad;
+            fileImage.StreamSource = attachmentStream;
+            fileImage.EndInit();
+            return EnsureVisibleAlpha(fileImage);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async void NoteAutoSaveTimer_Tick(object? sender, EventArgs e)
+    {
+        _noteAutoSaveTimer.Stop();
+        try
+        {
+            await SaveCurrentNoteAsync(force: false);
+        }
+        catch (Exception exception)
+        {
+            NoteSaveStateText.Text = "自动保存失败";
+            AppDiagnostics.LogException("自动保存笔记", exception);
+        }
+    }
+
+    private async Task SaveCurrentNoteAsync(bool force)
+    {
+        if (_currentNote is null ||
+            (_currentNote.IsEncrypted && _currentNoteKey is null))
+        {
+            return;
+        }
+
+        await _noteSaveGate.WaitAsync();
+        try
+        {
+            var note = _currentNote;
+            if (note is null ||
+                (note.IsEncrypted && _currentNoteKey is null) ||
+                (!force && !_noteDirty))
+            {
+                return;
+            }
+
+            var content = new NoteContent(
+                NoteTitleTextBox.Text,
+                SerializeNoteBody(),
+                SerializeNoteBodyRichText());
+            var editVersion = _noteEditVersion;
+            if (note.IsEncrypted)
+            {
+                await _notesService.SaveEncryptedAsync(
+                    note,
+                    content,
+                    _currentNoteKey!);
+                if (editVersion == _noteEditVersion)
+                {
+                    SetNoteText(note.Title, note.Content, note.RichTextData);
+                }
+            }
+            else
+            {
+                note.Title = content.Title;
+                note.Content = content.Content;
+                note.RichTextData = content.RichTextData;
+                await _notesService.SaveAsync(note);
+            }
+
+            await RefreshNotesAsync(note.Id, activateSelected: false);
+            if (editVersion == _noteEditVersion)
+            {
+                _noteDirty = false;
+                NoteSaveStateText.Text = $"已保存 {DateTime.Now:HH:mm:ss}";
+            }
+            else
+            {
+                _noteDirty = true;
+                NoteSaveStateText.Text = "保存期间有新修改，等待下次保存";
+            }
+        }
+        finally
+        {
+            _noteSaveGate.Release();
+        }
+    }
+
+    private bool ShouldSaveNoteBeforeClose() =>
+        _currentNote is not null &&
+        _noteDirty &&
+        (!_currentNote.IsEncrypted || _currentNoteKey is not null);
+
+    private void ContinueClosingAfterNoteDecision()
+    {
+        Dispatcher.BeginInvoke(
+            DispatcherPriority.Background,
+            new Action(Close));
+    }
+
+    private void LockCurrentNote(bool showCurrentState)
+    {
+        _noteAutoSaveTimer.Stop();
+        _currentNoteKey?.Dispose();
+        _currentNoteKey = null;
+        _noteDirty = false;
+        SetNoteText("", "");
+        if (showCurrentState && _currentNote?.IsEncrypted == true)
+        {
+            _currentNote.Title = "";
+            _currentNote.Content = "";
+            ShowEncryptedNoteLocked();
+            return;
+        }
+
+        _currentNote = null;
+    }
+
+    private void SetNoteText(
+        string title,
+        string content,
+        string? richTextData = null)
+    {
+        _selectedNoteImage = null;
+        _suppressNoteEditorEvents = true;
+        try
+        {
+            NoteTitleTextBox.Text = title;
+            if (!TryLoadNoteBodyRichText(richTextData))
+            {
+                LoadNoteBodyMarkdown(content);
+            }
+            NormalizeNoteBodyFontFamily();
+            NoteCharacterCountText.Text = $"{content.Length:N0} 字符";
+            ApplyNoteZoom();
+            UpdateNoteBoldButtonState();
+        }
+        finally
+        {
+            _suppressNoteEditorEvents = false;
+        }
+    }
+
+    private void ShowNoteError(string title, Exception exception)
+    {
+        var logPath = AppDiagnostics.LogException(title, exception);
+        StatusText.Text = AppDiagnostics.GetUserMessage(exception);
+        MessageBox.Show(
+            this,
+            $"{AppDiagnostics.GetUserMessage(exception)}\n\n诊断日志：\n{logPath}",
+            title,
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
     }
 
     private async void SearchButton_Click(object sender, RoutedEventArgs e)
@@ -897,9 +3668,10 @@ public partial class MainWindow : Window
         }
 
         SetConfigurationButtonsEnabled(false);
-        StatusText.Text = "正在导出所有记录、收藏和报告...";
+        StatusText.Text = "正在保存笔记并导出所有记录、收藏和报告...";
         try
         {
+            await SaveCurrentNoteAsync(force: true);
             var result = await _configurationPackages.ExportAsync(
                 dialog.FileName,
                 GetAppVersion(),
@@ -950,7 +3722,7 @@ public partial class MainWindow : Window
 
         var confirmation = MessageBox.Show(
             this,
-            "导入会替换当前电脑上的报告、查询记录、收藏和 Star 快照。\n\n" +
+            "导入会替换当前电脑上的笔记、报告、查询记录、收藏和 Star 快照。\n\n" +
             "程序会先自动备份当前数据。是否继续？",
             "确认导入配置",
             MessageBoxButton.YesNo,
@@ -968,6 +3740,8 @@ public partial class MainWindow : Window
                 dialog.FileName,
                 GetAppVersion(),
                 CancellationToken.None);
+            LockCurrentNote(showCurrentState: false);
+            _noteItems = [];
             MessageBox.Show(
                 this,
                 $"导入完成，共导入 {result.ImportedFileCount:N0} 个文件，" +
@@ -1033,6 +3807,28 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (!ReferenceEquals(WorkspaceTabs.SelectedItem, NotesTab) &&
+            _currentNote is not null)
+        {
+            try
+            {
+                await SaveCurrentNoteAsync(force: true);
+            }
+            catch (Exception exception)
+            {
+                AppDiagnostics.LogException("离开笔记页前保存", exception);
+            }
+            finally
+            {
+                LockCurrentNote(showCurrentState: false);
+            }
+        }
+        else if (ReferenceEquals(WorkspaceTabs.SelectedItem, NotesTab) &&
+                 NoteTree.SelectedItem is NoteTreeItem { Note: { } selectedNote })
+        {
+            await ActivateNoteAsync(selectedNote);
+        }
+
         if (ReferenceEquals(WorkspaceTabs.SelectedItem, CombinedFavoritesTab))
         {
             await RefreshSearchDirectoriesAsync();
@@ -1056,6 +3852,7 @@ public partial class MainWindow : Window
             GlobalCenterColumn,
             GlobalRightColumn,
             280);
+        NotesLeftColumn.Width = new GridLength(280);
         SaveLayoutSettings();
         StatusText.Text = "已恢复默认面板布局。";
     }
@@ -1091,6 +3888,8 @@ public partial class MainWindow : Window
             GlobalRightColumn,
             _appSettings.GlobalLeftPanelWidth,
             _appSettings.GlobalRightPanelWidth);
+        NotesLeftColumn.Width = new GridLength(
+            Math.Max(NotesLeftColumn.MinWidth, _appSettings.NotesLeftPanelWidth));
     }
 
     private void SaveLayoutSettings()
@@ -1115,6 +3914,7 @@ public partial class MainWindow : Window
         _appSettings.FindRightPanelWidth = GetPanelWidth(FindRightColumn);
         _appSettings.GlobalLeftPanelWidth = GetPanelWidth(GlobalLeftColumn);
         _appSettings.GlobalRightPanelWidth = GetPanelWidth(GlobalRightColumn);
+        _appSettings.NotesLeftPanelWidth = GetPanelWidth(NotesLeftColumn);
 
         try
         {
@@ -2709,7 +5509,7 @@ public partial class MainWindow : Window
     {
         var dialog = new FolderNameDialog(
             "新建收藏目录",
-            "目录名称会显示在“我的收藏”中。")
+            "目录名称会显示在收藏中。")
         {
             Owner = this
         };

@@ -155,29 +155,33 @@
     {
       "path": "docs/assets/main-workflow-dark.png",
       "description": "深色主题展示统一表格、输入框、焦点与滚动条状态。"
+    },
+    {
+      "path": "docs/assets/notes-workbench.png",
+      "description": "笔记工作区展示目录树、富文本工具栏、正文编辑和加密笔记入口。"
     }
   ],
   "artifacts": [
     {
-      "path": "release-build/LocalGithubLibrary-0.3.1-win-x64.zip",
+      "path": "release-build/LocalGithubLibrary-0.4.0-win-x64.zip",
       "role": "standard",
-      "description": "推荐的 Windows x64 标准发布包，包含主程序与 CPU 原生运行库。",
+      "description": "推荐的 Windows x64 标准发布包，包含 0.4.0 主程序与 CPU 原生运行库。",
       "localized_descriptions": {
-        "zh-CN": "推荐的 Windows x64 标准发布包，包含主程序与 CPU 原生运行库。",
-        "zh-TW": "推薦的 Windows x64 標準發佈包，包含主程式與 CPU 原生執行階段。",
-        "en": "Recommended Windows x64 package with the application and CPU runtime."
+        "zh-CN": "推荐的 Windows x64 标准发布包，包含 0.4.0 主程序与 CPU 原生运行库。",
+        "zh-TW": "推薦的 Windows x64 標準發佈包，包含 0.4.0 主程式與 CPU 原生執行階段。",
+        "en": "Recommended Windows x64 package with the 0.4.0 application and CPU runtime."
       },
       "required": true,
-      "download_name": "LocalGithubLibrary-0.3.1-win-x64.zip"
+      "download_name": "LocalGithubLibrary-0.4.0-win-x64.zip"
     },
     {
       "path": "release-build/GitHubTopicReports.exe",
       "role": "executable",
-      "description": "主程序 EXE，适合已有 runtimes 目录的用户升级。",
+      "description": "0.4.0 主程序 EXE，适合已有 runtimes 目录的用户升级。",
       "localized_descriptions": {
-        "zh-CN": "主程序 EXE，适合已有 runtimes 目录的用户升级。",
-        "zh-TW": "主程式 EXE，適合已有 runtimes 目錄的使用者升級。",
-        "en": "Standalone executable for upgrades that already include the runtime directory."
+        "zh-CN": "0.4.0 主程序 EXE，适合已有 runtimes 目录的用户升级。",
+        "zh-TW": "0.4.0 主程式 EXE，適合已有 runtimes 目錄的使用者升級。",
+        "en": "0.4.0 standalone executable for upgrades that already include the runtime directory."
       },
       "required": true,
       "download_name": "GitHubTopicReports.exe"

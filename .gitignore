@@ -11,3 +11,4 @@ github-token.txt
 *.tmp
 *.ghllm
 *.gguf
+recovery-*/

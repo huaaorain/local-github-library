@@ -13,18 +13,21 @@ public sealed class FavoriteDragGhostAdorner : Adorner
     private readonly string _subtitle;
     private readonly string _title;
     private readonly double _width;
+    private readonly bool _centerOnPointer;
     private Point _position;
 
     public FavoriteDragGhostAdorner(
         FrameworkElement adornedElement,
         string title,
         string subtitle = "拖动以调整收藏顺序",
-        double width = 300)
+        double width = 300,
+        bool centerOnPointer = false)
         : base(adornedElement)
     {
         _title = title;
         _subtitle = subtitle;
         _width = width;
+        _centerOnPointer = centerOnPointer;
         IsHitTestVisible = false;
         SnapsToDevicePixels = true;
         Effect = new DropShadowEffect
@@ -42,9 +45,15 @@ public sealed class FavoriteDragGhostAdorner : Adorner
     {
         var maxLeft = Math.Max(0, AdornedElement.RenderSize.Width - _width);
         var maxTop = Math.Max(0, AdornedElement.RenderSize.Height - GhostHeight);
+        var desiredX = _centerOnPointer
+            ? pointerPosition.X - _width / 2
+            : pointerPosition.X + 14;
+        var desiredY = _centerOnPointer
+            ? pointerPosition.Y - GhostHeight / 2
+            : pointerPosition.Y + 12;
         _position = new Point(
-            Math.Clamp(pointerPosition.X + 14, 0, maxLeft),
-            Math.Clamp(pointerPosition.Y + 12, 0, maxTop));
+            Math.Clamp(desiredX, 0, maxLeft),
+            Math.Clamp(desiredY, 0, maxTop));
         InvalidateVisual();
     }
 

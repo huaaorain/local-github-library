@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.3.1-ff7a45?style=flat-square" alt="Version 0.3.1">
+  <img src="https://img.shields.io/badge/version-0.4.0-ff7a45?style=flat-square" alt="Version 0.4.0">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -93,6 +93,10 @@ GitHub is good at finding one repository, but it is not designed to answer quest
       <td>Create, rename, or delete custom folders; search and batch-favorite repositories while skipping duplicates. Long-press a folder name to reorder folders, or a repository name to reorder projects, with smooth easing animations. Add notes, mark noted projects with an icon, and export all notes to a timestamped TXT file.</td>
     </tr>
     <tr>
+      <td><strong>Local&#8239;notes</strong></td>
+      <td>Organize notes in a folder tree and edit Markdown with inline images, bold text, and six text colors. Supports Ctrl+S, periodic auto-save, image copying, zoom, context actions, and drag ordering. Each note becomes a same-named Markdown file plus an images directory. Encrypted notes store both Markdown and images as ciphertext that can only be opened with the note password.</td>
+    </tr>
+    <tr>
       <td><strong>Insights</strong></td>
       <td>Extract project summaries from README files. An optional local LLM can create Chinese summaries and translations without a hosted inference API.</td>
     </tr>
@@ -115,7 +119,7 @@ GitHub is good at finding one repository, but it is not designed to answer quest
 
 _This is a workflow diagram based on the current source and public feature documentation, not a screenshot of the application._
 
-GitHub APIs and public daily rankings supply discovery data. The workspace turns that data into search results, growth trends, favorites, and summaries, then stores everything in local files. Network access powers discovery; snapshots and reports provide continuity.
+GitHub APIs and public daily rankings supply discovery data. The workspace turns that data into search results, growth trends, favorites, and summaries, then organizes research in folder-based Markdown notes. Network access powers discovery; local notes, snapshots, and reports preserve long-term context.
 
 <a id="screenshots"></a>
 
@@ -125,7 +129,9 @@ GitHub APIs and public daily rankings supply discovery data. The workspace turns
 | --- | --- |
 | ![Local GitHub Library light workspace](docs/assets/main-workflow.png) | ![Local GitHub Library dark workspace](docs/assets/main-workflow-dark.png) |
 
-_Screenshots use non-sensitive demo data. The header theme button switches modes immediately without changing queries, favorites, or reports._
+![Local GitHub Library notes workspace](docs/assets/notes-workbench.png)
+
+_Screenshots use non-sensitive demo data. The notes workspace shows the folder tree, rich-text toolbar, local Markdown editor, and encrypted-note entry._
 
 <a id="quick-start"></a>
 
@@ -135,7 +141,7 @@ _Screenshots use non-sensitive demo data. The header theme button switches modes
 
 | Package | Size | Best for |
 | --- | ---: | --- |
-| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.3.1/LocalGithubLibrary-0.3.1-win-x64.zip) | About 84 MB | Folder drag ordering, layout memory, GitHub sign-in, and local reports |
+| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.4.0/LocalGithubLibrary-0.4.0-win-x64.zip) | About 84 MB | Local notes, folder ordering, GitHub sign-in, and local reports |
 | [LLM model (optional)](docs/models/README.md) | About 1.04 GB | Downloaded separately; application upgrades reuse it |
 
 ### 2. Extract and run
@@ -218,6 +224,16 @@ GitHubReports/
   LLM/
     Packages/            # Optional local models
     prompt.txt
+  Notes/                 # Folder-based local notes
+    Project-notes/
+      Requirements/
+        Requirements.md
+        images/
+    Private/
+      Confidential/
+        Confidential.md.enc
+        images/
+          *.png.enc
 ```
 
 - GitHub tokens are saved through app settings in `github-auth.bin`; advanced users can still use `GITHUB_TOKEN` or `github-token.txt`.
@@ -395,6 +411,7 @@ Release notes: [Open](https://github.com/huaaorain/local-github-library/releases
 - Access to `github.com` and `api.github.com`
 - Network access for search, README retrieval, and current rankings
 - Favorite browsing and downloaded ranking caches work offline
+- Note editing, image management, encrypted notes, and saved-note browsing work offline
 
 ## ⚠️ Known limitations
 
@@ -403,6 +420,8 @@ Release notes: [Open](https://github.com/huaaorain/local-github-library/releases
 - The all-site growth ranking depends on the coverage of the public [OpenGithubs daily ranking](https://github.com/OpenGithubs/github-daily-rank).
 - Only Windows x64 builds are currently provided.
 - The unsigned EXE may trigger a Windows SmartScreen warning.
+- Encryption protects note text and image contents; titles, folder names, and file counts may still be visible from local paths. Forgotten passwords cannot be recovered.
+- Notes from 0.3.x migrate automatically. A previously encrypted note needs to be unlocked and saved before its placeholder folder can be renamed to the real note title.
 - The repository does not currently declare an open-source license.
 
 ## 🔧 Build from source
@@ -436,6 +455,7 @@ Issues and pull requests are welcome. Before submitting:
 
 ## 📝 Release history
 
+- [0.4.0: folder-based notes, rich editing, encrypted images, and safe writes](docs/releases/v0.4.0.en.md)
 - [0.3.1: favorite folder drag ordering and restart layout restoration](docs/releases/v0.3.1.en.md)
 - [0.3.0: GitHub sign-in, private repository search, and secure credential storage](docs/releases/v0.3.0.en.md)
 - [0.2.7: favorite drag ordering, note markers, Windows startup, and default directory view](docs/releases/v0.2.7.en.md)

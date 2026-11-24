@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:models="clr-namespace:GitHubTopicReports.Models"
         mc:Ignorable="d"
         Title="Local GitHub Library"
         Icon="Resources/app.ico"
@@ -18,6 +19,7 @@
         TextOptions.TextFormattingMode="Display"
         Background="{DynamicResource AppBackgroundBrush}"
         Foreground="{DynamicResource TextPrimaryBrush}"
+        PreviewKeyDown="MainWindow_PreviewKeyDown"
         SizeChanged="MainWindow_SizeChanged">
     <AdornerDecorator>
     <Grid Background="{DynamicResource AppBackgroundBrush}">
@@ -43,9 +45,9 @@
                                Margin="0,4,0,0"
                                MaxWidth="520"
                                HorizontalAlignment="Left"
-                               Text="登录 GitHub 后可搜索公开与私有仓库，保存完整报告，并整理到本地收藏目录。"
+                               Text="搜索公开与私有仓库，保存报告、整理收藏，并记录本地 Markdown 笔记。"
                                TextTrimming="CharacterEllipsis"
-                               ToolTip="登录 GitHub 后可搜索公开与私有仓库，保存完整报告，并整理到本地收藏目录。"
+                               ToolTip="搜索公开与私有仓库，保存报告、整理收藏，并记录本地 Markdown 笔记。"
                                Style="{StaticResource QuietTextStyle}" />
                 </StackPanel>
                 <StackPanel Grid.Column="1"
@@ -93,7 +95,7 @@
         <TabControl x:Name="WorkspaceTabs"
                     Margin="12,0,12,0"
                     SelectionChanged="WorkspaceTabs_SelectionChanged">
-            <TabItem x:Name="CombinedFavoritesTab" Header="我的收藏">
+            <TabItem x:Name="CombinedFavoritesTab" Header="收藏">
                 <Grid Margin="0"
                       TextElement.Foreground="{DynamicResource TextPrimaryBrush}">
                     <Grid.RowDefinitions>
@@ -248,26 +250,16 @@
                                                         ToolTip="重命名此目录"
                                                         Style="{StaticResource BorderlessIconButtonStyle}"
                                                         Click="RenameSearchDirectoryButton_Click">
-                                                    <Grid Width="20" Height="20">
-                                                        <Border Width="13"
-                                                                Height="12"
-                                                                HorizontalAlignment="Left"
-                                                                VerticalAlignment="Bottom"
-                                                                Margin="0,0,0,2"
-                                                                BorderBrush="{DynamicResource TextSecondaryBrush}"
-                                                                BorderThickness="1"
-                                                                CornerRadius="1.5" />
-                                                        <Path Data="M 2,15 L 3.25,11.5 L 11.8,3.7 L 14.2,6.3 L 5.6,14.1 Z"
-                                                              Fill="{DynamicResource SurfaceBrush}"
-                                                              Stroke="{DynamicResource TextSecondaryBrush}"
-                                                              StrokeThickness="0.95"
-                                                              StrokeLineJoin="Round" />
-                                                        <Path Data="M 10.7,4.7 L 13.1,7.3"
-                                                              Stroke="{DynamicResource TextSecondaryBrush}"
-                                                              StrokeThickness="0.8"
-                                                              StrokeStartLineCap="Round"
-                                                              StrokeEndLineCap="Round" />
-                                                    </Grid>
+                                                    <Path Width="14"
+                                                          Height="14"
+                                                          Stretch="Uniform"
+                                                          Data="M 2,12 L 2.8,9.2 L 10.5,1.5 C 10.8,1.2 11.2,1.2 11.5,1.5 L 12.5,2.5 C 12.8,2.8 12.8,3.2 12.5,3.5 L 4.8,11.2 Z M 9.8,2.2 L 11.8,4.2"
+                                                          Fill="Transparent"
+                                                          Stroke="{DynamicResource TextSecondaryBrush}"
+                                                          StrokeThickness="1.1"
+                                                          StrokeStartLineCap="Round"
+                                                          StrokeEndLineCap="Round"
+                                                          StrokeLineJoin="Round" />
                                                 </Button>
                                                 <Button Grid.Column="3"
                                                         Width="24"
@@ -279,31 +271,11 @@
                                                         ToolTip="删除此目录"
                                                         Style="{StaticResource DangerBorderlessIconButtonStyle}"
                                                         Click="DeleteSearchDirectoryButton_Click">
-                                                    <Grid Width="16"
-                                                          Height="16">
-                                                        <Grid.Resources>
-                                                            <Style TargetType="Path">
-                                                                <Setter Property="Stroke"
-                                                                        Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
-                                                            </Style>
-                                                        </Grid.Resources>
-                                                        <Path Data="M 2,4 H 14"
-                                                              StrokeThickness="1.1"
-                                                              StrokeStartLineCap="Round"
-                                                              StrokeEndLineCap="Round" />
-                                                        <Path Data="M 5,4 V 2 H 11 V 4"
-                                                              Fill="Transparent"
-                                                              StrokeThickness="1.1"
-                                                              StrokeLineJoin="Round" />
-                                                        <Path Data="M 3.5,4.5 L 4.5,14.5 H 11.5 L 12.5,4.5"
-                                                              Fill="Transparent"
-                                                              StrokeThickness="1.1"
-                                                              StrokeLineJoin="Round" />
-                                                        <Path Data="M 6.5,7 V 12 M 9.5,7 V 12"
-                                                              StrokeThickness="1"
-                                                              StrokeStartLineCap="Round"
-                                                              StrokeEndLineCap="Round" />
-                                                    </Grid>
+                                                    <Path Width="15"
+                                                          Height="15"
+                                                          Stretch="Uniform"
+                                                          Data="M 2,4.5 H 14 L 13,15 H 3 Z M 5.5,4.5 L 6,1.5 H 10 L 10.5,4.5 Z"
+                                                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                                                 </Button>
                                             </Grid>
                                         </DataTemplate>
@@ -607,7 +579,7 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="查找项目">
+            <TabItem Header="查找">
                 <Grid Margin="0"
                       TextElement.Foreground="{DynamicResource TextPrimaryBrush}">
                     <Grid.RowDefinitions>
@@ -1286,7 +1258,455 @@
                 </Grid>
             </TabItem>
 
-            <TabItem x:Name="OriginalFavoritesTab" Header="我的收藏旧版">
+            <TabItem x:Name="NotesTab" Header="笔记">
+                <Grid Margin="0"
+                      TextElement.Foreground="{DynamicResource TextPrimaryBrush}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition x:Name="NotesLeftColumn"
+                                          Width="280"
+                                          MinWidth="210" />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="*"
+                                          MinWidth="420" />
+                    </Grid.ColumnDefinitions>
+                    <GridSplitter Grid.Column="1"
+                                  AutomationProperties.Name="调整笔记列表宽度"
+                                  DragCompleted="PanelSplitter_DragCompleted"
+                                  Style="{StaticResource PanelSplitterStyle}" />
+
+                    <Border Grid.Column="0" Style="{StaticResource PanelCardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid Margin="14,13,14,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="过往笔记"
+                                           Style="{StaticResource SectionTitleStyle}" />
+                                <TextBlock x:Name="NoteCountText"
+                                           Grid.Column="1"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource QuietTextStyle}"
+                                           Text="0 篇" />
+                                <Button x:Name="CreateNoteFolderButton"
+                                        Grid.Column="2"
+                                        Margin="8,0,0,0"
+                                        AutomationProperties.Name="新建笔记目录"
+                                        ToolTip="在所选目录下新建子目录"
+                                        Style="{StaticResource CompactIconButtonStyle}"
+                                        Click="CreateNoteFolderButton_Click">
+                                    <Grid Width="14" Height="14">
+                                        <Path Data="M 1,4 H 6 L 7.3,5.5 H 13 V 12 H 1 Z"
+                                              Fill="{DynamicResource TextSecondaryBrush}" />
+                                        <Path Data="M 10.5,1 V 6 M 8,3.5 H 13"
+                                              Stroke="{DynamicResource TextSecondaryBrush}"
+                                              StrokeThickness="1.2"
+                                              StrokeStartLineCap="Round"
+                                              StrokeEndLineCap="Round" />
+                                    </Grid>
+                                </Button>
+                                <Button x:Name="CreateNoteButton"
+                                        Grid.Column="3"
+                                        Margin="8,0,0,0"
+                                        AutomationProperties.Name="新建笔记"
+                                        ToolTip="新建笔记"
+                                        Style="{StaticResource CompactIconButtonStyle}"
+                                        Click="CreateNoteButton_Click">
+                                    <Path Width="12"
+                                          Height="12"
+                                          Data="M 1,6 H 11 M 6,1 V 11"
+                                          Stroke="{DynamicResource TextSecondaryBrush}"
+                                          StrokeThickness="1.6"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round" />
+                                </Button>
+                            </Grid>
+                            <TreeView x:Name="NoteTree"
+                                      Grid.Row="1"
+                                      Margin="6,0"
+                                      Background="Transparent"
+                                      BorderThickness="0"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                      ContextMenuOpening="NoteTree_ContextMenuOpening"
+                                      MouseLeave="NoteTree_MouseLeave"
+                                      PreviewMouseLeftButtonDown="NoteTree_PreviewMouseLeftButtonDown"
+                                      PreviewMouseRightButtonDown="NoteTree_PreviewMouseRightButtonDown"
+                                      PreviewMouseMove="NoteTree_PreviewMouseMove"
+                                      PreviewMouseLeftButtonUp="NoteTree_PreviewMouseLeftButtonUp"
+                                      SelectedItemChanged="NoteTree_SelectedItemChanged">
+                                <TreeView.ItemContainerStyle>
+                                    <Style TargetType="TreeViewItem">
+                                        <Setter Property="IsExpanded" Value="True" />
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    </Style>
+                                </TreeView.ItemContainerStyle>
+                                <TreeView.ItemTemplate>
+                                    <HierarchicalDataTemplate DataType="{x:Type models:NoteTreeItem}"
+                                                              ItemsSource="{Binding Children}">
+                                        <Grid x:Name="NoteTreeRow"
+                                              MinWidth="200"
+                                              HorizontalAlignment="Stretch"
+                                              Margin="2,3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid x:Name="FolderIcon"
+                                                  Width="14"
+                                                  Height="14"
+                                                  Margin="0,0,7,0"
+                                                  VerticalAlignment="Center"
+                                                  Visibility="Collapsed">
+                                                <Path Data="M 1,3.5 H 6 L 7.3,5 H 13 V 12 H 1 Z"
+                                                      Fill="{DynamicResource TextSecondaryBrush}" />
+                                            </Grid>
+                                            <Grid x:Name="NoteLockGlyph"
+                                                  Width="12"
+                                                  Height="12"
+                                                  Margin="0,0,7,0"
+                                                  VerticalAlignment="Center"
+                                                  Visibility="Collapsed">
+                                                <Path Stretch="Uniform"
+                                                      Data="M 2,5 H 10 V 12 H 2 Z M 3.5,5 V 3.7 C 3.5,1.8 8.5,1.8 8.5,3.7 V 5"
+                                                      Fill="{DynamicResource TextSecondaryBrush}"
+                                                      Stroke="{DynamicResource TextSecondaryBrush}"
+                                                      StrokeThickness="1"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeEndLineCap="Round" />
+                                            </Grid>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding Name}" />
+                                                <TextBlock x:Name="NoteUpdatedText"
+                                                           Margin="0,3,0,0"
+                                                           Text="{Binding UpdatedDisplay}"
+                                                           Style="{StaticResource QuietTextStyle}" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <HierarchicalDataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                                                <Setter TargetName="FolderIcon"
+                                                        Property="Visibility"
+                                                        Value="Visible" />
+                                                <Setter TargetName="NoteUpdatedText"
+                                                        Property="Visibility"
+                                                        Value="Collapsed" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsFolder}" Value="False">
+                                                <Setter TargetName="NoteTreeRow"
+                                                        Property="Margin"
+                                                        Value="32,3,2,3" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsEncrypted}" Value="True">
+                                                <Setter TargetName="NoteLockGlyph"
+                                                        Property="Visibility"
+                                                        Value="Visible" />
+                                            </DataTrigger>
+                                        </HierarchicalDataTemplate.Triggers>
+                                    </HierarchicalDataTemplate>
+                                </TreeView.ItemTemplate>
+                            </TreeView>
+                            <TextBlock Grid.Row="1"
+                                       Text="还没有笔记。&#10;点击右上角“+”开始记录。">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock"
+                                           BasedOn="{StaticResource EmptyStateTextStyle}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasItems, ElementName=NoteTree}"
+                                                         Value="False">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <TextBlock Grid.Row="2"
+                                       Margin="14,8,14,12"
+                                       Text="Markdown 纯文本 · Ctrl+S 保存 · 每 3 分钟自动保存"
+                                       Style="{StaticResource QuietTextStyle}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="2" Style="{StaticResource PanelCardStyle}">
+                        <Grid>
+                            <Grid x:Name="NoteEditorContent">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid Margin="16,13,16,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="笔记编辑"
+                                                   Style="{StaticResource SectionTitleStyle}" />
+                                        <TextBlock x:Name="NoteEncryptionStateText"
+                                                   Margin="0,3,0,0"
+                                                   Text="选择或新建一篇笔记。"
+                                                   Style="{StaticResource QuietTextStyle}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                Orientation="Horizontal">
+                                        <Button x:Name="EncryptNoteButton"
+                                                Padding="12,6"
+                                                Content="加密"
+                                                IsEnabled="False"
+                                                Click="EncryptNoteButton_Click" />
+                                        <Button x:Name="LockNoteButton"
+                                                Margin="8,0,0,0"
+                                                Padding="12,6"
+                                                Content="锁定"
+                                                Visibility="Collapsed"
+                                                Click="LockNoteButton_Click" />
+                                        <Button x:Name="DeleteNoteButton"
+                                                Margin="8,0,0,0"
+                                                Padding="12,6"
+                                                Content="删除"
+                                                IsEnabled="False"
+                                                Click="DeleteNoteButton_Click" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBox x:Name="NoteTitleTextBox"
+                                         Grid.Row="1"
+                                         Margin="16,0,16,10"
+                                         MinHeight="44"
+                                         Padding="0,5"
+                                         Background="Transparent"
+                                         BorderThickness="0,0,0,1"
+                                         FontFamily="Segoe UI Variable Display"
+                                         FontSize="24"
+                                         FontWeight="SemiBold"
+                                         MaxLength="200"
+                                         TextChanged="NoteEditor_TextChanged" />
+
+                                <Grid Grid.Row="2" Margin="16,0,16,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <WrapPanel VerticalAlignment="Center"
+                                               Orientation="Horizontal">
+                                        <TextBlock Text="正文（支持 Markdown 和正文内图片）"
+                                                   VerticalAlignment="Center"
+                                                   Style="{StaticResource QuietTextStyle}" />
+                                        <Button x:Name="NoteBoldButton"
+                                                Margin="12,0,0,0"
+                                                AutomationProperties.Name="加粗所选文字"
+                                                ToolTip="加粗所选文字（Ctrl+B）"
+                                                Style="{StaticResource CompactIconButtonStyle}"
+                                                Click="NoteBoldButton_Click">
+                                            <TextBlock Text="B"
+                                                       FontWeight="Bold"
+                                                       FontSize="14" />
+                                        </Button>
+                                        <TextBlock Margin="10,0,5,0"
+                                                   VerticalAlignment="Center"
+                                                   Text="颜色"
+                                                   Style="{StaticResource QuietTextStyle}" />
+                                        <Button Tag="Default"
+                                                Margin="0,0,4,0"
+                                                AutomationProperties.Name="默认文字颜色"
+                                                ToolTip="使用默认文字颜色"
+                                                Style="{StaticResource CompactIconButtonStyle}"
+                                                Click="NoteTextColorButton_Click">
+                                            <Ellipse Width="12"
+                                                     Height="12"
+                                                     Fill="{DynamicResource TextPrimaryBrush}"
+                                                     Stroke="{DynamicResource AppBorderBrush}"
+                                                     StrokeThickness="1" />
+                                        </Button>
+                                        <Button Tag="#D14343"
+                                                Margin="0,0,4,0"
+                                                AutomationProperties.Name="红色文字"
+                                                ToolTip="红色"
+                                                Style="{StaticResource CompactIconButtonStyle}"
+                                                Click="NoteTextColorButton_Click">
+                                            <Ellipse Width="12"
+                                                     Height="12"
+                                                     Fill="#D14343" />
+                                        </Button>
+                                        <Button Tag="#C97B16"
+                                                Margin="0,0,4,0"
+                                                AutomationProperties.Name="橙色文字"
+                                                ToolTip="橙色"
+                                                Style="{StaticResource CompactIconButtonStyle}"
+                                                Click="NoteTextColorButton_Click">
+                                            <Ellipse Width="12"
+                                                     Height="12"
+                                                     Fill="#C97B16" />
+                                        </Button>
+                                        <Button Tag="#2E8B57"
+                                                Margin="0,0,4,0"
+                                                AutomationProperties.Name="绿色文字"
+                                                ToolTip="绿色"
+                                                Style="{StaticResource CompactIconButtonStyle}"
+                                                Click="NoteTextColorButton_Click">
+                                            <Ellipse Width="12"
+                                                     Height="12"
+                                                     Fill="#2E8B57" />
+                                        </Button>
+                                        <Button Tag="#2F6FD6"
+                                                Margin="0,0,4,0"
+                                                AutomationProperties.Name="蓝色文字"
+                                                ToolTip="蓝色"
+                                                Style="{StaticResource CompactIconButtonStyle}"
+                                                Click="NoteTextColorButton_Click">
+                                            <Ellipse Width="12"
+                                                     Height="12"
+                                                     Fill="#2F6FD6" />
+                                        </Button>
+                                        <Button Tag="#8B5CF6"
+                                                AutomationProperties.Name="紫色文字"
+                                                ToolTip="紫色"
+                                                Style="{StaticResource CompactIconButtonStyle}"
+                                                Click="NoteTextColorButton_Click">
+                                            <Ellipse Width="12"
+                                                     Height="12"
+                                                     Fill="#8B5CF6" />
+                                        </Button>
+                                    </WrapPanel>
+                                    <TextBlock x:Name="NoteSaveStateText"
+                                               Grid.Column="1"
+                                               Text="未保存"
+                                               Style="{StaticResource QuietTextStyle}" />
+                                </Grid>
+
+                                <RichTextBox x:Name="NoteBodyEditor"
+                                             Grid.Row="3"
+                                             Margin="16,0,16,10"
+                                             Padding="12"
+                                             AcceptsTab="True"
+                                             IsDocumentEnabled="True"
+                                             VerticalScrollBarVisibility="Auto"
+                                             HorizontalScrollBarVisibility="Auto"
+                                             Background="{DynamicResource SurfaceBrush}"
+                                             Foreground="{DynamicResource TextPrimaryBrush}"
+                                             BorderBrush="{DynamicResource AppBorderBrush}"
+                                             BorderThickness="1"
+                                             CaretBrush="{DynamicResource TextPrimaryBrush}"
+                                             SelectionBrush="{DynamicResource PrimaryBrush}"
+                                             FontFamily="{StaticResource BodyFont}"
+                                             FontSize="14"
+                                             IsEnabled="False"
+                                             DataObject.Pasting="NoteBodyTextBox_Pasting"
+                                             PreviewKeyDown="NoteBodyTextBox_PreviewKeyDown"
+                                             PreviewMouseWheel="NoteBodyEditor_PreviewMouseWheel"
+                                             SelectionChanged="NoteBodyEditor_SelectionChanged"
+                                             TextChanged="NoteEditor_TextChanged">
+                                    <RichTextBox.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="撤销"
+                                                      Command="ApplicationCommands.Undo" />
+                                            <MenuItem Header="剪切"
+                                                      Command="ApplicationCommands.Cut" />
+                                            <MenuItem Header="复制"
+                                                      Command="ApplicationCommands.Copy" />
+                                            <MenuItem Header="粘贴"
+                                                      Command="ApplicationCommands.Paste" />
+                                            <Separator />
+                                            <MenuItem Header="全选"
+                                                      Command="ApplicationCommands.SelectAll" />
+                                        </ContextMenu>
+                                    </RichTextBox.ContextMenu>
+                                    <FlowDocument PagePadding="0"
+                                                  LineHeight="22">
+                                        <Paragraph Margin="0" />
+                                    </FlowDocument>
+                                </RichTextBox>
+
+                                <Grid Grid.Row="4" Margin="16,0,16,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="内容仅保存在本机 GitHubReports/Notes。"
+                                               Style="{StaticResource QuietTextStyle}" />
+                                    <TextBlock x:Name="NoteZoomText"
+                                               Grid.Column="1"
+                                               Margin="0,0,14,0"
+                                               Text="缩放 100%"
+                                               Style="{StaticResource QuietTextStyle}" />
+                                    <TextBlock x:Name="NoteCharacterCountText"
+                                               Grid.Column="2"
+                                               Text="0 字符"
+                                               Style="{StaticResource QuietTextStyle}" />
+                                </Grid>
+                            </Grid>
+
+                            <Border x:Name="NoteLockedOverlay"
+                                    Panel.ZIndex="2"
+                                    Margin="0,72,0,0"
+                                    Background="{DynamicResource SurfaceBrush}"
+                                    CornerRadius="10"
+                                    Visibility="Collapsed">
+                                <StackPanel HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            MaxWidth="360">
+                                    <Path Width="32"
+                                          Height="32"
+                                          HorizontalAlignment="Center"
+                                          Stretch="Uniform"
+                                          Data="M 3,7 H 13 V 18 H 3 Z M 5,7 V 5 C 5,1.5 11,1.5 11,5 V 7"
+                                          Fill="{DynamicResource TextPrimaryBrush}"
+                                          Stroke="{DynamicResource TextPrimaryBrush}"
+                                          StrokeThickness="1.4"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round" />
+                                    <TextBlock Margin="0,10,0,0"
+                                               HorizontalAlignment="Center"
+                                               Text="这篇笔记已加密"
+                                               FontSize="18"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Margin="0,6,0,14"
+                                               Text="输入密码后才能查看、编辑或自动保存内容。"
+                                               TextAlignment="Center"
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource QuietTextStyle}" />
+                                    <Button x:Name="UnlockNoteButton"
+                                            Padding="18,8"
+                                            Content="输入密码解锁"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            Click="UnlockNoteButton_Click" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border x:Name="NoteEmptyOverlay"
+                                    Panel.ZIndex="3"
+                                    Margin="0,72,0,0"
+                                    Background="{DynamicResource SurfaceBrush}"
+                                    CornerRadius="10">
+                                <StackPanel HorizontalAlignment="Center"
+                                            VerticalAlignment="Center">
+                                    <TextBlock HorizontalAlignment="Center"
+                                               Text="选择一篇过往笔记，或点击左上角“+”新建。"
+                                               Style="{StaticResource EmptyStateTextStyle}" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <TabItem x:Name="OriginalFavoritesTab" Header="收藏旧版">
                 <Grid Margin="0"
                       TextElement.Foreground="{DynamicResource TextPrimaryBrush}">
                     <Grid.ColumnDefinitions>
@@ -1451,7 +1871,7 @@
                 VerticalAlignment="Top"
                 Panel.ZIndex="2"
                 AutomationProperties.Name="恢复默认布局"
-                ToolTip="恢复三个工作区的默认面板宽度"
+                ToolTip="恢复各工作区的默认面板宽度"
                 Style="{StaticResource CompactIconButtonStyle}"
                 Click="ResetLayoutButton_Click">
             <StackPanel Width="11"
