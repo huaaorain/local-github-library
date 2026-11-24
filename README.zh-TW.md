@@ -246,16 +246,18 @@ GitHubReports/
 ## 📦 所有版本
 
 <!-- release-catalog:start -->
-最新版本: [Local GitHub Library v0.3.1](https://github.com/huaaorain/local-github-library/releases/tag/v0.3.1)
+最新版本: [Local GitHub Library v0.4.0](https://github.com/huaaorain/local-github-library/releases/tag/v0.4.0)
 
 | 版本 | 發佈時間 | 發佈說明 |
 | --- | --- | --- |
+| `v0.4.0` | 2026-11-24 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.4.0) |
 | `v0.3.1` | 2026-11-23 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.3.1) |
 | `v0.3.0` | 2026-11-20 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.3.0) |
 | `v0.2.7` | 2026-11-19 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.7) |
 | `v0.2.6` | 2026-11-06 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.6) |
 | `v0.2.5` | 2026-11-06 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.5) |
 | `v0.2.4` | 2026-11-05 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.4) |
+| `models-qwen2.5-1.5b-v1` | 2026-11-05 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/models-qwen2.5-1.5b-v1) |
 | `v0.2.3` | 2026-11-04 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.3) |
 | `v0.2.2` | 2026-11-02 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.2) |
 | `v0.2.1` | 2026-10-27 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.2.1) |
@@ -264,6 +266,18 @@ GitHubReports/
 
 <details>
 <summary><strong>全部版本下載</strong></summary>
+
+### Local GitHub Library v0.4.0
+
+發佈說明: [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.4.0)
+
+- [FILE_MANIFEST.md](https://github.com/huaaorain/local-github-library/releases/download/v0.4.0/FILE_MANIFEST.md) — 696 B
+- [GitHubTopicReports.exe](https://github.com/huaaorain/local-github-library/releases/download/v0.4.0/GitHubTopicReports.exe) — 81.3 MB
+- [LocalGithubLibrary-0.4.0-win-x64.zip](https://github.com/huaaorain/local-github-library/releases/download/v0.4.0/LocalGithubLibrary-0.4.0-win-x64.zip) — 83.3 MB
+- [release-manifest.json](https://github.com/huaaorain/local-github-library/releases/download/v0.4.0/release-manifest.json) — 1.8 KB
+- [SHA256SUMS.txt](https://github.com/huaaorain/local-github-library/releases/download/v0.4.0/SHA256SUMS.txt) — 192 B
+- [原始碼（zip）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.4.0.zip)
+- [原始碼（tar.gz）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.4.0.tar.gz)
 
 ### Local GitHub Library v0.3.1
 
@@ -336,6 +350,17 @@ GitHubReports/
 - [SHA256SUMS.txt](https://github.com/huaaorain/local-github-library/releases/download/v0.2.4/SHA256SUMS.txt) — 192 B
 - [原始碼（zip）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.2.4.zip)
 - [原始碼（tar.gz）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.2.4.tar.gz)
+
+### LLM 模型库 - Qwen2.5 1.5B Q4_K_M v1
+
+發佈說明: [開啟](https://github.com/huaaorain/local-github-library/releases/tag/models-qwen2.5-1.5b-v1)
+
+- [FILE_MANIFEST.md](https://github.com/huaaorain/local-github-library/releases/download/models-qwen2.5-1.5b-v1/FILE_MANIFEST.md) — 516 B
+- [Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm](https://github.com/huaaorain/local-github-library/releases/download/models-qwen2.5-1.5b-v1/Qwen2.5-1.5B-Instruct-Q4_K_M.ghllm) — 1.0 GB
+- [release-manifest.json](https://github.com/huaaorain/local-github-library/releases/download/models-qwen2.5-1.5b-v1/release-manifest.json) — 1.1 KB
+- [SHA256SUMS.txt](https://github.com/huaaorain/local-github-library/releases/download/models-qwen2.5-1.5b-v1/SHA256SUMS.txt) — 101 B
+- [原始碼（zip）](https://github.com/huaaorain/local-github-library/archive/refs/tags/models-qwen2.5-1.5b-v1.zip)
+- [原始碼（tar.gz）](https://github.com/huaaorain/local-github-library/archive/refs/tags/models-qwen2.5-1.5b-v1.tar.gz)
 
 ### Local GitHub Library 0.2.3
 
