@@ -246,10 +246,11 @@ GitHubReports/
 ## 📦 所有版本
 
 <!-- release-catalog:start -->
-最新版本: [Local GitHub Library v0.4.0](https://github.com/huaaorain/local-github-library/releases/tag/v0.4.0)
+最新版本: [Local GitHub Library v0.4.1](https://github.com/huaaorain/local-github-library/releases/tag/v0.4.1)
 
 | 版本 | 發佈時間 | 發佈說明 |
 | --- | --- | --- |
+| `v0.4.1` | 2026-11-27 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.4.1) |
 | `v0.4.0` | 2026-11-24 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.4.0) |
 | `v0.3.1` | 2026-11-23 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.3.1) |
 | `v0.3.0` | 2026-11-20 | [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.3.0) |
@@ -266,6 +267,19 @@ GitHubReports/
 
 <details>
 <summary><strong>全部版本下載</strong></summary>
+
+### Local GitHub Library v0.4.1
+
+發佈說明: [開啟](https://github.com/huaaorain/local-github-library/releases/tag/v0.4.1)
+
+- [FILE_MANIFEST.md](https://github.com/huaaorain/local-github-library/releases/download/v0.4.1/FILE_MANIFEST.md) — 859 B
+- [GitHubTopicReports.exe](https://github.com/huaaorain/local-github-library/releases/download/v0.4.1/GitHubTopicReports.exe) — 81.3 MB
+- [LICENSE](https://github.com/huaaorain/local-github-library/releases/download/v0.4.1/LICENSE) — 4.5 KB
+- [LocalGithubLibrary-0.4.1-win-x64.zip](https://github.com/huaaorain/local-github-library/releases/download/v0.4.1/LocalGithubLibrary-0.4.1-win-x64.zip) — 83.3 MB
+- [release-manifest.json](https://github.com/huaaorain/local-github-library/releases/download/v0.4.1/release-manifest.json) — 2.4 KB
+- [SHA256SUMS.txt](https://github.com/huaaorain/local-github-library/releases/download/v0.4.1/SHA256SUMS.txt) — 266 B
+- [原始碼（zip）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.4.1.zip)
+- [原始碼（tar.gz）](https://github.com/huaaorain/local-github-library/archive/refs/tags/v0.4.1.tar.gz)
 
 ### Local GitHub Library v0.4.0
 
