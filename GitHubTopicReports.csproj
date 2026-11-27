@@ -9,7 +9,7 @@
     <AssemblyName>GitHubTopicReports</AssemblyName>
     <Product>Local GitHub Library</Product>
     <Description>A local-first Windows library for discovering public and authenticated private GitHub repositories.</Description>
-    <Version>0.4.0</Version>
+    <Version>0.4.1</Version>
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <RepositoryUrl>https://github.com/huaaorain/local-github-library</RepositoryUrl>
   </PropertyGroup>

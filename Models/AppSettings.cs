@@ -21,6 +21,8 @@ public sealed class AppSettings
     public double GlobalLeftPanelWidth { get; set; } = 220;
     public double GlobalRightPanelWidth { get; set; } = 280;
     public double NotesLeftPanelWidth { get; set; } = 280;
+    public Dictionary<string, double> DataGridColumnWidths { get; set; } = [];
+    public string RestoreHotkey { get; set; } = "Ctrl+Shift+D";
 
     public AppSettings Copy() => new()
     {
@@ -36,6 +38,10 @@ public sealed class AppSettings
         FindRightPanelWidth = FindRightPanelWidth,
         GlobalLeftPanelWidth = GlobalLeftPanelWidth,
         GlobalRightPanelWidth = GlobalRightPanelWidth,
-        NotesLeftPanelWidth = NotesLeftPanelWidth
+        NotesLeftPanelWidth = NotesLeftPanelWidth,
+        DataGridColumnWidths = new Dictionary<string, double>(
+            DataGridColumnWidths ?? [],
+            StringComparer.Ordinal),
+        RestoreHotkey = RestoreHotkey
     };
 }

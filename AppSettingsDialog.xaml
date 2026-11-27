@@ -212,6 +212,33 @@
                 <CheckBox x:Name="StartWithWindowsCheckBox"
                           Margin="0,8,0,0"
                           Content="开机时自动启动 Local GitHub Library" />
+                <TextBlock Margin="0,14,0,0"
+                           Text="最小化后呼出窗口"
+                           FontWeight="SemiBold" />
+                <Grid Margin="0,7,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="RestoreHotkeyTextBox"
+                             MinHeight="36"
+                             Padding="9,6"
+                             IsReadOnly="True"
+                             Cursor="Hand"
+                             ToolTip="点击后按下新的组合键，例如 Ctrl+Shift+D"
+                             PreviewKeyDown="RestoreHotkeyTextBox_PreviewKeyDown" />
+                    <Button x:Name="ResetHotkeyButton"
+                            Grid.Column="1"
+                            Margin="8,0,0,0"
+                            Padding="12,7"
+                            Content="恢复默认"
+                            Click="ResetHotkeyButton_Click" />
+                </Grid>
+                <TextBlock x:Name="HotkeyHintText"
+                           Margin="0,5,0,0"
+                           Text="点击输入框后按下组合键。需要至少包含 Ctrl、Alt、Shift 或 Win 中的一个修饰键。"
+                           TextWrapping="Wrap"
+                           Style="{StaticResource QuietTextStyle}" />
             </StackPanel>
         </Border>
 

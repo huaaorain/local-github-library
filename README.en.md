@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.0-ff7a45?style=flat-square" alt="Version 0.4.0">
+  <img src="https://img.shields.io/badge/version-0.4.1-ff7a45?style=flat-square" alt="Version 0.4.1">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -106,7 +106,7 @@ GitHub is good at finding one repository, but it is not designed to answer quest
     </tr>
     <tr>
       <td><strong>Settings&#8239;and&#8239;tray</strong></td>
-      <td>Use the header gear to manage LLM packages, configuration import/export, the local document library, and optional Windows startup. Panel widths, window size, and maximized state are restored automatically. Choose whether closing minimizes to the tray or exits, with an optional confirmation on every close. Light and dark themes remain available directly from the header.</td>
+      <td>Use the header gear to manage LLM packages, configuration import/export, the local document library, and optional Windows startup. Panel widths, window size, maximized state, and table column widths are restored automatically. A custom global restore shortcut (Ctrl+Shift+D by default) can bring the app back from the taskbar or tray. Choose whether closing minimizes to the tray or exits. Light and dark themes remain available directly from the header.</td>
     </tr>
   </tbody>
 </table>
@@ -141,7 +141,7 @@ _Screenshots use non-sensitive demo data. The notes workspace shows the folder t
 
 | Package | Size | Best for |
 | --- | ---: | --- |
-| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.4.0/LocalGithubLibrary-0.4.0-win-x64.zip) | About 84 MB | Local notes, folder ordering, GitHub sign-in, and local reports |
+| [Standard Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.4.1/LocalGithubLibrary-0.4.1-win-x64.zip) | About 84 MB | Local notes, folder ordering, GitHub sign-in, and local reports |
 | [LLM model (optional)](docs/models/README.md) | About 1.04 GB | Downloaded separately; application upgrades reuse it |
 
 ### 2. Extract and run
@@ -447,7 +447,7 @@ Release notes: [Open](https://github.com/huaaorain/local-github-library/releases
 - The unsigned EXE may trigger a Windows SmartScreen warning.
 - Encryption protects note text and image contents; titles, folder names, and file counts may still be visible from local paths. Forgotten passwords cannot be recovered.
 - Notes from 0.3.x migrate automatically. A previously encrypted note needs to be unlocked and saved before its placeholder folder can be renamed to the real note title.
-- The repository does not currently declare an open-source license.
+- This project uses PolyForm Noncommercial 1.0.0, permits noncommercial use only, and is not an OSI open-source license. Commercial use requires separate authorization.
 
 ## 🔧 Build from source
 
@@ -480,6 +480,7 @@ Issues and pull requests are welcome. Before submitting:
 
 ## 📝 Release history
 
+- [0.4.1: custom global restore hotkey, saved table widths, and startup isolation](docs/releases/v0.4.1.en.md)
 - [0.4.0: folder-based notes, rich editing, encrypted images, and safe writes](docs/releases/v0.4.0.en.md)
 - [0.3.1: favorite folder drag ordering and restart layout restoration](docs/releases/v0.3.1.en.md)
 - [0.3.0: GitHub sign-in, private repository search, and secure credential storage](docs/releases/v0.3.0.en.md)
@@ -504,4 +505,4 @@ Issues and pull requests are welcome. Before submitting:
 
 ## 📄 License
 
-This repository does not currently declare an open-source license. Until a license is added, do not use the code as part of a commercial or redistributed product.
+This project uses PolyForm Noncommercial 1.0.0, permits noncommercial use only, and is not an OSI open-source license. Commercial use requires separate authorization. See [LICENSE](LICENSE) for the complete terms.

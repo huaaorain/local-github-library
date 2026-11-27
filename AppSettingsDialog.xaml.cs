@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Navigation;
 using GitHubTopicReports.Models;
 using GitHubTopicReports.Services;
@@ -30,6 +31,7 @@ public partial class AppSettingsDialog : Window
         ExitRadio.IsChecked = CurrentSettings.CloseAction == AppCloseAction.Exit;
         AskOnCloseCheckBox.IsChecked = CurrentSettings.AskOnClose;
         StartWithWindowsCheckBox.IsChecked = CurrentSettings.StartWithWindows;
+        RestoreHotkeyTextBox.Text = CurrentSettings.RestoreHotkey;
         Loaded += AppSettingsDialog_Loaded;
     }
 
@@ -171,6 +173,63 @@ public partial class AppSettingsDialog : Window
     private void SaveSettingsButton_Click(object sender, RoutedEventArgs e) =>
         Complete(AppSettingsAction.None);
 
+    private void RestoreHotkeyTextBox_PreviewKeyDown(
+        object sender,
+        System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key is System.Windows.Input.Key.LeftCtrl
+            or System.Windows.Input.Key.RightCtrl
+            or System.Windows.Input.Key.LeftShift
+            or System.Windows.Input.Key.RightShift
+            or System.Windows.Input.Key.LeftAlt
+            or System.Windows.Input.Key.RightAlt
+            or System.Windows.Input.Key.LWin
+            or System.Windows.Input.Key.RWin)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        var modifiers = System.Windows.Input.Keyboard.Modifiers;
+        if (modifiers == System.Windows.Input.ModifierKeys.None)
+        {
+            HotkeyHintText.Text = "请同时按住 Ctrl、Alt、Shift 或 Win 后再按一个字母、数字或功能键。";
+            HotkeyHintText.Foreground = (Brush)FindResource("DangerBrush");
+            e.Handled = true;
+            return;
+        }
+
+        var parts = new List<string>();
+        if (modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control))
+        {
+            parts.Add("Ctrl");
+        }
+        if (modifiers.HasFlag(System.Windows.Input.ModifierKeys.Shift))
+        {
+            parts.Add("Shift");
+        }
+        if (modifiers.HasFlag(System.Windows.Input.ModifierKeys.Alt))
+        {
+            parts.Add("Alt");
+        }
+        if (modifiers.HasFlag(System.Windows.Input.ModifierKeys.Windows))
+        {
+            parts.Add("Win");
+        }
+        parts.Add(e.Key.ToString());
+        RestoreHotkeyTextBox.Text = string.Join("+", parts);
+        HotkeyHintText.Text = "快捷键已录入，点击“保存”后生效。";
+        HotkeyHintText.Foreground = (Brush)FindResource("TextSecondaryBrush");
+        e.Handled = true;
+    }
+
+    private void ResetHotkeyButton_Click(object sender, RoutedEventArgs e)
+    {
+        RestoreHotkeyTextBox.Text = "Ctrl+Shift+D";
+        HotkeyHintText.Text = "已恢复默认快捷键。";
+        HotkeyHintText.Foreground = (Brush)FindResource("TextSecondaryBrush");
+    }
+
     private void ActionButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { Tag: string action } &&
@@ -187,6 +246,7 @@ public partial class AppSettingsDialog : Window
             : AppCloseAction.MinimizeToTray;
         CurrentSettings.AskOnClose = AskOnCloseCheckBox.IsChecked == true;
         CurrentSettings.StartWithWindows = StartWithWindowsCheckBox.IsChecked == true;
+        CurrentSettings.RestoreHotkey = RestoreHotkeyTextBox.Text.Trim();
         RequestedAction = action;
         DialogResult = true;
     }

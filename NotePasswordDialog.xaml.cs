@@ -26,12 +26,12 @@ public partial class NotePasswordDialog : Window
         Loaded += (_, _) => PasswordInput.Focus();
     }
 
-    public string Password { get; private set; } = "";
+    public string EnteredValue { get; private set; } = "";
 
     private void ConfirmButton_Click(object sender, RoutedEventArgs e)
     {
-        var password = PasswordInput.Password;
-        if (string.IsNullOrWhiteSpace(password))
+        var enteredValue = PasswordInput.Password;
+        if (string.IsNullOrWhiteSpace(enteredValue))
         {
             ShowError("请输入密码。");
             return;
@@ -39,14 +39,14 @@ public partial class NotePasswordDialog : Window
 
         if (_requireConfirmation)
         {
-            if (password.Length < 8)
+            if (enteredValue.Length < 8)
             {
                 ShowError("新密码至少需要 8 个字符。");
                 return;
             }
 
             if (!string.Equals(
-                    password,
+                    enteredValue,
                     ConfirmationInput.Password,
                     StringComparison.Ordinal))
             {
@@ -55,7 +55,7 @@ public partial class NotePasswordDialog : Window
             }
         }
 
-        Password = password;
+        EnteredValue = enteredValue;
         PasswordInput.Clear();
         ConfirmationInput.Clear();
         DialogResult = true;

@@ -14,6 +14,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -33,6 +34,13 @@ public partial class MainWindow : Window
     private static readonly Regex NoteImageRegex = new(
         @"!\[[^\]]*\]\((?<url>(?:data:image/|images/|Attachments/)[^)\s]+)\)",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private const int HotkeyId = 0x4C47;
+    private const int WmHotkey = 0x0312;
+    private const uint ModAlt = 0x0001;
+    private const uint ModControl = 0x0002;
+    private const uint ModShift = 0x0004;
+    private const uint ModWin = 0x0008;
+    private const uint ModNoRepeat = 0x4000;
     private readonly GitHubSearchService _gitHub;
     private readonly ReportLibraryService _library = new();
     private readonly DispatcherTimer _favoriteDragTimer = new()
@@ -48,6 +56,8 @@ public partial class MainWindow : Window
         Interval = TimeSpan.FromMinutes(3)
     };
     private readonly SemaphoreSlim _noteSaveGate = new(1, 1);
+    private HwndSource? _hotkeySource;
+    private bool _hotkeyRegistered;
     private readonly FavoritesService _favorites;
     private readonly NotesService _notesService;
     private readonly GlobalLeaderboardService _globalLeaderboard;
@@ -169,9 +179,12 @@ public partial class MainWindow : Window
         CombinedContentTabs.Items.Remove(CombinedDirectoryTab);
         CombinedContentTabs.Items.Insert(0, CombinedDirectoryTab);
         CombinedContentTabs.SelectedItem = CombinedDirectoryTab;
+        ApplySavedDataGridColumnWidths();
+        DataGridColumnResizeThumb.Resized += DataGridColumnResizeThumb_Resized;
         _favoriteDragTimer.Tick += FavoriteDragTimer_Tick;
         _favoriteFolderDragTimer.Tick += FavoriteFolderDragTimer_Tick;
         _noteAutoSaveTimer.Tick += NoteAutoSaveTimer_Tick;
+        SourceInitialized += MainWindow_SourceInitialized;
         NoteTree.ContextMenu = new ContextMenu();
         NoteTree.Loaded += (_, _) =>
         {
@@ -292,6 +305,7 @@ public partial class MainWindow : Window
                 dialog.CurrentSettings.StartWithWindows);
             _appSettingsService.Save(dialog.CurrentSettings);
             _appSettings = dialog.CurrentSettings;
+            RegisterGlobalHotkey();
             StatusText.Text = "软件设置已保存。";
         }
         catch (Exception exception)
@@ -547,6 +561,10 @@ public partial class MainWindow : Window
         _currentNoteKey?.Dispose();
         _currentNoteKey = null;
         _noteAutoSaveTimer.Stop();
+        DataGridColumnResizeThumb.Resized -= DataGridColumnResizeThumb_Resized;
+        UnregisterGlobalHotkey();
+        _hotkeySource?.RemoveHook(MainWindow_WndProc);
+        _hotkeySource = null;
         CommandManager.RemovePreviewExecutedHandler(
             NoteBodyEditor,
             NoteBodyTextBox_CommandExecuted);
@@ -562,6 +580,174 @@ public partial class MainWindow : Window
         ResetFavoriteFolderDrag();
         DisposeTrayIcon();
     }
+
+    private void MainWindow_SourceInitialized(object? sender, EventArgs e)
+    {
+        _hotkeySource = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+        _hotkeySource?.AddHook(MainWindow_WndProc);
+        RegisterGlobalHotkey();
+    }
+
+    private IntPtr MainWindow_WndProc(
+        IntPtr hwnd,
+        int message,
+        IntPtr wParam,
+        IntPtr lParam,
+        ref bool handled)
+    {
+        if (message == WmHotkey && wParam.ToInt32() == HotkeyId)
+        {
+            RestoreFromTray();
+            handled = true;
+        }
+
+        return IntPtr.Zero;
+    }
+
+    private void RegisterGlobalHotkey()
+    {
+        UnregisterGlobalHotkey();
+        if (_hotkeySource is null ||
+            !TryParseHotkey(
+                _appSettings.RestoreHotkey,
+                out var modifiers,
+                out var virtualKey))
+        {
+            StatusText.Text = "呼出快捷键无效，请在软件设置中重新录入。";
+            return;
+        }
+
+        _hotkeyRegistered = RegisterHotKey(
+            _hotkeySource.Handle,
+            HotkeyId,
+            modifiers | ModNoRepeat,
+            virtualKey);
+        if (!_hotkeyRegistered)
+        {
+            StatusText.Text = $"快捷键 {_appSettings.RestoreHotkey} 已被其他程序占用。";
+        }
+    }
+
+    private void UnregisterGlobalHotkey()
+    {
+        if (_hotkeyRegistered && _hotkeySource is not null)
+        {
+            UnregisterHotKey(_hotkeySource.Handle, HotkeyId);
+        }
+        _hotkeyRegistered = false;
+    }
+
+    private static bool TryParseHotkey(
+        string? text,
+        out uint modifiers,
+        out uint virtualKey)
+    {
+        modifiers = 0;
+        virtualKey = 0;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        var parts = text.Split(
+            '+',
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length < 2 ||
+            !Enum.TryParse<Key>(parts[^1], ignoreCase: true, out var key) ||
+            key is Key.LeftCtrl or Key.RightCtrl or Key.LeftShift or Key.RightShift
+                or Key.LeftAlt or Key.RightAlt or Key.LWin or Key.RWin)
+        {
+            return false;
+        }
+
+        foreach (var modifier in parts[..^1])
+        {
+            modifiers |= modifier.ToUpperInvariant() switch
+            {
+                "CTRL" or "CONTROL" => ModControl,
+                "SHIFT" => ModShift,
+                "ALT" => ModAlt,
+                "WIN" or "WINDOWS" => ModWin,
+                _ => 0u
+            };
+        }
+
+        if (modifiers == 0)
+        {
+            return false;
+        }
+        virtualKey = (uint)KeyInterop.VirtualKeyFromKey(key);
+        return virtualKey != 0;
+    }
+
+    private void ApplySavedDataGridColumnWidths()
+    {
+        foreach (var grid in GetLayoutDataGrids())
+        {
+            for (var index = 0; index < grid.Columns.Count; index++)
+            {
+                if (_appSettings.DataGridColumnWidths.TryGetValue(
+                        $"{grid.Name}:{index}",
+                        out var width) &&
+                    width >= 28)
+                {
+                    grid.Columns[index].Width = new DataGridLength(width);
+                }
+            }
+        }
+    }
+
+    private void DataGridColumnResizeThumb_Resized()
+    {
+        CaptureDataGridColumnWidths();
+        try
+        {
+            _appSettingsService.Save(_appSettings);
+        }
+        catch (Exception exception)
+        {
+            AppDiagnostics.LogException("保存表格列宽", exception);
+        }
+    }
+
+    private void CaptureDataGridColumnWidths()
+    {
+        foreach (var grid in GetLayoutDataGrids())
+        {
+            for (var index = 0; index < grid.Columns.Count; index++)
+            {
+                var column = grid.Columns[index];
+                if (column.Visibility == Visibility.Visible &&
+                    column.ActualWidth >= 28)
+                {
+                    _appSettings.DataGridColumnWidths[
+                        $"{grid.Name}:{index}"] = column.ActualWidth;
+                }
+            }
+        }
+    }
+
+    private IEnumerable<DataGrid> GetLayoutDataGrids()
+    {
+        yield return StandaloneSearchResultsGrid;
+        yield return CombinedFavoritesGrid;
+        yield return CurrentGrid;
+        yield return GrowthGrid;
+        yield return GlobalLeaderboardGrid;
+        yield return FavoritesGrid;
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool RegisterHotKey(
+        IntPtr hWnd,
+        int id,
+        uint fsModifiers,
+        uint virtualKey);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool UnregisterHotKey(
+        IntPtr hWnd,
+        int id);
 
     private async Task RefreshNotesAsync(
         string? preferredNoteId = null,
@@ -1830,7 +2016,7 @@ public partial class MainWindow : Window
                 NoteTitleTextBox.Text,
                 SerializeNoteBody(),
                 SerializeNoteBodyRichText());
-            using var key = NoteEncryptionService.CreateKey(dialog.Password);
+            using var key = NoteEncryptionService.CreateKey(dialog.EnteredValue);
             await _notesService.SaveEncryptedAsync(_currentNote, content, key);
             _noteDirty = false;
             var noteId = _currentNote.Id;
@@ -1873,7 +2059,7 @@ public partial class MainWindow : Window
 
             var opened = await _notesService.OpenEncryptedAsync(
                 _currentNote.Id,
-                dialog.Password);
+                dialog.EnteredValue);
             key = opened.Key;
             var content = opened.Content;
             _currentNoteKey?.Dispose();
@@ -1998,7 +2184,7 @@ public partial class MainWindow : Window
         {
             var opened = await _notesService.OpenEncryptedAsync(
                 note.Id,
-                dialog.Password);
+                dialog.EnteredValue);
             opened.Key.Dispose();
             return true;
         }
@@ -3915,6 +4101,7 @@ public partial class MainWindow : Window
         _appSettings.GlobalLeftPanelWidth = GetPanelWidth(GlobalLeftColumn);
         _appSettings.GlobalRightPanelWidth = GetPanelWidth(GlobalRightColumn);
         _appSettings.NotesLeftPanelWidth = GetPanelWidth(NotesLeftColumn);
+        CaptureDataGridColumnWidths();
 
         try
         {

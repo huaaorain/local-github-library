@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.0-ff7a45?style=flat-square" alt="版本 0.4.0">
+  <img src="https://img.shields.io/badge/version-0.4.1-ff7a45?style=flat-square" alt="版本 0.4.1">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="本機優先">
@@ -106,7 +106,7 @@ GitHub 適合找到一個倉庫，卻不擅長回答跨主題、跨時間的問�
     </tr>
     <tr>
       <td><strong>設&#8239;定&#8239;與&#8239;托&#8239;盤</strong></td>
-      <td>頂部齒輪集中管理 LLM、設定匯入匯出、文件庫和開機自啟；自動記住三個工作區的面板寬度、視窗尺寸和最大化狀態。可設定關閉視窗時最小化到托盤或完全結束，並選擇每次關閉是否詢問。淺色與深色主題可隨時切換。</td>
+      <td>頂部齒輪集中管理 LLM、設定匯入匯出、文件庫和開機自啟；自動記住三個工作區的面板寬度、視窗尺寸、最大化狀態和各表格欄寬。可自訂全域呼出快速鍵（預設 Ctrl+Shift+D），從工作列或托盤還原視窗，並設定關閉視窗時最小化到托盤或完全結束。淺色與深色主題可隨時切換。</td>
     </tr>
   </tbody>
 </table>
@@ -141,7 +141,7 @@ _截圖使用非敏感示範資料。筆記頁展示目錄樹、富文字工具�
 
 | 發佈包 | 大小 | 適用情境 |
 | --- | ---: | --- |
-| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.4.0/LocalGithubLibrary-0.4.0-win-x64.zip) | 約 84 MB | 本機筆記、目錄排序、GitHub 登入與本機報告 |
+| [標準版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.4.1/LocalGithubLibrary-0.4.1-win-x64.zip) | 約 84 MB | 本機筆記、目錄排序、GitHub 登入與本機報告 |
 | [LLM 模型（選用）](docs/models/README.md) | 約 1.04 GB | 獨立下載，升級程式時無需重複下載 |
 
 ### 2. 解壓縮並執行
@@ -447,7 +447,7 @@ GitHubReports/
 - 未簽署的 EXE 可能觸發 Windows SmartScreen 警告。
 - 加密筆記會加密正文和圖片內容；標題、目錄名稱和檔案數量仍可能從本機路徑看出。忘記密碼後無法恢復正文。
 - 從 0.3.x 升級時舊筆記會自動遷移；舊加密筆記需要先解鎖並保存，才能把佔位目錄改成真實筆記名稱。
-- 目前倉庫尚未宣告開源授權。
+- 本專案採用 PolyForm Noncommercial 1.0.0，僅允許非商業用途；它不是 OSI 開源授權。商業用途需要另行取得授權。
 
 ## 🔧 從原始碼建置
 
@@ -480,6 +480,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 📝 更新記錄
 
+- [0.4.1：自訂全域呼出快速鍵、保存表格欄寬與啟動隔離](docs/releases/v0.4.1.zh-TW.md)
 - [0.4.0：目錄化本機筆記、豐富編輯、加密圖片與安全寫入](docs/releases/v0.4.0.zh-TW.md)
 - [0.3.1：收藏目錄拖動排序與重新啟動版面還原](docs/releases/v0.3.1.zh-TW.md)
 - [0.3.0：GitHub 登入、私有倉庫搜尋與安全憑證保存](docs/releases/v0.3.0.zh-TW.md)
@@ -504,4 +505,4 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 📄 License
 
-目前倉庫尚未指定開源授權。在加入授權前，請勿直接將程式碼作為商業或再發佈專案的一部分使用。
+本專案採用 PolyForm Noncommercial 1.0.0，僅允許非商業用途；它不是 OSI 開源授權。商業用途需要另行取得授權。完整條款見 [LICENSE](LICENSE)。

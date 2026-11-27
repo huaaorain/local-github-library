@@ -1,4 +1,6 @@
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.Win32;
 
 namespace GitHubTopicReports.Services;
@@ -10,16 +12,24 @@ public sealed class StartupRegistrationService
 
     private readonly string _valueName;
 
-    public StartupRegistrationService(string valueName = DefaultValueName)
+    public StartupRegistrationService(string? valueName = null)
     {
-        _valueName = valueName;
+        _valueName = string.IsNullOrWhiteSpace(valueName)
+            ? CreateInstallationValueName()
+            : valueName;
     }
 
     public bool IsEnabled()
     {
         using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath);
-        return key?.GetValue(_valueName) is string value &&
-               !string.IsNullOrWhiteSpace(value);
+        if (key?.GetValue(_valueName) is string value &&
+            !string.IsNullOrWhiteSpace(value))
+        {
+            return true;
+        }
+
+        return key?.GetValue(DefaultValueName) is string legacyValue &&
+               LegacyValueMatchesCurrentInstallation(legacyValue);
     }
 
     public void SetEnabled(bool enabled)
@@ -30,6 +40,11 @@ public sealed class StartupRegistrationService
         if (!enabled)
         {
             key.DeleteValue(_valueName, throwOnMissingValue: false);
+            if (key.GetValue(DefaultValueName) is string legacyValue &&
+                LegacyValueMatchesCurrentInstallation(legacyValue))
+            {
+                key.DeleteValue(DefaultValueName, throwOnMissingValue: false);
+            }
             return;
         }
 
@@ -42,5 +57,44 @@ public sealed class StartupRegistrationService
         }
 
         key.SetValue(_valueName, $"\"{executablePath}\"", RegistryValueKind.String);
+        if (key.GetValue(DefaultValueName) is string currentLegacyValue &&
+            LegacyValueMatchesCurrentInstallation(currentLegacyValue))
+        {
+            key.DeleteValue(DefaultValueName, throwOnMissingValue: false);
+        }
+    }
+
+    private static string CreateInstallationValueName()
+    {
+        var directory = Path.GetFullPath(AppContext.BaseDirectory)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            .ToUpperInvariant();
+        var hash = Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes(directory)))[..12];
+        return $"{DefaultValueName}-{hash}";
+    }
+
+    private static bool LegacyValueMatchesCurrentInstallation(string value)
+    {
+        try
+        {
+            var path = value.Trim().Trim('"');
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return false;
+            }
+
+            var legacyDirectory = Path.GetDirectoryName(
+                Path.GetFullPath(path));
+            return string.Equals(
+                legacyDirectory,
+                Path.GetFullPath(AppContext.BaseDirectory)
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

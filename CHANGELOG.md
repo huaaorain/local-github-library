@@ -2,6 +2,28 @@
 
 All notable changes to Local Github Library will be documented in this file.
 
+## [0.4.1] - 2026-11-27
+
+### Added
+
+- Add a configurable global restore hotkey, defaulting to `Ctrl+Shift+D`.
+- Restore the window from taskbar or tray-minimized state through the global hotkey.
+- Persist table column widths for Search, Rankings, and Favorites across restarts.
+- Add the PolyForm Noncommercial 1.0.0 license and include it with distributed builds.
+
+### Changed
+
+- Make the visible table-column boundary itself the resize handle, avoiding an
+  additional divider and color mismatch.
+- Scope Windows startup registration to the installation directory so separate
+  copies no longer remove each other's startup entries.
+
+### Fixed
+
+- Prevent an old generic startup entry from being reused by a different copy of
+  the application.
+- Keep column-width and hotkey settings compatible with existing app settings.
+
 ## [0.4.0] - 2026-11-24
 
 ### Added

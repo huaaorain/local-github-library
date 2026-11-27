@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.0-ff7a45?style=flat-square" alt="Version 0.4.0">
+  <img src="https://img.shields.io/badge/version-0.4.1-ff7a45?style=flat-square" alt="Version 0.4.1">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-111816?style=flat-square&logo=windows&logoColor=white" alt="Windows 10/11 x64">
   <img src="https://img.shields.io/badge/runtime-.NET%2010-512bd4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/data-local--first-c5f36b?style=flat-square" alt="Local-first">
@@ -106,7 +106,7 @@ GitHub 适合找到一个仓库，却不擅长回答跨主题、跨时间的问�
     </tr>
     <tr>
       <td><strong>设&#8239;置&#8239;与&#8239;托&#8239;盘</strong></td>
-      <td>顶部齿轮集中管理 LLM、配置导入导出、文档库和开机自启；自动记住三个工作区的面板宽度、窗口尺寸和最大化状态。可设置关闭窗口时最小化到托盘或完全退出，并选择每次关闭是否询问。浅色与深色主题可随时切换。</td>
+      <td>顶部齿轮集中管理 LLM、配置导入导出、文档库和开机自启；自动记住三个工作区的面板宽度、窗口尺寸和最大化状态，以及各表格的列宽。可自定义全局呼出快捷键（默认 Ctrl+Shift+D），并设置关闭窗口时最小化到托盘或完全退出。浅色与深色主题可随时切换。</td>
     </tr>
   </tbody>
 </table>
@@ -141,7 +141,7 @@ _截图使用非敏感演示数据。笔记页展示目录树、富文本工具�
 
 | 发布包 | 大小 | 适用场景 |
 | --- | ---: | --- |
-| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.4.0/LocalGithubLibrary-0.4.0-win-x64.zip) | 约 84 MB | 本地笔记、目录排序、GitHub 登录与本地报告 |
+| [标准版 Windows x64](https://github.com/huaaorain/local-github-library/releases/download/v0.4.1/LocalGithubLibrary-0.4.1-win-x64.zip) | 约 84 MB | 本地笔记、目录排序、GitHub 登录与本地报告 |
 | [LLM 模型（可选）](docs/models/README.md) | 约 1.04 GB | 独立下载，升级程序时无需重复下载 |
 
 ### 2. 解压并运行
@@ -447,7 +447,7 @@ GitHubReports/
 - 未签名 EXE 可能触发 Windows SmartScreen 提示。
 - 加密笔记会加密正文和图片内容；标题、目录名和文件数量仍可能从本地路径看出。忘记密码后无法恢复正文。
 - 从 0.3.x 升级时旧笔记会自动迁移；旧加密笔记需要先解锁并保存，才能把占位目录改成真实笔记名称。
-- 当前仓库尚未声明开源许可证。
+- 本项目采用 PolyForm Noncommercial 1.0.0，仅允许非商业用途；它不是 OSI 开源许可证。商业用途需要单独授权。
 
 ## 🔧 从源码构建
 
@@ -480,6 +480,7 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 📝 更新记录
 
+- [0.4.1：自定义全局呼出快捷键、保存表格列宽与启动修复](docs/releases/v0.4.1.zh-CN.md)
 - [0.4.0：目录化本地笔记、丰富编辑、加密图片与安全写入](docs/releases/v0.4.0.zh-CN.md)
 - [0.3.1：收藏目录拖动排序与重启布局恢复](docs/releases/v0.3.1.zh-CN.md)
 - [0.3.0：GitHub 登录、私有仓库搜索与安全凭据存储](docs/releases/v0.3.0.zh-CN.md)
@@ -504,4 +505,4 @@ dotnet run --project .\GitHubTopicReports.csproj
 
 ## 📄 License
 
-当前仓库尚未指定开源许可证。在添加许可证前，请勿直接将代码作为商业或再分发项目的一部分使用。
+本项目采用 PolyForm Noncommercial 1.0.0，仅允许非商业用途；它不是 OSI 开源许可证。商业用途需要单独授权。完整条款见 [LICENSE](LICENSE)。
